@@ -1,7 +1,7 @@
 [versions]
 agp = "8.11.1"
 android-compileSdk = "36"
-android-minSdk = "24"
+android-minSdk = "30"
 android-targetSdk = "36"
 androidx-activity = "1.10.1"
 androidx-appcompat = "1.7.1"
@@ -10,7 +10,7 @@ androidx-core = "1.16.0"
 androidx-espresso = "3.6.1"
 androidx-lifecycle = "2.9.1"
 androidx-testExt = "1.2.1"
-composeMultiplatform = "1.8.2"
+composeMultiplatform = "1.9.0-alpha03"
 junit = "4.13.2"
 kotlin = "2.2.0"
 kotlinx-coroutines = "1.10.2"
@@ -24,6 +24,8 @@ firebase-bom = "33.16.0"
 firebase-crashlytics-plugin = "3.0.4"
 firebase-ktx = "2.1.0"
 serialization = "1.9.0"
+compose-material3 = "1.4.0-alpha18"
+android-material = "1.14.0-alpha03"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -57,6 +59,8 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-common-ktx = { module = "dev.gitlive:firebase-common", version.ref = "firebase-ktx" }
 firebase-firestore-ktx = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-ktx" }
 firebase-firestore-android = { module = "com.google.firebase:firebase-firestore-ktx" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
+android-material = { module = "com.google.android.material:material", version.ref = "android-material" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

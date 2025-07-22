@@ -59,6 +59,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.firebase.firestore.ktx)
+            implementation(libs.compose.material3)
+            implementation(libs.android.material)
         }
 
         iosMain.dependencies {
