@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Expense(
-    @SerialName("Description") 
+    @SerialName("description")
     val description: String = "",
-    @SerialName("Name") 
+    @SerialName("name")
     val name: String = "",
     @SerialName("price") 
     val price: Double = 0.0,

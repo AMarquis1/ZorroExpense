@@ -58,15 +58,17 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.firebase.firestore.ktx)
         }
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-            // Using REST API approach instead to access the custom database
+            implementation(libs.firebase.firestore.ktx)
         }
 
         wasmJsMain.dependencies {
-            // No Firebase support - will use REST API fallback
+            // No Firebase support - using REST API approach via Ktor
+            implementation(libs.ktor.client.core)
         }
 
         commonMain.dependencies {
@@ -84,6 +86,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
+            implementation(libs.firebase.common.ktx)
         }
 
         commonTest.dependencies {
@@ -121,9 +124,5 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
-
-    // Firebase for Android
-    add("androidMainImplementation", enforcedPlatform("com.google.firebase:firebase-bom:33.16.0"))
-    add("androidMainImplementation", "com.google.firebase:firebase-firestore-ktx")
 }
 
