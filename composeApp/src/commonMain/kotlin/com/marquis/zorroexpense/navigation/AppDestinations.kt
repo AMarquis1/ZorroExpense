@@ -8,6 +8,9 @@ sealed class AppDestinations {
     data object ExpenseList : AppDestinations()
     
     @Serializable
+    data object AddExpense : AppDestinations()
+    
+    @Serializable
     data class ExpenseDetail(
         val expenseName: String,
         val expenseDescription: String,

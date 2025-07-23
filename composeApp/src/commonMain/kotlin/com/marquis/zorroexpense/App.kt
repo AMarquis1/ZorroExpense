@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marquis.zorroexpense.navigation.AppDestinations
+import com.marquis.zorroexpense.screens.AddExpenseScreen
 import com.marquis.zorroexpense.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.screens.ExpenseListScreen
 import com.marquis.zorroexpense.ui.theme.ZorroExpenseTheme
@@ -36,6 +37,20 @@ fun App() {
                                 expenseDate = expense.date
                             )
                         )
+                    },
+                    onAddExpense = {
+                        navController.navigate(AppDestinations.AddExpense)
+                    }
+                )
+            }
+            
+            composable<AppDestinations.AddExpense> {
+                AddExpenseScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onExpenseSaved = {
+                        navController.popBackStack()
                     }
                 )
             }
