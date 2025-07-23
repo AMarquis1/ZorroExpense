@@ -69,7 +69,6 @@ kotlin {
         }
 
         wasmJsMain.dependencies {
-            // No Firebase support - using REST API approach via Ktor
             implementation(libs.ktor.client.core)
         }
 
@@ -88,7 +87,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
-            implementation(libs.firebase.common.ktx)
+            implementation(libs.material.icons)
         }
 
         commonTest.dependencies {
