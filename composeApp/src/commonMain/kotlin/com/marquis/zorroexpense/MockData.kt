@@ -24,7 +24,7 @@ object MockExpenseData {
             name = "Litière Agglomérante",
             description = "Arm & Hammer multi-chat 18kg - en spécial chez Canadian Tire",
             price = 24.99,
-            date = "2024-01-12T10:20:00Z"
+            date = "2024-02-12T10:20:00Z"
         ),
         Expense(
             name = "Jouets pour Minous",
@@ -36,7 +36,7 @@ object MockExpenseData {
             name = "Vaccins chez le Vét",
             description = "Vaccins annuels pour Mistigri - clinique du Dr Tremblay",
             price = 145.00,
-            date = "2024-01-10T09:00:00Z"
+            date = "2024-04-10T09:00:00Z"
         ),
         Expense(
             name = "Pâté Santé pour Chats",

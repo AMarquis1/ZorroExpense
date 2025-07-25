@@ -52,7 +52,9 @@ import com.marquis.zorroexpense.FirestoreService
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.components.EmptyState
 import com.marquis.zorroexpense.components.ErrorState
-import com.marquis.zorroexpense.components.ExpenseCard
+import com.marquis.zorroexpense.components.ExpenseCardWithDate
+import com.marquis.zorroexpense.components.MonthSeparator
+import com.marquis.zorroexpense.components.getMonthYear
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.sarah
 
@@ -68,13 +70,11 @@ fun ExpenseListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showConfigMenu by remember { mutableStateOf(false) }
     var sortBy by remember { mutableStateOf(SortOption.DATE_DESC) }
-    
-    // Scroll state for FAB and TopAppBar behavior
+
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(true) }
 
-    // Filter expenses based on search query
     val filteredExpenses by remember {
         derivedStateOf {
             if (searchQuery.isBlank()) {
@@ -86,6 +86,13 @@ fun ExpenseListScreen(
                     expense.price.toString().contains(searchQuery)
                 }.sortedWith(sortBy.comparator)
             }
+        }
+    }
+
+    val groupedExpenses by remember {
+        derivedStateOf {
+            filteredExpenses.groupBy { getMonthYear(it.date) }
+                .toSortedMap(compareByDescending { it })
         }
     }
 
@@ -262,8 +269,8 @@ fun ExpenseListScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 6.dp,
-                    pressedElevation = 8.dp
+                    defaultElevation = 8.dp,
+                    pressedElevation = 16.dp
                 )
             )
         }
@@ -318,12 +325,22 @@ fun ExpenseListScreen(
                             }
                         }
                         
-                        items(filteredExpenses) { expense ->
-                            ExpenseCard(
-                                expense = expense,
-                                profileImage = Res.drawable.sarah,
-                                onCardClick = { onExpenseClick(expense) }
-                            )
+                        // Display grouped expenses with month separators
+                        groupedExpenses.forEach { (monthYear, expensesInMonth) ->
+                            item(key = "header_$monthYear") {
+                                MonthSeparator(month = monthYear)
+                            }
+                            
+                            items(
+                                items = expensesInMonth,
+                                key = { expense -> "expense_${expense.date}_${expense.name}_${expense.price}" }
+                            ) { expense ->
+                                ExpenseCardWithDate(
+                                    expense = expense,
+                                    profileImage = Res.drawable.sarah,
+                                    onCardClick = { onExpenseClick(expense) }
+                                )
+                            }
                         }
                     }
                 }
