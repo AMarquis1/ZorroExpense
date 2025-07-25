@@ -13,9 +13,9 @@ object MockExpenseData {
     )
     
     // Predefined categories (using Material Icon names)
-    val categoryLoyer = Category(name = "loyer", icon = "Home", color = "#2196F3") // Home icon for housing
-    val categoryEpicerie = Category(name = "épicerie", icon = "ShoppingCart", color = "#4CAF50") // Shopping cart for groceries
-    val categoryZorro = Category(name = "ZORRO", icon = "Pets", color = "#FF9800") // Pets icon for cat expenses
+    val categoryLoyer = Category(name = "Loyer", icon = "Home", color = "#2196F3") // Home icon for housing
+    val categoryEpicerie = Category(name = "Épicerie", icon = "ShoppingCart", color = "#4CAF50") // Shopping cart for groceries
+    val categoryZorro = Category(name = "Zorro", icon = "Pets", color = "#FF9800") // Pets icon for cat expenses
     
     // List of all categories for filtering
     val allCategories = listOf(categoryLoyer, categoryEpicerie, categoryZorro)
@@ -67,7 +67,7 @@ object MockExpenseData {
             splitWith = listOf(userSarah.userId, userAlex.userId)
         ),
         Expense(
-            name = "Épicerie Provigo",
+            name = "Épicerie Provigo avec un tres long nom",
             description = "Produits frais - poisson, légumes verts et fruits de saison",
             price = 67.99,
             date = "2024-02-12T10:20:00Z",
