@@ -1,5 +1,11 @@
 package com.marquis.zorroexpense.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,16 +53,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.AppConfig
+import com.marquis.zorroexpense.Category
 import com.marquis.zorroexpense.Expense
 import com.marquis.zorroexpense.FirestoreService
 import com.marquis.zorroexpense.MockExpenseData
+import com.marquis.zorroexpense.components.CategoryFilterRow
 import com.marquis.zorroexpense.components.EmptyState
 import com.marquis.zorroexpense.components.ErrorState
 import com.marquis.zorroexpense.components.ExpenseCardWithDate
 import com.marquis.zorroexpense.components.MonthSeparator
 import com.marquis.zorroexpense.components.getMonthYear
-import zorroexpense.composeapp.generated.resources.Res
-import zorroexpense.composeapp.generated.resources.sarah
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,29 +76,43 @@ fun ExpenseListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showConfigMenu by remember { mutableStateOf(false) }
     var sortBy by remember { mutableStateOf(SortOption.DATE_DESC) }
+    var collapsedMonths by remember { mutableStateOf(setOf<String>()) }
+    var selectedCategories by remember { mutableStateOf(MockExpenseData.allCategories.toSet()) }
 
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(true) }
 
-    val filteredExpenses by remember {
+    val filteredExpenses by remember(expenses, searchQuery, sortBy, selectedCategories) {
         derivedStateOf {
-            if (searchQuery.isBlank()) {
-                expenses.sortedWith(sortBy.comparator)
-            } else {
-                expenses.filter { expense ->
+            var filtered = expenses
+            
+            // Apply category filter
+            if (selectedCategories.isNotEmpty()) {
+                filtered = filtered.filter { expense ->
+                    selectedCategories.contains(expense.category)
+                }
+            }
+            
+            // Apply search filter
+            if (searchQuery.isNotBlank()) {
+                filtered = filtered.filter { expense ->
                     expense.name.contains(searchQuery, ignoreCase = true) ||
                     expense.description.contains(searchQuery, ignoreCase = true) ||
                     expense.price.toString().contains(searchQuery)
-                }.sortedWith(sortBy.comparator)
+                }
             }
+            
+            filtered.sortedWith(sortBy.comparator)
         }
     }
 
     val groupedExpenses by remember {
         derivedStateOf {
-            filteredExpenses.groupBy { getMonthYear(it.date) }
-                .toSortedMap(compareByDescending { it })
+            filteredExpenses.groupBy { expense -> getMonthYear(expense.date) }
+                .toList()
+                .sortedByDescending { (monthYear, _) -> monthYear }
+                .toMap()
         }
     }
 
@@ -325,21 +345,64 @@ fun ExpenseListScreen(
                             }
                         }
                         
+                        // Category filter row
+                        item {
+                            CategoryFilterRow(
+                                selectedCategories = selectedCategories,
+                                onCategoryToggle = { category ->
+                                    selectedCategories = if (selectedCategories.contains(category)) {
+                                        selectedCategories - category
+                                    } else {
+                                        selectedCategories + category
+                                    }
+                                },
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        
                         // Display grouped expenses with month separators
-                        groupedExpenses.forEach { (monthYear, expensesInMonth) ->
+                        groupedExpenses.forEach { entry ->
+                            val monthYear = entry.key
+                            val expensesInMonth = entry.value
                             item(key = "header_$monthYear") {
-                                MonthSeparator(month = monthYear)
+                                MonthSeparator(
+                                    month = monthYear,
+                                    isCollapsed = collapsedMonths.contains(monthYear),
+                                    onToggleCollapsed = {
+                                        collapsedMonths = if (collapsedMonths.contains(monthYear)) {
+                                            collapsedMonths - monthYear
+                                        } else {
+                                            collapsedMonths + monthYear
+                                        }
+                                    }
+                                )
                             }
                             
+                            // Animated visibility for expenses
                             items(
                                 items = expensesInMonth,
-                                key = { expense -> "expense_${expense.date}_${expense.name}_${expense.price}" }
-                            ) { expense ->
-                                ExpenseCardWithDate(
-                                    expense = expense,
-                                    profileImage = Res.drawable.sarah,
-                                    onCardClick = { onExpenseClick(expense) }
-                                )
+                                key = { expense: Expense -> "expense_${expense.date}_${expense.name}_${expense.price}" }
+                            ) { expense: Expense ->
+                                AnimatedVisibility(
+                                    visible = !collapsedMonths.contains(monthYear),
+                                    enter = fadeIn(
+                                        animationSpec = tween(durationMillis = 300)
+                                    ) + slideInVertically(
+                                        animationSpec = tween(durationMillis = 300),
+                                        initialOffsetY = { -it / 2 }
+                                    ),
+                                    exit = fadeOut(
+                                        animationSpec = tween(durationMillis = 200)
+                                    ) + slideOutVertically(
+                                        animationSpec = tween(durationMillis = 200),
+                                        targetOffsetY = { -it / 2 }
+                                    )
+                                ) {
+                                    ExpenseCardWithDate(
+                                        expense = expense,
+                                        onCardClick = { onExpenseClick(expense) }
+                                    )
+                                }
                             }
                         }
                     }

@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.Expense
 import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
-import zorroexpense.composeapp.generated.resources.zorro_header
 
 /**
  * Reusable AppHeader component that displays app title and expense summary with Zorro header image background
@@ -36,7 +35,7 @@ import zorroexpense.composeapp.generated.resources.zorro_header
  * @param isLoading Loading state
  * @param modifier Optional modifier for styling (should include status bar padding)
  */
-@Composable
+/*@Composable
 fun AppHeader(
     appTitle: String = "ZorroExpense",
     expenses: List<Expense> = emptyList(),
@@ -85,7 +84,7 @@ fun AppHeader(
             }
         }
     }
-}
+}*/
 
 /**
  * App title component
