@@ -1,5 +1,6 @@
 package com.marquis.zorroexpense.components
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -58,12 +59,17 @@ import zorroexpense.composeapp.generated.resources.sarah
  * 
  * @param expense The expense data to display
  * @param onCardClick Optional click handler for the card
+ * @param sharedTransitionScope Optional shared transition scope for shared element transitions
+ * @param animatedContentScope Optional animated content scope for shared element transitions
  * @param modifier Optional modifier for styling
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ExpenseCardWithDate(
     expense: Expense,
     onCardClick: (() -> Unit)? = null,
+    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
+    animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -79,6 +85,8 @@ fun ExpenseCardWithDate(
         ExpenseCard(
             expense = expense,
             onCardClick = onCardClick,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope
         )
     }
 }
@@ -89,12 +97,17 @@ fun ExpenseCardWithDate(
  * 
  * @param expense The expense data to display
  * @param onCardClick Optional click handler for the card
+ * @param sharedTransitionScope Optional shared transition scope for shared element transitions
+ * @param animatedContentScope Optional animated content scope for shared element transitions
  * @param modifier Optional modifier for styling
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ExpenseCard(
     expense: Expense,
     onCardClick: (() -> Unit)? = null,
+    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
+    animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -111,11 +124,23 @@ fun ExpenseCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Category icon on the left
+            // Category icon on the left with shared element transition
             if (expense.category.icon.isNotEmpty()) {
+                val categoryModifier = if (sharedTransitionScope != null && animatedContentScope != null) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            sharedContentState = rememberSharedContentState(key = "category-${expense.category.name}-${expense.name}-${expense.date}"),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                    }
+                } else {
+                    Modifier
+                }
+                
                 CategoryIconCircle(
                     category = expense.category,
-                    size = 40.dp
+                    size = 40.dp,
+                    modifier = categoryModifier
                 )
                 Spacer(modifier = Modifier.width(12.dp))
             }
@@ -123,6 +148,8 @@ fun ExpenseCard(
             // Content column
             ExpenseCardContent(
                 expense = expense,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -132,9 +159,12 @@ fun ExpenseCard(
 /**
  * Internal component for the expense card content section
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ExpenseCardContent(
     expense: Expense,
+    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
+    animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -171,7 +201,10 @@ private fun ExpenseCardContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     SplitUsersRow(
                         userIds = expense.splitWith,
-                        buyerId = expense.paidBy
+                        buyerId = expense.paidBy,
+                        expense = expense,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope
                     )
                 }
             }
@@ -213,10 +246,14 @@ private fun ExpenseDateDisplay(
  * Component to display a row of user profile images for split participants
  * The buyer's avatar is displayed larger to emphasize who paid
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun SplitUsersRow(
     userIds: List<String>,
     buyerId: String,
+    expense: Expense,
+    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
+    animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
     modifier: Modifier = Modifier
 ) {
     Row(

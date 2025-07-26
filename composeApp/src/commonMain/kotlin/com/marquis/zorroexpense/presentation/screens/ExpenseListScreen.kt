@@ -1,6 +1,9 @@
 package com.marquis.zorroexpense.presentation.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -9,7 +12,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -17,11 +19,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -57,21 +61,19 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.zorro_header
-import com.marquis.zorroexpense.AppConfig
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
-import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.components.CategoryFilterRow
 import com.marquis.zorroexpense.components.EmptyState
 import com.marquis.zorroexpense.components.ErrorState
@@ -81,11 +83,14 @@ import com.marquis.zorroexpense.components.getMonthYear
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
+import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ExpenseListScreen(
-    viewModel: com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
+    viewModel: ExpenseListViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -181,7 +186,11 @@ fun ExpenseListScreen(
                             contentDescription = "Zorro header background",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(110.dp),
+                                .height(
+                                    60.dp + with(LocalDensity.current) {
+                                        WindowInsets.statusBars.getTop(this).toDp()
+                                    }
+                                ),
                             contentScale = ContentScale.Crop
                         )
                     }
@@ -466,7 +475,9 @@ fun ExpenseListScreen(
                                 ) {
                                     ExpenseCardWithDate(
                                         expense = expense,
-                                        onCardClick = { viewModel.onEvent(ExpenseListUiEvent.ExpenseClicked(expense)) }
+                                        onCardClick = { viewModel.onEvent(ExpenseListUiEvent.ExpenseClicked(expense)) },
+                                        sharedTransitionScope = sharedTransitionScope,
+                                        animatedContentScope = animatedContentScope
                                     )
                                 }
                             }

@@ -1,5 +1,7 @@
 package com.marquis.zorroexpense
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -17,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marquis.zorroexpense.di.AppModule
+import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
@@ -26,6 +29,7 @@ import com.marquis.zorroexpense.ui.theme.ZorroExpenseTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 @Preview
 fun App() {
@@ -33,56 +37,76 @@ fun App() {
         Box(modifier = Modifier.fillMaxSize()) {
             val navController = rememberNavController()
             
-            NavHost(
-                navController = navController,
-                startDestination = AppDestinations.ExpenseList,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                composable<AppDestinations.ExpenseList> {
-                    val viewModel = AppModule.provideExpenseListViewModel(
-                        onExpenseClick = { expense ->
-                            navController.navigate(
-                                AppDestinations.ExpenseDetail(
-                                    expenseName = expense.name,
-                                    expenseDescription = expense.description,
-                                    expensePrice = expense.price,
-                                    expenseDate = expense.date
+            SharedTransitionLayout {
+                NavHost(
+                    navController = navController,
+                    startDestination = AppDestinations.ExpenseList,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    composable<AppDestinations.ExpenseList> {
+                        val viewModel = AppModule.provideExpenseListViewModel(
+                            onExpenseClick = { expense ->
+                                navController.navigate(
+                                    AppDestinations.ExpenseDetail(
+                                        expenseName = expense.name,
+                                        expenseDescription = expense.description,
+                                        expensePrice = expense.price,
+                                        expenseDate = expense.date,
+                                        categoryName = expense.category.name,
+                                        categoryIcon = expense.category.icon,
+                                        categoryColor = expense.category.color,
+                                        paidBy = expense.paidBy,
+                                        splitWith = expense.splitWith
+                                    )
                                 )
-                            )
-                        },
-                        onAddExpenseClick = {
-                            navController.navigate(AppDestinations.AddExpense)
-                        }
-                    )
-                    ExpenseListScreen(viewModel = viewModel)
-                }
+                            },
+                            onAddExpenseClick = {
+                                navController.navigate(AppDestinations.AddExpense)
+                            }
+                        )
+                        ExpenseListScreen(
+                            viewModel = viewModel,
+                            sharedTransitionScope = this@SharedTransitionLayout,
+                            animatedContentScope = this
+                        )
+                    }
 
-                composable<AppDestinations.AddExpense> {
-                    AddExpenseScreen(
-                        onBackClick = {
-                            navController.popBackStack()
-                        },
-                        onExpenseSaved = {
-                            navController.popBackStack()
-                        }
-                    )
-                }
+                    composable<AppDestinations.AddExpense> {
+                        AddExpenseScreen(
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            onExpenseSaved = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
 
-                composable<AppDestinations.ExpenseDetail> { backStackEntry ->
-                    val expenseDetail = backStackEntry.toRoute<AppDestinations.ExpenseDetail>()
-                    val expense = Expense(
-                        name = expenseDetail.expenseName,
-                        description = expenseDetail.expenseDescription,
-                        price = expenseDetail.expensePrice,
-                        date = expenseDetail.expenseDate
-                    )
+                    composable<AppDestinations.ExpenseDetail> { backStackEntry ->
+                        val expenseDetail = backStackEntry.toRoute<AppDestinations.ExpenseDetail>()
+                        val expense = Expense(
+                            name = expenseDetail.expenseName,
+                            description = expenseDetail.expenseDescription,
+                            price = expenseDetail.expensePrice,
+                            date = expenseDetail.expenseDate,
+                            category = Category(
+                                name = expenseDetail.categoryName,
+                                icon = expenseDetail.categoryIcon,
+                                color = expenseDetail.categoryColor
+                            ),
+                            paidBy = expenseDetail.paidBy,
+                            splitWith = expenseDetail.splitWith
+                        )
 
-                    ExpenseDetailScreen(
-                        expense = expense,
-                        onBackClick = {
-                            navController.popBackStack()
-                        }
-                    )
+                        ExpenseDetailScreen(
+                            expense = expense,
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            sharedTransitionScope = this@SharedTransitionLayout,
+                            animatedContentScope = this
+                        )
+                    }
                 }
             }
             StatusBarProtection()

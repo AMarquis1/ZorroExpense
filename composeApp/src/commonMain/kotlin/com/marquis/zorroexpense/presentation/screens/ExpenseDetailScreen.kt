@@ -1,25 +1,33 @@
 package com.marquis.zorroexpense.presentation.screens
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -29,23 +37,28 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.domain.model.Expense
-import com.marquis.zorroexpense.components.ExpenseDateChip
-import com.marquis.zorroexpense.components.ExpensePriceChip
-import com.marquis.zorroexpense.components.ExpenseProfileAvatar
+import com.marquis.zorroexpense.components.CategoryIconCircle
+import com.marquis.zorroexpense.components.ProfileAvatar
+import com.marquis.zorroexpense.MockExpenseData
 import zorroexpense.composeapp.generated.resources.Res
+import zorroexpense.composeapp.generated.resources.alex
 import zorroexpense.composeapp.generated.resources.sarah
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun ExpenseDetailScreen(
+fun SharedTransitionScope.ExpenseDetailScreen(
     expense: Expense,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets.statusBars,
         topBar = {
             TopAppBar(
                 title = {
@@ -63,169 +76,320 @@ fun ExpenseDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    IconButton(
+                        onClick = { 
+                            // TODO: Implement edit functionality
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit Expense"
+                        )
+                    }
+                    IconButton(
+                        onClick = { 
+                            // TODO: Implement delete functionality
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete Expense"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
+                .padding(20.dp)
         ) {
-            Column(
+            // Clean header section with category icon
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Top
             ) {
-                // Main expense card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                // Category icon with shared element transition
+                if (expense.category.icon.isNotEmpty()) {
+                    CategoryIconCircle(
+                        category = expense.category,
+                        size = 60.dp,
+                        modifier = with(sharedTransitionScope) {
+                            Modifier
+                                .align(Alignment.CenterVertically)
+                                .sharedElement(
+                                    sharedContentState = rememberSharedContentState(key = "category-${expense.category.name}-${expense.name}-${expense.date}"),
+                                    animatedVisibilityScope = animatedContentScope
+                                )
+                        }
+                    )
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                }
+                
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Profile avatar
-                        ExpenseProfileAvatar(
-                            expenseName = expense.name,
-                            imageResource = Res.drawable.sarah,
-                            size = 120.dp
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Expense name
-                        Text(
-                            text = expense.name.ifEmpty { "Unnamed Expense" },
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Price chip
-                        ExpensePriceChip(price = expense.price)
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Date chip
-                        ExpenseDateChip(date = expense.date)
-                    }
+                    // Expense name - primary emphasis
+                    Text(
+                        text = expense.name.ifEmpty { "Unnamed Expense" },
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    // Date - secondary emphasis
+                    Text(
+                        text = formatDate(expense.date),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 
-                // Description section
-                if (expense.description.isNotEmpty()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp)
-                        ) {
-                            Text(
-                                text = "Description",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            Text(
-                                text = expense.description,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
-                            )
-                        }
-                    }
-                } else {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No description provided",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                            )
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Additional details section
+                // Price - dramatic emphasis
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        containerColor = expense.category.color.takeIf { it.isNotEmpty() }?.let { parseHexColor(it) } ?: MaterialTheme.colorScheme.primaryContainer
                     ),
                     shape = RoundedCornerShape(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.padding(12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "$${formatPrice(expense.price)}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Buyer information
+            val buyer = MockExpenseData.usersMap[expense.paidBy]
+            val profileImageResource = when (buyer?.profileImage) {
+                "sarah" -> Res.drawable.sarah
+                "alex" -> Res.drawable.alex
+                else -> Res.drawable.sarah
+            }
+            if (buyer != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(20.dp)
                     ) {
                         Text(
-                            text = "Expense Details",
+                            text = "Paid by",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
                         )
                         
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        DetailRow(
-                            label = "Amount",
-                            value = "$${expense.price}",
-                            valueColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            ProfileAvatar(
+                                size = 48.dp,
+                                imageResource = profileImageResource,
+                                fallbackText = buyer.name,
+                                backgroundColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                            
+                            Spacer(modifier = Modifier.width(16.dp))
+                            
+                            Text(
+                                text = buyer.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            if (expense.splitWith.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Text(
+                            text = "Split with",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
                         )
                         
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        DetailRow(
-                            label = "Date",
-                            value = formatTimestamp(expense.date),
-                            valueColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(expense.splitWith) { userId ->
+                                val user = MockExpenseData.usersMap[userId]
+
+                                if (user != null) {
+                                    val profileImageResource = when (user.profileImage) {
+                                        "sarah" -> Res.drawable.sarah
+                                        "alex" -> Res.drawable.alex
+                                        else -> Res.drawable.sarah
+                                    }
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        ProfileAvatar(
+                                            size = 56.dp,
+                                            imageResource = profileImageResource,
+                                            fallbackText = user.name,
+                                            backgroundColor = MaterialTheme.colorScheme.secondary,
+                                            contentColor = MaterialTheme.colorScheme.onSecondary
+                                        )
+                                        
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        
+                                        Text(
+                                            text = user.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center
+                                        )
+                                        
+                                        // Calculate split amount
+                                        val splitAmount = expense.price / expense.splitWith.size
+                                        Text(
+                                            text = "$${formatPrice(splitAmount)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            // Category info
+            if (expense.category.name.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = parseHexColor(expense.category.color).copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Category",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.weight(1f))
                         
-                        DetailRow(
-                            label = "Name",
-                            value = expense.name.ifEmpty { "Unnamed Expense" },
-                            valueColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        Text(
+                            text = expense.category.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = parseHexColor(expense.category.color)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            // Description section
+            if (expense.description.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Text(
+                            text = "Description",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        
+                        Text(
+                            text = expense.description,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+                        )
+                    }
+                }
+            } else {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No description available",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                         )
                     }
                 }
@@ -234,40 +398,52 @@ fun ExpenseDetailScreen(
     }
 }
 
-@Composable
-private fun DetailRow(
-    label: String,
-    value: String,
-    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
-            modifier = Modifier.weight(1f)
-        )
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = valueColor,
-            textAlign = TextAlign.End
-        )
+// Utility functions
+private fun formatPrice(price: Double): String {
+    return if (price == price.toInt().toDouble()) {
+        price.toInt().toString()
+    } else {
+        val rounded = (price * 100).toInt() / 100.0
+        val decimalPart = ((rounded * 100) % 100).toInt()
+        val wholePart = rounded.toInt()
+        "$wholePart.${decimalPart.toString().padStart(2, '0')}"
     }
 }
 
-private fun formatTimestamp(timestamp: String): String {
-    return if (timestamp.isBlank()) {
-        "No date"
-    } else {
-        timestamp.substringBefore("T").takeIf { it.isNotBlank() } ?: timestamp
+private fun formatDate(timestamp: String): String {
+    if (timestamp.isBlank()) {
+        return "No date"
+    }
+    
+    try {
+        val dateStr = timestamp.substringBefore("T")
+        val parts = dateStr.split("-")
+        if (parts.size >= 3) {
+            val year = parts[0]
+            val month = parts[1].toIntOrNull() ?: 1
+            val day = parts[2].toIntOrNull() ?: 1
+            
+            val monthNames = arrayOf(
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            )
+            
+            val monthName = if (month in 1..12) monthNames[month - 1] else "January"
+            return "$monthName $day, $year"
+        }
+    } catch (_: Exception) {
+        // Fall back to simple format
+    }
+    
+    return timestamp.substringBefore("T").takeIf { it.isNotBlank() } ?: timestamp
+}
+
+private fun parseHexColor(hexColor: String): Color {
+    return try {
+        val cleanHex = hexColor.removePrefix("#")
+        val colorInt = cleanHex.toLong(16)
+        Color(colorInt or 0xFF000000) // Add alpha if not present
+    } catch (_: Exception) {
+        Color(0xFF6200EE) // Default purple color
     }
 }

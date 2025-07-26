@@ -15,6 +15,11 @@ sealed class AppDestinations {
         val expenseName: String,
         val expenseDescription: String,
         val expensePrice: Double,
-        val expenseDate: String
+        val expenseDate: String,
+        val categoryName: String,
+        val categoryIcon: String,
+        val categoryColor: String,
+        val paidBy: String,
+        val splitWith: List<String>
     ) : AppDestinations()
 }
