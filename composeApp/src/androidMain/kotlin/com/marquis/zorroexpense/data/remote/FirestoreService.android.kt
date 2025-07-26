@@ -1,5 +1,6 @@
-package com.marquis.zorroexpense
+package com.marquis.zorroexpense.data.remote
 
+import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 
@@ -7,11 +8,11 @@ import dev.gitlive.firebase.firestore.firestore
 actual class FirestoreService {
     private val firestore = Firebase.firestore
 
-    actual suspend fun getExpenses(): Result<List<Expense>> {
+    actual suspend fun getExpenses(): Result<List<ExpenseDto>> {
         return try {
             val snapshot = firestore.collection("Expense").get()
             val expenses = snapshot.documents.map { document ->
-                document.data<Expense>()
+                document.data<ExpenseDto>()
             }
 
             Result.success(expenses)

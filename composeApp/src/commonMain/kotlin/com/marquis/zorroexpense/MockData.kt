@@ -1,5 +1,9 @@
 package com.marquis.zorroexpense
 
+import com.marquis.zorroexpense.domain.model.Category
+import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.model.User
+
 object MockExpenseData {
     
     // Predefined users

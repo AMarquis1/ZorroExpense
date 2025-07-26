@@ -1,4 +1,4 @@
-package com.marquis.zorroexpense.screens
+package com.marquis.zorroexpense.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.marquis.zorroexpense.Expense
+import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.components.ExpenseDateChip
 import com.marquis.zorroexpense.components.ExpensePriceChip
 import com.marquis.zorroexpense.components.ExpenseProfileAvatar

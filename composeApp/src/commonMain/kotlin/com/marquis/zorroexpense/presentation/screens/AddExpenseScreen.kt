@@ -1,4 +1,4 @@
-package com.marquis.zorroexpense.screens
+package com.marquis.zorroexpense.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,8 +54,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.AppConfig
-import com.marquis.zorroexpense.Expense
-import com.marquis.zorroexpense.FirestoreService
+import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.MockExpenseData
 import kotlinx.coroutines.launch
 

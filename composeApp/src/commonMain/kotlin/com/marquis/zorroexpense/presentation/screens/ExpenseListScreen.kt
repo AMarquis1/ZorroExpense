@@ -1,4 +1,4 @@
-package com.marquis.zorroexpense.screens
+package com.marquis.zorroexpense.presentation.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -46,6 +46,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,9 +69,8 @@ import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.zorro_header
 import com.marquis.zorroexpense.AppConfig
-import com.marquis.zorroexpense.Category
-import com.marquis.zorroexpense.Expense
-import com.marquis.zorroexpense.FirestoreService
+import com.marquis.zorroexpense.domain.model.Category
+import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.components.CategoryFilterRow
 import com.marquis.zorroexpense.components.EmptyState
@@ -78,51 +78,38 @@ import com.marquis.zorroexpense.components.ErrorState
 import com.marquis.zorroexpense.components.ExpenseCardWithDate
 import com.marquis.zorroexpense.components.MonthSeparator
 import com.marquis.zorroexpense.components.getMonthYear
+import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
+import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
+import com.marquis.zorroexpense.presentation.state.SortOption
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseListScreen(
-    onExpenseClick: (Expense) -> Unit,
-    onAddExpense: () -> Unit = {}
+    viewModel: com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
 ) {
-    var expenses by remember { mutableStateOf<List<Expense>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var searchQuery by remember { mutableStateOf("") }
-    var isSearchExpanded by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Local UI state for things not managed by ViewModel
     var showConfigMenu by remember { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
-    var sortBy by remember { mutableStateOf(SortOption.DATE_DESC) }
-    var collapsedMonths by remember { mutableStateOf(setOf<String>()) }
-    var selectedCategories by remember { mutableStateOf(MockExpenseData.allCategories.toSet()) }
 
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(true) }
 
-    val filteredExpenses by remember(expenses, searchQuery, sortBy, selectedCategories) {
-        derivedStateOf {
-            var filtered = expenses
-            
-            // Apply category filter - show nothing if no categories selected
-            filtered = filtered.filter { expense ->
-                selectedCategories.contains(expense.category)
-            }
-            
-            // Apply search filter
-            if (searchQuery.isNotBlank()) {
-                filtered = filtered.filter { expense ->
-                    expense.name.contains(searchQuery, ignoreCase = true) ||
-                    expense.description.contains(searchQuery, ignoreCase = true) ||
-                    expense.price.toString().contains(searchQuery)
-                }
-            }
-            
-            filtered.sortedWith(sortBy.comparator)
-        }
-    }
+    // Extract state values from the current UI state
+    val currentState = uiState
+    val expenses = if (currentState is ExpenseListUiState.Success) currentState.expenses else emptyList()
+    val filteredExpenses = if (currentState is ExpenseListUiState.Success) currentState.filteredExpenses else emptyList()
+    val searchQuery = if (currentState is ExpenseListUiState.Success) currentState.searchQuery else ""
+    val isSearchExpanded = if (currentState is ExpenseListUiState.Success) currentState.isSearchExpanded else false
+    val selectedCategories = if (currentState is ExpenseListUiState.Success) currentState.selectedCategories else emptySet()
+    val sortBy = if (currentState is ExpenseListUiState.Success) currentState.sortOption else SortOption.DATE_DESC
+    val collapsedMonths = if (currentState is ExpenseListUiState.Success) currentState.collapsedMonths else emptySet()
+    val isLoading = currentState is ExpenseListUiState.Loading
+    val errorMessage = if (currentState is ExpenseListUiState.Error) currentState.message else null
 
-    val groupedExpenses by remember {
+    val groupedExpenses by remember(filteredExpenses) {
         derivedStateOf {
             filteredExpenses.groupBy { expense -> getMonthYear(expense.date) }
                 .toList()
@@ -131,33 +118,9 @@ fun ExpenseListScreen(
         }
     }
 
-    val loadExpenses: suspend () -> Unit = {
-        isLoading = true
-        errorMessage = null
-        
-        if (AppConfig.USE_MOCK_DATA) {
-            MockExpenseData.getMockExpenses()
-                .onSuccess { expenseList ->
-                    expenses = expenseList
-                }
-                .onFailure { exception ->
-                    errorMessage = exception.message ?: "Unknown error occurred"
-                }
-        } else {
-            FirestoreService().getExpenses()
-                .onSuccess { expenseList ->
-                    expenses = expenseList
-                }
-                .onFailure { exception ->
-                    errorMessage = exception.message ?: "Unknown error occurred"
-                }
-        }
-        
-        isLoading = false
-    }
-
+    // Load expenses when screen first appears
     LaunchedEffect(Unit) {
-        loadExpenses()
+        viewModel.onEvent(ExpenseListUiEvent.LoadExpenses)
     }
     
     // Focus search field when expanded
@@ -237,7 +200,7 @@ fun ExpenseListScreen(
                                 // Expanded search field
                                 OutlinedTextField(
                                     value = searchQuery,
-                                    onValueChange = { searchQuery = it },
+                                    onValueChange = { query -> viewModel.onEvent(ExpenseListUiEvent.SearchQueryChanged(query)) },
                                     placeholder = {
                                         Text(
                                             "Search expenses...",
@@ -255,8 +218,8 @@ fun ExpenseListScreen(
                                     trailingIcon = {
                                         IconButton(
                                             onClick = {
-                                                searchQuery = ""
-                                                isSearchExpanded = false
+                                                viewModel.onEvent(ExpenseListUiEvent.SearchQueryChanged(""))
+                                                viewModel.onEvent(ExpenseListUiEvent.SearchExpandedChanged(false))
                                             }
                                         ) {
                                             Icon(
@@ -294,7 +257,7 @@ fun ExpenseListScreen(
                                 // Search icon button
                                 IconButton(
                                     onClick = {
-                                        isSearchExpanded = true
+                                        viewModel.onEvent(ExpenseListUiEvent.SearchExpandedChanged(true))
                                     }
                                 ) {
                                     Icon(
@@ -341,7 +304,7 @@ fun ExpenseListScreen(
                                                     )
                                                 },
                                                 onClick = {
-                                                    sortBy = option
+                                                    viewModel.onEvent(ExpenseListUiEvent.SortOptionChanged(option))
                                                     showConfigMenu = false
                                                 }
                                             )
@@ -359,7 +322,7 @@ fun ExpenseListScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onAddExpense,
+                onClick = { viewModel.onEvent(ExpenseListUiEvent.AddExpenseClicked) },
                 expanded = isFabExpanded,
                 icon = {
                     Icon(
@@ -403,12 +366,8 @@ fun ExpenseListScreen(
                         item {
                             CategoryFilterRow(
                                 selectedCategories = selectedCategories,
-                                onCategoryToggle = { category ->
-                                    selectedCategories = if (selectedCategories.contains(category)) {
-                                        selectedCategories - category
-                                    } else {
-                                        selectedCategories + category
-                                    }
+                                onCategoryToggle = { category: Category ->
+                                    viewModel.onEvent(ExpenseListUiEvent.CategoryToggled(category))
                                 },
                             )
                         }
@@ -421,17 +380,17 @@ fun ExpenseListScreen(
                                     title = "No matching expenses",
                                     description = "Try adjusting your search query to find expenses."
                                 )
-                            } else if (selectedCategories.isEmpty()) {
+                            } else if (selectedCategories.isNotEmpty()) {
                                 EmptyState(
                                     icon = "📂",
-                                    title = "No categories selected",
-                                    description = "Select categories above to view expenses."
+                                    title = "No expenses in selected categories",
+                                    description = "Try selecting different categories or add expenses to these categories."
                                 )
                             } else {
                                 EmptyState(
                                     icon = "💸",
                                     title = "No expenses found",
-                                    description = "Start tracking your expenses by adding some data to your Firestore collection."
+                                    description = "Start tracking your expenses by adding some data."
                                 )
                             }
                         }
@@ -453,12 +412,8 @@ fun ExpenseListScreen(
                         item {
                             CategoryFilterRow(
                                 selectedCategories = selectedCategories,
-                                onCategoryToggle = { category ->
-                                    selectedCategories = if (selectedCategories.contains(category)) {
-                                        selectedCategories - category
-                                    } else {
-                                        selectedCategories + category
-                                    }
+                                onCategoryToggle = { category: Category ->
+                                    viewModel.onEvent(ExpenseListUiEvent.CategoryToggled(category))
                                 },
                             )
                         }
@@ -484,11 +439,7 @@ fun ExpenseListScreen(
                                     month = monthYear,
                                     isCollapsed = collapsedMonths.contains(monthYear),
                                     onToggleCollapsed = {
-                                        collapsedMonths = if (collapsedMonths.contains(monthYear)) {
-                                            collapsedMonths - monthYear
-                                        } else {
-                                            collapsedMonths + monthYear
-                                        }
+                                        viewModel.onEvent(ExpenseListUiEvent.MonthToggleCollapsed(monthYear))
                                     }
                                 )
                             }
@@ -515,7 +466,7 @@ fun ExpenseListScreen(
                                 ) {
                                     ExpenseCardWithDate(
                                         expense = expense,
-                                        onCardClick = { onExpenseClick(expense) }
+                                        onCardClick = { viewModel.onEvent(ExpenseListUiEvent.ExpenseClicked(expense)) }
                                     )
                                 }
                             }
@@ -525,13 +476,4 @@ fun ExpenseListScreen(
             }
         }
     }
-}
-
-enum class SortOption(val displayName: String, val comparator: Comparator<Expense>) {
-    DATE_DESC("Date (Newest first)", compareByDescending { it.date }),
-    DATE_ASC("Date (Oldest first)", compareBy { it.date }),
-    PRICE_DESC("Price (Highest first)", compareByDescending { it.price }),
-    PRICE_ASC("Price (Lowest first)", compareBy { it.price }),
-    NAME_ASC("Name (A-Z)", compareBy { it.name.lowercase() }),
-    NAME_DESC("Name (Z-A)", compareByDescending { it.name.lowercase() })
 }

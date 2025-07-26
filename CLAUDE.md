@@ -52,24 +52,103 @@ ZorroExpense is a Kotlin Multiplatform expense tracking application targeting An
 
 ## Architecture
 
+The project follows **MVVM (Model-View-ViewModel)** architecture with **Clean Architecture** principles, providing a scalable and maintainable codebase.
+
+### Architecture Layers
+
+#### 📱 **Presentation Layer** (`presentation/`)
+- **ViewModels**: State management with StateFlow and UI event handling
+- **UI States**: Sealed classes defining screen states (Loading, Success, Error)
+- **UI Events**: Sealed classes for user interactions
+- **Screens**: Jetpack Compose UI components that observe ViewModel state
+
+```kotlin
+// Example: ExpenseListViewModel manages state and handles events
+class ExpenseListViewModel(private val getExpensesUseCase: GetExpensesUseCase) : ViewModel() {
+    private val _uiState = MutableStateFlow<ExpenseListUiState>(ExpenseListUiState.Loading)
+    val uiState: StateFlow<ExpenseListUiState> = _uiState.asStateFlow()
+    
+    fun onEvent(event: ExpenseListUiEvent) { /* Handle UI events */ }
+}
+```
+
+#### 💼 **Domain Layer** (`domain/`)
+- **Models**: Clean business entities (Category, Expense, User)
+- **Repository Interfaces**: Abstract data access contracts
+- **Use Cases**: Business logic encapsulation
+
+```kotlin
+// Example: Clean domain model without framework dependencies
+data class Expense(
+    val description: String = "",
+    val name: String = "",
+    val price: Double = 0.0,
+    val date: String = "",
+    val category: Category = Category(),
+    val paidBy: String = "",
+    val splitWith: List<String> = emptyList()
+)
+```
+
+#### 💾 **Data Layer** (`data/`)
+- **Repository Implementations**: Concrete data access implementations
+- **DTOs**: Data Transfer Objects with serialization annotations
+- **Data Sources**: Platform-specific data access (FirestoreService)
+- **Mappers**: Convert between DTOs and Domain models
+
+```kotlin
+// Example: Repository handles data source selection (Mock vs Firestore)
+class ExpenseRepositoryImpl(private val firestoreService: FirestoreService) : ExpenseRepository {
+    override suspend fun getExpenses(): Result<List<Expense>> {
+        return if (AppConfig.USE_MOCK_DATA) {
+            MockExpenseData.getMockExpenses()
+        } else {
+            firestoreService.getExpenses().mapCatching { dtos -> dtos.map { it.toDomain() } }
+        }
+    }
+}
+```
+
+#### 🔧 **Dependency Injection** (`di/`)
+- **AppModule**: Manual dependency injection providing ViewModels and dependencies
+- **Singleton Pattern**: Ensures single instances of repositories and services
+
+### Reactive State Management
+
+The app uses **StateFlow** for reactive state management:
+
+```kotlin
+// Screen observes ViewModel state reactively
+@Composable
+fun ExpenseListScreen(viewModel: ExpenseListViewModel, ...) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    when (uiState) {
+        is ExpenseListUiState.Loading -> LoadingUI()
+        is ExpenseListUiState.Success -> ExpenseListUI(uiState.expenses)
+        is ExpenseListUiState.Error -> ErrorUI(uiState.message)
+    }
+}
+```
+
+### Navigation Integration
+
+Type-safe navigation with ViewModel integration:
+
+```kotlin
+// App.kt provides ViewModels through dependency injection
+composable<AppDestinations.ExpenseList> {
+    val viewModel = AppModule.provideExpenseListViewModel()
+    ExpenseListScreen(viewModel = viewModel, ...)
+}
+```
+
 ### Multiplatform Structure
 
-- **commonMain**: Shared business logic, UI components, and data models
+- **commonMain**: Shared MVVM architecture, business logic, and UI
 - **androidMain**: Android-specific implementations (Firebase integration)
 - **iosMain**: iOS-specific implementations (currently placeholder)
 - **wasmJsMain**: Web-specific implementations (currently placeholder)
-
-### Key Components
-
-**Data Layer:**
-- `Expense` data class with Kotlinx Serialization annotations
-- `FirestoreService` expect/actual pattern for platform-specific database implementations
-- Android implementation uses Firebase Firestore with coroutines and suspendCancellableCoroutine
-
-**UI Layer:**
-- Single `App.kt` composable as main entry point
-- Uses Material3 design system
-- Implements loading states, error handling, and data display
 
 ### Platform-Specific Implementations
 
@@ -120,19 +199,124 @@ Database structure expects documents in "Expense" collection with fields:
 
 ## Development Notes
 
-### Known Limitations
-- iOS and Web implementations are incomplete (placeholder TODO methods)
-- No navigation system implemented yet
-- Single screen application currently focused on testing Firestore connectivity
-- Web target lacks Firebase support and will require REST API implementation
+### Architecture Benefits
+- **Separation of Concerns**: Clear separation between UI, business logic, and data
+- **Testability**: Each layer can be tested independently
+- **Scalability**: Easy to add new features and screens following established patterns
+- **Maintainability**: Clean dependencies and single responsibility principle
+- **Reactive UI**: StateFlow ensures UI automatically updates when data changes
+
+### Development Configuration
+
+**Mock Data vs Production Data:**
+```kotlin
+// AppConfig.kt controls data source
+object AppConfig {
+    const val USE_MOCK_DATA = true  // Set to false for Firestore
+}
+```
+
+When `USE_MOCK_DATA = true`:
+- Uses `MockExpenseData.getMockExpenses()` with sample data
+- No network calls or Firebase dependencies required
+- Instant data loading for development
+
+When `USE_MOCK_DATA = false`:
+- Uses Firestore through `FirestoreService` expect/actual implementation
+- Requires proper Firebase configuration and network connectivity
+
+### File Organization
+
+```
+src/commonMain/kotlin/com/marquis/zorroexpense/
+├── di/                          # Dependency Injection
+│   └── AppModule.kt            # Manual DI container
+├── domain/                      # Business Logic Layer
+│   ├── model/                  # Domain models (Expense, Category, User)
+│   ├── repository/             # Repository interfaces
+│   └── usecase/               # Business use cases
+├── data/                       # Data Access Layer
+│   ├── remote/                # External data sources
+│   │   ├── dto/              # Data Transfer Objects
+│   │   └── FirestoreService.kt
+│   └── repository/           # Repository implementations
+├── presentation/               # UI Layer
+│   ├── viewmodel/            # ViewModels for state management
+│   ├── state/                # UI states and events
+│   └── screens/              # Compose UI screens
+├── components/                # Reusable UI components
+├── navigation/                # Type-safe navigation
+├── ui/theme/                  # Material3 theming
+├── AppConfig.kt              # Application configuration
+└── MockExpenseData.kt        # Development mock data
+```
+
+### Key Implementation Patterns
+
+**ViewModel Pattern:**
+```kotlin
+// ViewModels expose StateFlow for reactive UI updates
+class ExpenseListViewModel(private val getExpensesUseCase: GetExpensesUseCase) {
+    private val _uiState = MutableStateFlow<ExpenseListUiState>(ExpenseListUiState.Loading)
+    val uiState: StateFlow<ExpenseListUiState> = _uiState.asStateFlow()
+    
+    // Handle all UI events through a single entry point
+    fun onEvent(event: ExpenseListUiEvent) { /* ... */ }
+}
+```
+
+**Repository Pattern:**
+```kotlin
+// Abstract interface in domain layer
+interface ExpenseRepository {
+    suspend fun getExpenses(): Result<List<Expense>>
+}
+
+// Concrete implementation in data layer
+class ExpenseRepositoryImpl(private val firestoreService: FirestoreService) : ExpenseRepository
+```
+
+**Use Case Pattern:**
+```kotlin
+// Encapsulates business logic
+class GetExpensesUseCase(private val repository: ExpenseRepository) {
+    suspend operator fun invoke(): Result<List<Expense>> = repository.getExpenses()
+}
+```
 
 ### Code Patterns
-- Uses expect/actual declarations for platform-specific implementations
-- Implements Result type for error handling
-- Uses Compose state management with remember and mutableStateOf
-- Follows Kotlin coroutines patterns with proper error handling
+- **MVVM Architecture**: Clear separation of presentation, business, and data layers
+- **StateFlow**: Reactive state management with automatic UI updates
+- **Sealed Classes**: Type-safe state and event handling
+- **Result Type**: Functional error handling throughout the app
+- **Repository Pattern**: Abstract data access with multiple implementations
+- **Use Cases**: Single-responsibility business logic encapsulation
+- **Dependency Injection**: Manual DI with singleton pattern
+- **Clean Architecture**: Dependencies point inward (Presentation → Domain ← Data)
 
 ### Testing Strategy
-- Basic test structure in place with `ComposeAppCommonTest.kt`
-- Android unit testing configured
-- No UI tests implemented yet
+- **Unit Tests**: Test ViewModels, Use Cases, and Repository implementations independently
+- **UI Tests**: Test Compose screens with ViewModel integration
+- **Mock Data**: Comprehensive mock data for development and testing
+- **Layer Testing**: Each architecture layer can be tested in isolation
+
+## Current Implementation Status
+
+### ✅ Completed Features
+- **MVVM Architecture**: Full implementation with Clean Architecture principles
+- **ExpenseListScreen**: Complete with reactive state management, search, filtering, and sorting
+- **Mock Data Integration**: Rich sample data for development and testing
+- **Type-Safe Navigation**: Compose Navigation with proper ViewModel integration
+- **Reactive UI**: StateFlow-based state management with automatic UI updates
+- **Material3 Design**: Modern UI with proper theming and components
+
+### 🚧 In Progress
+- **AddExpenseScreen**: Functional but could be enhanced with ViewModel pattern
+- **ExpenseDetailScreen**: Functional but could be enhanced with ViewModel pattern
+
+### 📋 Future Enhancements
+- **Firestore Integration**: Complete Firebase implementation for production
+- **iOS Platform**: Native iOS implementations for FirestoreService
+- **Web Platform**: WASM-specific implementations and Firebase REST API
+- **Additional Features**: Edit expenses, categories management, user profiles
+- **Testing**: Comprehensive test coverage for all layers

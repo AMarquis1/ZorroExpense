@@ -16,10 +16,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.marquis.zorroexpense.di.AppModule
+import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.navigation.AppDestinations
-import com.marquis.zorroexpense.screens.AddExpenseScreen
-import com.marquis.zorroexpense.screens.ExpenseDetailScreen
-import com.marquis.zorroexpense.screens.ExpenseListScreen
+import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
+import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
+import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
 import com.marquis.zorroexpense.ui.theme.ZorroExpenseTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -37,7 +39,7 @@ fun App() {
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable<AppDestinations.ExpenseList> {
-                    ExpenseListScreen(
+                    val viewModel = AppModule.provideExpenseListViewModel(
                         onExpenseClick = { expense ->
                             navController.navigate(
                                 AppDestinations.ExpenseDetail(
@@ -48,10 +50,11 @@ fun App() {
                                 )
                             )
                         },
-                        onAddExpense = {
+                        onAddExpenseClick = {
                             navController.navigate(AppDestinations.AddExpense)
                         }
                     )
+                    ExpenseListScreen(viewModel = viewModel)
                 }
 
                 composable<AppDestinations.AddExpense> {
