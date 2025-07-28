@@ -261,23 +261,15 @@ private fun SplitUsersRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        // First show the buyer
         val buyer = MockExpenseData.usersMap[buyerId]
         if (buyer != null) {
-            val buyerImageResource = when (buyer.profileImage) {
-                "sarah" -> Res.drawable.sarah
-                "alex" -> Res.drawable.alex
-                else -> Res.drawable.sarah
-            }
-            
-            ExpenseProfileAvatar(
-                expenseName = buyer.name,
-                imageResource = buyerImageResource,
-                size = 32.dp
+            ProfileAvatar(
+                name = buyer.name,
+                size = 32.dp,
+                userProfile = buyer.profileImage
             )
         }
-        
-        // Add arrow indicator if there are other users to split with
+
         val otherUsers = userIds.filter { it != buyerId }
         if (otherUsers.isNotEmpty()) {
             Icon(
@@ -288,21 +280,15 @@ private fun SplitUsersRow(
                     .size(20.dp)
                     .padding(horizontal = 2.dp)
             )
-            
-            // Show other split users
+
             otherUsers.forEach { userId ->
                 val user = MockExpenseData.usersMap[userId]
                 if (user != null) {
-                    val profileImageResource = when (user.profileImage) {
-                        "sarah" -> Res.drawable.sarah
-                        "alex" -> Res.drawable.alex
-                        else -> Res.drawable.sarah
-                    }
-                    
-                    ExpenseProfileAvatar(
-                        expenseName = user.name,
-                        imageResource = profileImageResource,
-                        size = 20.dp
+
+                    ProfileAvatar(
+                        name = user.name,
+                        size = 20.dp,
+                        userProfile = user.profileImage
                     )
                 }
             }

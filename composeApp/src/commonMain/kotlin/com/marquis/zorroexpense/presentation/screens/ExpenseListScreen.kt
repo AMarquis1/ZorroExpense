@@ -358,7 +358,7 @@ fun ExpenseListScreen(
                 errorMessage != null -> {
                     ErrorState(
                         title = "Error loading expenses",
-                        message = errorMessage!!
+                        message = errorMessage
                     )
                 }
                 

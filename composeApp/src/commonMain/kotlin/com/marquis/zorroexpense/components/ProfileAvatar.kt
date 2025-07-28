@@ -20,26 +20,27 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import zorroexpense.composeapp.generated.resources.Res
+import zorroexpense.composeapp.generated.resources.alex
+import zorroexpense.composeapp.generated.resources.sarah
 
-/**
- * Reusable ProfileAvatar component that can display an image or fallback to initials
- * 
- * @param size Size of the circular avatar (default: 72.dp)
- * @param imageResource Optional drawable resource for the avatar image
- * @param fallbackText Text to display when no image is provided (usually initials)
- * @param backgroundColor Background color of the avatar
- * @param contentColor Color of the fallback text
- * @param modifier Optional modifier for styling
- */
+
 @Composable
 fun ProfileAvatar(
+    name: String,
     size: Dp = 72.dp,
-    imageResource: DrawableResource? = null,
-    fallbackText: String = "?",
+    userProfile: String,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     modifier: Modifier = Modifier
 ) {
+    val fallbackText = if (name.isNotEmpty()) name.first().toString() else "?"
+    val imageResource : DrawableResource? = when (userProfile) {
+        "sarah" -> Res.drawable.sarah
+        "alex" -> Res.drawable.alex
+        else -> null
+    }
+
     Surface(
         modifier = modifier.size(size),
         shape = CircleShape,
@@ -73,24 +74,4 @@ fun ProfileAvatar(
             }
         }
     }
-}
-
-/**
- * Convenience function to create ProfileAvatar from an expense name initial
- */
-@Composable
-fun ExpenseProfileAvatar(
-    expenseName: String,
-    size: Dp = 72.dp,
-    imageResource: DrawableResource? = null,
-    modifier: Modifier = Modifier
-) {
-    val initial = if (expenseName.isNotEmpty()) expenseName.first().toString() else "?"
-    
-    ProfileAvatar(
-        size = size,
-        imageResource = imageResource,
-        fallbackText = initial,
-        modifier = modifier
-    )
 }

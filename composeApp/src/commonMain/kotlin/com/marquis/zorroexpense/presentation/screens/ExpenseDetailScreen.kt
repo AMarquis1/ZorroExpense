@@ -215,11 +215,11 @@ fun SharedTransitionScope.ExpenseDetailScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             ProfileAvatar(
+                                name = buyer.name,
                                 size = 48.dp,
-                                imageResource = profileImageResource,
-                                fallbackText = buyer.name,
+                                userProfile = buyer.profileImage,
                                 backgroundColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
                             )
                             
                             Spacer(modifier = Modifier.width(16.dp))
@@ -263,18 +263,13 @@ fun SharedTransitionScope.ExpenseDetailScreen(
                                 val user = MockExpenseData.usersMap[userId]
 
                                 if (user != null) {
-                                    val profileImageResource = when (user.profileImage) {
-                                        "sarah" -> Res.drawable.sarah
-                                        "alex" -> Res.drawable.alex
-                                        else -> Res.drawable.sarah
-                                    }
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         ProfileAvatar(
+                                            name = user.name,
                                             size = 56.dp,
-                                            imageResource = profileImageResource,
-                                            fallbackText = user.name,
+                                            userProfile = user.profileImage,
                                             backgroundColor = MaterialTheme.colorScheme.secondary,
                                             contentColor = MaterialTheme.colorScheme.onSecondary
                                         )
