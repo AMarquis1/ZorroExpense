@@ -82,12 +82,13 @@ class AddExpenseViewModel(
             try {
                 // Simple date string for now - can be enhanced later
                 val currentDate = "2024-01-01T12:00:00" // TODO: Use proper date/time
-                
+
+                // TODO: add categories split with and split by logics
                 val expense = Expense(
                     name = currentFormState.expenseName.trim(),
                     description = currentFormState.expenseDescription.trim(),
                     price = currentFormState.expensePrice.toDouble(),
-                    date = currentDate
+                    date = currentDate,
                 )
                 
                 addExpenseUseCase(expense)

@@ -6,6 +6,7 @@ import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 
 class ExpenseListViewModel(
     private val getExpensesUseCase: GetExpensesUseCase,
+    private val getCategoriesUseCase: GetCategoriesUseCase,
     private val onExpenseClick: (Expense) -> Unit = {},
     private val onAddExpenseClick: () -> Unit = {}
 ) : ViewModel() {
@@ -47,34 +49,40 @@ class ExpenseListViewModel(
         viewModelScope.launch {
             _uiState.value = ExpenseListUiState.Loading
             
-            getExpensesUseCase()
-                .onSuccess { expenses ->
-                    val initialState = ExpenseListUiState.Success(
+            // Load both expenses and categories
+            val expensesResult = getExpensesUseCase()
+            val categoriesResult = getCategoriesUseCase()
+            
+            if (expensesResult.isSuccess && categoriesResult.isSuccess) {
+                val expenses = expensesResult.getOrThrow()
+                val categories = categoriesResult.getOrThrow()
+                
+                val initialState = ExpenseListUiState.Success(
+                    expenses = expenses,
+                    filteredExpenses = expenses,
+                    selectedCategories = categories.toSet(), // Use real categories from Firestore
+                    searchQuery = "",
+                    isSearchExpanded = false,
+                    sortOption = SortOption.DATE_DESC,
+                    collapsedMonths = emptySet(),
+                    isFabExpanded = true
+                )
+                
+                // Apply initial filtering (which should show all expenses since all categories are selected)
+                _uiState.value = initialState.copy(
+                    filteredExpenses = filterExpenses(
                         expenses = expenses,
-                        filteredExpenses = expenses,
-                        selectedCategories = MockExpenseData.allCategories.toSet(),
                         searchQuery = "",
-                        isSearchExpanded = false,
-                        sortOption = SortOption.DATE_DESC,
-                        collapsedMonths = emptySet(),
-                        isFabExpanded = true
+                        selectedCategories = categories.toSet(),
+                        sortOption = SortOption.DATE_DESC
                     )
-                    
-                    // Apply initial filtering (which should show all expenses since all categories are selected)
-                    _uiState.value = initialState.copy(
-                        filteredExpenses = filterExpenses(
-                            expenses = expenses,
-                            searchQuery = "",
-                            selectedCategories = MockExpenseData.allCategories.toSet(),
-                            sortOption = SortOption.DATE_DESC
-                        )
-                    )
-                }
-                .onFailure { exception ->
-                    _uiState.value = ExpenseListUiState.Error(
-                        message = exception.message ?: "Unknown error occurred"
-                    )
-                }
+                )
+            } else {
+                val error = expensesResult.exceptionOrNull() ?: categoriesResult.exceptionOrNull()
+                _uiState.value = ExpenseListUiState.Error(
+                    message = error?.message ?: "Failed to load data"
+                )
+            }
         }
     }
 
@@ -189,7 +197,10 @@ class ExpenseListViewModel(
 
         filtered = if (selectedCategories.isNotEmpty()) {
             filtered.filter { expense ->
-                selectedCategories.contains(expense.category) || selectedCategories.any { it.name == expense.category.name }
+                // Use name-based comparison since categories from Firestore might be different object instances
+                selectedCategories.any { selectedCategory -> 
+                    selectedCategory.name == expense.category.name 
+                }
             }
         } else {
             emptyList()

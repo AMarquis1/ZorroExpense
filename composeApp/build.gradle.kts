@@ -58,6 +58,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.firebase.common.ktx)
             implementation(libs.firebase.firestore.ktx)
             implementation(libs.compose.material3)
             implementation(libs.android.material)
@@ -65,6 +66,7 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.firebase.common.ktx)
             implementation(libs.firebase.firestore.ktx)
         }
 
@@ -88,6 +90,7 @@ kotlin {
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
             implementation(libs.material.icons)
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
         }
 
         commonTest.dependencies {

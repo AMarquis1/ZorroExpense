@@ -21,7 +21,9 @@ class ExpenseRepositoryImpl(
                 // Use Firestore for production
                 firestoreService.getExpenses()
                     .mapCatching { expenseDtos ->
-                        expenseDtos.map { it.toDomain() }
+                        expenseDtos.map { expenseDto ->
+                            expenseDto.toDomain(firestoreService)
+                        }
                     }
             }
         } catch (e: Exception) {

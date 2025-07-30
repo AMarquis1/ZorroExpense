@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.UserDto
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -83,7 +84,7 @@ actual class FirestoreService actual constructor() {
 
     actual suspend fun getExpenses(): Result<List<ExpenseDto>> {
         return try {
-            val response = httpClient.get("$baseUrl/Expense") {
+            val response = httpClient.get("$baseUrl/expense") {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
                 }
@@ -121,5 +122,25 @@ actual class FirestoreService actual constructor() {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    actual suspend fun getUsers(): Result<List<UserDto>> {
+        // TODO: Implement full WASM support for users
+        return Result.success(emptyList())
+    }
+
+    actual suspend fun getCategories(): Result<List<CategoryDto>> {
+        // TODO: Implement full WASM support for categories
+        return Result.success(emptyList())
+    }
+
+    actual suspend fun getUserById(userId: String): Result<UserDto?> {
+        // TODO: Implement full WASM support for user by ID
+        return Result.success(null)
+    }
+
+    actual suspend fun getCategoryById(categoryId: String): Result<CategoryDto?> {
+        // TODO: Implement full WASM support for category by ID
+        return Result.success(null)
     }
 }

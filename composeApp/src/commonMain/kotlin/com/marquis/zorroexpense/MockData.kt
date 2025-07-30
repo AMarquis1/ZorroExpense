@@ -7,8 +7,8 @@ import com.marquis.zorroexpense.domain.model.User
 object MockExpenseData {
     
     // Predefined users
-    val userSarah = User(userId = "sarah_123", name = "Sarah", profileImage = "sarah")
-    val userAlex = User(userId = "alex_456", name = "Alex", profileImage = "alex")
+    val userSarah = User(userId = "yblRlB470XiMuiJhbxSZ", name = "Sarah", profileImage = "sarah")
+    val userAlex = User(userId = "5KaHBQhJUv6NdU9WuXSm", name = "Alex", profileImage = "alex")
     
     // User lookup map for easy access
     val usersMap = mapOf(
