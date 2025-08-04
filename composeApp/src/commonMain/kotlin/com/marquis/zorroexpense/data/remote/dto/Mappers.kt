@@ -4,9 +4,6 @@ import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.data.remote.FirestoreService
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 // DTO to Domain mappings
 fun UserDto.toDomain(userId: String = ""): User = User(

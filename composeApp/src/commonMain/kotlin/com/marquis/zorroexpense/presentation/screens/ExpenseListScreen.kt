@@ -84,6 +84,7 @@ import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
+import com.marquis.zorroexpense.platform.PullToRefreshBox
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
@@ -112,6 +113,7 @@ fun ExpenseListScreen(
     val sortBy = if (currentState is ExpenseListUiState.Success) currentState.sortOption else SortOption.DATE_DESC
     val collapsedMonths = if (currentState is ExpenseListUiState.Success) currentState.collapsedMonths else emptySet()
     val isLoading = currentState is ExpenseListUiState.Loading
+    val isRefreshing = if (currentState is ExpenseListUiState.Success) currentState.isRefreshing else false
     val errorMessage = if (currentState is ExpenseListUiState.Error) currentState.message else null
 
     val groupedExpenses by remember(filteredExpenses) {
@@ -122,6 +124,8 @@ fun ExpenseListScreen(
                 .toMap()
         }
     }
+
+    // Pull-to-refresh is handled by platform-specific implementation
 
     // Load expenses when screen first appears
     LaunchedEffect(Unit) {
@@ -351,8 +355,12 @@ fun ExpenseListScreen(
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier.fillMaxSize()
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.onEvent(ExpenseListUiEvent.RefreshExpenses) },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
             when {
                 errorMessage != null -> {
@@ -367,7 +375,7 @@ fun ExpenseListScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
-                            top = paddingValues.calculateTopPadding() + 8.dp,
+                            top = 8.dp,
                             bottom = 72.dp
                         )
                     ) {
@@ -411,7 +419,7 @@ fun ExpenseListScreen(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
-                            top = paddingValues.calculateTopPadding() + 8.dp,
+                            top = 8.dp,
                             bottom = with(LocalDensity.current) { 
                                 WindowInsets.navigationBars.getBottom(this).toDp() + 72.dp // 56dp FAB + 16dp spacing
                             }

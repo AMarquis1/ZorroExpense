@@ -2,17 +2,17 @@ package com.marquis.zorroexpense.data.remote.dto
 
 import dev.gitlive.firebase.firestore.Timestamp
 import dev.gitlive.firebase.firestore.DocumentReference
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // Android-specific timestamp conversion
 actual fun Any?.toDateString(): String {
     return when (this) {
         is Timestamp -> {
-            val instant = Instant.fromEpochMilliseconds(this.seconds * 1000 + this.nanoseconds / 1000000)
-            val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-            "${dateTime.year}-${dateTime.monthNumber.toString().padStart(2, '0')}-${dateTime.dayOfMonth.toString().padStart(2, '0')}"
+            val date = Date(this.seconds * 1000 + this.nanoseconds / 1000000)
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            formatter.format(date)
         }
         else -> ""
     }

@@ -14,7 +14,9 @@ sealed class ExpenseListUiState {
         val selectedCategories: Set<Category> = emptySet(),
         val sortOption: SortOption = SortOption.DATE_DESC,
         val collapsedMonths: Set<String> = emptySet(),
-        val isFabExpanded: Boolean = true
+        val isFabExpanded: Boolean = true,
+        val isRefreshing: Boolean = false,
+        val hasInitiallyLoaded: Boolean = false
     ) : ExpenseListUiState()
     
     data class Error(

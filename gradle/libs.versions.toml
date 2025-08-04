@@ -9,14 +9,13 @@ composeMultiplatform = "1.9.0-beta01"
 junit = "4.13.2"
 kotlin = "2.2.0"
 navigationCompose = "2.9.0-beta04"
-coil3 = "3.2.0"
-ktor = "3.2.2"
+coil3 = "3.3.0"
+ktor = "3.2.3"
 ksp = "2.2.0-2.0.2"
 kotlinSerialization = "1.9.0"
 gms = "4.4.3"
 firebase-ktx = "2.1.0"
-serialization = "1.9.0"
-compose-material3 = "1.4.0-alpha18"
+compose-material3 = "1.4.0-beta01"
 android-material = "1.14.0-alpha03"
 material-icons = "1.7.3"
 
@@ -36,6 +35,7 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+ktor-client-caching = { module = "io.ktor:ktor-client-caching", version.ref = "ktor" }
 jetbrains-compose-navigation = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref= "navigationCompose"}
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 firebase-common-ktx = { module = "dev.gitlive:firebase-common", version.ref = "firebase-ktx" }
@@ -54,14 +54,19 @@ jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serializati
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 gms = { id = "com.google.gms.google-services", version.ref = "gms" }
 
-
-
 [bundles]
 ktor = [
     "ktor-client-core",
     "ktor-client-content-negotiation",
     "ktor-client-auth",
     "ktor-client-logging",
+    "ktor-serialization-kotlinx-json",
+]
+ktor-wasm = [
+    "ktor-client-core",
+    "ktor-client-content-negotiation",
+    "ktor-client-logging",
+    "ktor-client-caching",
     "ktor-serialization-kotlinx-json",
 ]
 coil = [

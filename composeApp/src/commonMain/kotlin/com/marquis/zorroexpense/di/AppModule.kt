@@ -52,15 +52,25 @@ object AppModule {
     }
     
     // Presentation Layer (ViewModels)
+    private var expenseListViewModel: ExpenseListViewModel? = null
+    
     fun provideExpenseListViewModel(
         onExpenseClick: (Expense) -> Unit = {},
         onAddExpenseClick: () -> Unit = {}
-    ) = ExpenseListViewModel(
+    ): ExpenseListViewModel {
+        // Get or create singleton instance
+        val viewModel = expenseListViewModel ?: ExpenseListViewModel(
             getExpensesUseCase = getExpensesUseCase,
             getCategoriesUseCase = getCategoriesUseCase,
             onExpenseClick = onExpenseClick,
             onAddExpenseClick = onAddExpenseClick
-        )
+        ).also { expenseListViewModel = it }
+        
+        // Update callbacks if they changed (for navigation)
+        viewModel.updateCallbacks(onExpenseClick, onAddExpenseClick)
+        
+        return viewModel
+    }
     
     fun provideAddExpenseViewModel(): AddExpenseViewModel {
         return AddExpenseViewModel(addExpenseUseCase)

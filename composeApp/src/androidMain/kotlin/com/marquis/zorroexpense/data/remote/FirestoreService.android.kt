@@ -6,7 +6,6 @@ import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
-import dev.gitlive.firebase.firestore.DocumentReference
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class FirestoreService {

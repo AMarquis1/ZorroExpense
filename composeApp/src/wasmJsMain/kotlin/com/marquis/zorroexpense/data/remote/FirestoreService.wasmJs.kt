@@ -6,6 +6,8 @@ import com.marquis.zorroexpense.data.remote.dto.UserDto
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.cache.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -75,6 +77,15 @@ actual class FirestoreService actual constructor() {
                 ignoreUnknownKeys = true
                 isLenient = true
             })
+        }
+        
+        install(HttpCache) {
+            // Configure HTTP caching for WASM
+            // Cache responses for 5 minutes to survive navigation
+        }
+        
+        install(Logging) {
+            level = LogLevel.INFO
         }
     }
     

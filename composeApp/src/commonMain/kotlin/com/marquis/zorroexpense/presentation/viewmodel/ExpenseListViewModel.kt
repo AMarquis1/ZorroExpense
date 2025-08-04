@@ -19,21 +19,30 @@ import kotlinx.coroutines.launch
 class ExpenseListViewModel(
     private val getExpensesUseCase: GetExpensesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val onExpenseClick: (Expense) -> Unit = {},
-    private val onAddExpenseClick: () -> Unit = {}
+    private var onExpenseClick: (Expense) -> Unit = {},
+    private var onAddExpenseClick: () -> Unit = {}
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ExpenseListUiState>(ExpenseListUiState.Loading)
     val uiState: StateFlow<ExpenseListUiState> = _uiState.asStateFlow()
 
     init {
-        loadExpenses()
+        // Load expenses on initialization - Firestore cache makes this instant after first load
+        loadExpenses(isRefresh = false)
+    }
+
+    fun updateCallbacks(
+        onExpenseClick: (Expense) -> Unit,
+        onAddExpenseClick: () -> Unit
+    ) {
+        this.onExpenseClick = onExpenseClick
+        this.onAddExpenseClick = onAddExpenseClick
     }
 
     fun onEvent(event: ExpenseListUiEvent) {
         when (event) {
-            is ExpenseListUiEvent.LoadExpenses -> loadExpenses()
-            is ExpenseListUiEvent.RefreshExpenses -> loadExpenses()
+            is ExpenseListUiEvent.LoadExpenses -> loadExpenses(isRefresh = false)
+            is ExpenseListUiEvent.RefreshExpenses -> loadExpenses(isRefresh = true)
             is ExpenseListUiEvent.SearchQueryChanged -> updateSearchQuery(event.query)
             is ExpenseListUiEvent.SearchExpandedChanged -> updateSearchExpanded(event.isExpanded)
             is ExpenseListUiEvent.CategoryToggled -> toggleCategory(event.category)
@@ -45,9 +54,17 @@ class ExpenseListViewModel(
         }
     }
 
-    private fun loadExpenses() {
+    private fun loadExpenses(isRefresh: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = ExpenseListUiState.Loading
+            val currentState = _uiState.value
+            
+            // For initial load, show loading state
+            // For refresh, keep existing data visible and set isRefreshing = true
+            if (!isRefresh) {
+                _uiState.value = ExpenseListUiState.Loading
+            } else if (currentState is ExpenseListUiState.Success) {
+                _uiState.value = currentState.copy(isRefreshing = true)
+            }
             
             // Load both expenses and categories
             val expensesResult = getExpensesUseCase()
@@ -57,31 +74,50 @@ class ExpenseListViewModel(
                 val expenses = expensesResult.getOrThrow()
                 val categories = categoriesResult.getOrThrow()
                 
-                val initialState = ExpenseListUiState.Success(
+                // Preserve existing UI state if refreshing, otherwise use defaults
+                val existingState = if (isRefresh && currentState is ExpenseListUiState.Success) {
+                    currentState
+                } else {
+                    ExpenseListUiState.Success()
+                }
+                
+                val newState = ExpenseListUiState.Success(
                     expenses = expenses,
                     filteredExpenses = expenses,
-                    selectedCategories = categories.toSet(), // Use real categories from Firestore
-                    searchQuery = "",
-                    isSearchExpanded = false,
-                    sortOption = SortOption.DATE_DESC,
-                    collapsedMonths = emptySet(),
-                    isFabExpanded = true
+                    selectedCategories = if (isRefresh && currentState is ExpenseListUiState.Success) {
+                        currentState.selectedCategories
+                    } else {
+                        categories.toSet() // Use all categories for initial load
+                    },
+                    searchQuery = existingState.searchQuery,
+                    isSearchExpanded = existingState.isSearchExpanded,
+                    sortOption = existingState.sortOption,
+                    collapsedMonths = existingState.collapsedMonths,
+                    isFabExpanded = existingState.isFabExpanded,
+                    isRefreshing = false,
+                    hasInitiallyLoaded = true
                 )
                 
-                // Apply initial filtering (which should show all expenses since all categories are selected)
-                _uiState.value = initialState.copy(
+                // Apply filtering with current filters
+                _uiState.value = newState.copy(
                     filteredExpenses = filterExpenses(
                         expenses = expenses,
-                        searchQuery = "",
-                        selectedCategories = categories.toSet(),
-                        sortOption = SortOption.DATE_DESC
+                        searchQuery = newState.searchQuery,
+                        selectedCategories = newState.selectedCategories,
+                        sortOption = newState.sortOption
                     )
                 )
             } else {
                 val error = expensesResult.exceptionOrNull() ?: categoriesResult.exceptionOrNull()
-                _uiState.value = ExpenseListUiState.Error(
-                    message = error?.message ?: "Failed to load data"
-                )
+                if (isRefresh && currentState is ExpenseListUiState.Success) {
+                    // If refresh fails, keep existing data but show error somehow
+                    // For now, just stop refreshing
+                    _uiState.value = currentState.copy(isRefreshing = false)
+                } else {
+                    _uiState.value = ExpenseListUiState.Error(
+                        message = error?.message ?: "Failed to load data"
+                    )
+                }
             }
         }
     }

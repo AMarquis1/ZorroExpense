@@ -71,7 +71,7 @@ kotlin {
         }
 
         wasmJsMain.dependencies {
-            implementation(libs.ktor.client.core)
+            implementation(libs.bundles.ktor.wasm)
         }
 
         commonMain.dependencies {
@@ -90,7 +90,6 @@ kotlin {
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
             implementation(libs.material.icons)
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
         }
 
         commonTest.dependencies {

@@ -6,10 +6,23 @@ import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
+import dev.gitlive.firebase.firestore.firestoreSettings
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class FirestoreService {
-    private val firestore = Firebase.firestore
+    private val firestore = Firebase.firestore.apply {
+        // Configure Firestore with offline persistence for iOS using GitLive API
+        try {
+            settings = firestoreSettings {
+                sslEnabled = true
+                // Note: GitLive Firebase SDK enables offline persistence by default on iOS
+                // The persistent cache will be configured automatically
+            }
+        } catch (e: Exception) {
+            // Settings might already be configured, that's okay
+            println("FirestoreService iOS: Settings already configured or error: ${e.message}")
+        }
+    }
 
     actual suspend fun getExpenses(): Result<List<ExpenseDto>> {
         return try {
