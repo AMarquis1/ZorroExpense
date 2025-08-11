@@ -200,11 +200,8 @@ private fun ExpenseCardContent(
                 if (expense.splitWith.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     SplitUsersRow(
-                        userIds = expense.splitWith,
-                        buyerId = expense.paidBy,
-                        expense = expense,
-                        sharedTransitionScope = sharedTransitionScope,
-                        animatedContentScope = animatedContentScope
+                        users = expense.splitWith,
+                        buyer = expense.paidBy,
                     )
                 }
             }
@@ -249,11 +246,8 @@ private fun ExpenseDateDisplay(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun SplitUsersRow(
-    userIds: List<String>,
-    buyerId: String,
-    expense: Expense,
-    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
-    animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
+    users: List<com.marquis.zorroexpense.domain.model.User>,
+    buyer: com.marquis.zorroexpense.domain.model.User,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -261,16 +255,13 @@ private fun SplitUsersRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        val buyer = MockExpenseData.usersMap[buyerId]
-        if (buyer != null) {
-            ProfileAvatar(
-                name = buyer.name,
-                size = 32.dp,
-                userProfile = buyer.profileImage
-            )
-        }
+        ProfileAvatar(
+            name = buyer.name,
+            size = 32.dp,
+            userProfile = buyer.profileImage
+        )
 
-        val otherUsers = userIds.filter { it != buyerId }
+        val otherUsers = users.filter { it.userId != buyer.userId }
         if (otherUsers.isNotEmpty()) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
@@ -281,16 +272,12 @@ private fun SplitUsersRow(
                     .padding(horizontal = 2.dp)
             )
 
-            otherUsers.forEach { userId ->
-                val user = MockExpenseData.usersMap[userId]
-                if (user != null) {
-
-                    ProfileAvatar(
-                        name = user.name,
-                        size = 20.dp,
-                        userProfile = user.profileImage
-                    )
-                }
+            otherUsers.forEach { user ->
+                ProfileAvatar(
+                    name = user.name,
+                    size = 20.dp,
+                    userProfile = user.profileImage
+                )
             }
         }
     }
