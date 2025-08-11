@@ -31,8 +31,8 @@ object MockExpenseData {
             price = 1250.00,
             date = "2024-01-01T09:00:00Z",
             category = categoryLoyer,
-            paidBy = userSarah.userId,
-            splitWith = listOf(userSarah.userId, userAlex.userId)
+            paidBy = userSarah,
+            splitWith = listOf(userSarah, userAlex)
         ),
         Expense(
             name = "Épicerie IGA",
@@ -40,8 +40,8 @@ object MockExpenseData {
             price = 89.95,
             date = "2024-01-15T14:30:00Z",
             category = categoryEpicerie,
-            paidBy = userSarah.userId,
-            splitWith = listOf(userSarah.userId, userAlex.userId)
+            paidBy = userSarah,
+            splitWith = listOf(userSarah, userAlex)
         ),
         Expense(
             name = "Épicerie Metro",
@@ -49,8 +49,8 @@ object MockExpenseData {
             price = 32.48,
             date = "2024-01-14T11:15:00Z",
             category = categoryEpicerie,
-            paidBy = userAlex.userId,
-            splitWith = listOf(userAlex.userId)
+            paidBy = userAlex,
+            splitWith = listOf(userAlex)
         ),
         Expense(
             name = "Loyer Février",
@@ -58,8 +58,8 @@ object MockExpenseData {
             price = 1250.00,
             date = "2024-02-01T09:00:00Z",
             category = categoryLoyer,
-            paidBy = userAlex.userId,
-            splitWith = listOf(userSarah.userId, userAlex.userId)
+            paidBy = userAlex,
+            splitWith = listOf(userSarah, userAlex)
         ),
         Expense(
             name = "Épicerie Maxi",
@@ -67,8 +67,8 @@ object MockExpenseData {
             price = 45.75,
             date = "2024-01-13T16:45:00Z",
             category = categoryEpicerie,
-            paidBy = userSarah.userId,
-            splitWith = listOf(userSarah.userId, userAlex.userId)
+            paidBy = userSarah,
+            splitWith = listOf(userSarah, userAlex)
         ),
         Expense(
             name = "Épicerie Provigo avec un tres long nom",
@@ -76,8 +76,8 @@ object MockExpenseData {
             price = 67.99,
             date = "2024-02-12T10:20:00Z",
             category = categoryEpicerie,
-            paidBy = userAlex.userId,
-            splitWith = listOf(userAlex.userId, userSarah.userId)
+            paidBy = userAlex,
+            splitWith = listOf(userAlex, userSarah)
         ),
         Expense(
             name = "Épicerie Costco",
@@ -85,8 +85,8 @@ object MockExpenseData {
             price = 156.30,
             date = "2024-01-11T13:30:00Z",
             category = categoryEpicerie,
-            paidBy = userSarah.userId,
-            splitWith = listOf(userSarah.userId, userAlex.userId)
+            paidBy = userSarah,
+            splitWith = listOf(userSarah, userAlex)
         ),
         Expense(
             name = "Loyer Mars",
@@ -94,8 +94,8 @@ object MockExpenseData {
             price = 1250.00,
             date = "2024-03-01T09:00:00Z",
             category = categoryLoyer,
-            paidBy = userSarah.userId,
-            splitWith = listOf(userSarah.userId, userAlex.userId)
+            paidBy = userSarah,
+            splitWith = listOf(userSarah, userAlex)
         ),
         Expense(
             name = "Épicerie Loblaws",
@@ -103,8 +103,8 @@ object MockExpenseData {
             price = 78.50,
             date = "2024-01-07T17:20:00Z",
             category = categoryEpicerie,
-            paidBy = userAlex.userId,
-            splitWith = listOf(userAlex.userId, userSarah.userId)
+            paidBy = userAlex,
+            splitWith = listOf(userAlex, userSarah)
         ),
         Expense(
             name = "Épicerie Jean Coutu",
@@ -112,8 +112,8 @@ object MockExpenseData {
             price = 23.99,
             date = "2024-01-06T14:10:00Z",
             category = categoryEpicerie,
-            paidBy = userAlex.userId,
-            splitWith = listOf(userAlex.userId)
+            paidBy = userAlex,
+            splitWith = listOf(userAlex)
         ),
         Expense(
             name = "Nourriture pour Zorro",
@@ -121,8 +121,8 @@ object MockExpenseData {
             price = 174.50,
             date = "2024-01-20T16:30:00Z",
             category = categoryZorro,
-            paidBy = userSarah.userId,
-            splitWith = listOf(userSarah.userId, userAlex.userId)
+            paidBy = userSarah,
+            splitWith = listOf(userSarah, userAlex)
         )
     )
     
