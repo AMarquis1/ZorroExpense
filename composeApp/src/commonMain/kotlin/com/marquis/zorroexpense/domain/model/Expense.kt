@@ -6,6 +6,6 @@ data class Expense(
     val price: Double = 0.0,
     val date: String = "",
     val category: Category = Category(),
-    val paidBy: String = "", // userId of who paid
-    val splitWith: List<String> = emptyList() // List of userIds who split the expense
+    val paidBy: User = User(), // User object of who paid
+    val splitWith: List<User> = emptyList() // List of User objects who split the expense
 )
