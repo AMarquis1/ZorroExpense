@@ -73,7 +73,9 @@ fun App() {
                     }
 
                     composable<AppDestinations.AddExpense> {
+                        val viewModel = AppModule.provideAddExpenseViewModel()
                         AddExpenseScreen(
+                            viewModel = viewModel,
                             onBackClick = {
                                 navController.popBackStack()
                             },

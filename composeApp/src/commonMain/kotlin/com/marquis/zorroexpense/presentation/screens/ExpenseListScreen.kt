@@ -89,6 +89,7 @@ fun ExpenseListScreen(
     animatedContentScope: AnimatedContentScope
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val availableCategories by viewModel.availableCategories.collectAsState()
     
     // Local UI state for things not managed by ViewModel
     var showConfigMenu by remember { mutableStateOf(false) }
@@ -371,6 +372,7 @@ fun ExpenseListScreen(
                         // Category filter row
                         item {
                             CategoryFilterRow(
+                                categories = availableCategories,
                                 selectedCategories = selectedCategories,
                                 onCategoryToggle = { category: Category ->
                                     viewModel.onEvent(ExpenseListUiEvent.CategoryToggled(category))
@@ -417,6 +419,7 @@ fun ExpenseListScreen(
                         // Category filter row - always first item
                         item {
                             CategoryFilterRow(
+                                categories = availableCategories,
                                 selectedCategories = selectedCategories,
                                 onCategoryToggle = { category: Category ->
                                     viewModel.onEvent(ExpenseListUiEvent.CategoryToggled(category))

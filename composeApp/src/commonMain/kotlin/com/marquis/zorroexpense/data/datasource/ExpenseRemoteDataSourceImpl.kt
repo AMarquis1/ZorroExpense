@@ -4,6 +4,7 @@ import com.marquis.zorroexpense.AppConfig
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.toDomain
+import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.Expense
 
 /**
@@ -34,11 +35,12 @@ class ExpenseRemoteDataSourceImpl(
     override suspend fun addExpense(expense: Expense): Result<Unit> {
         return try {
             if (AppConfig.USE_MOCK_DATA) {
-                // Mock implementation - in real app would call firestoreService.addExpense()
+                // Mock implementation - just return success
                 Result.success(Unit)
             } else {
-                // TODO: Implement when FirestoreService.addExpense() is available
-                Result.failure(NotImplementedError("Remote addExpense not yet implemented"))
+                // Convert domain expense to DTO and save to Firestore
+                val expenseDto = expense.toDto()
+                firestoreService.addExpense(expenseDto)
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -48,11 +50,13 @@ class ExpenseRemoteDataSourceImpl(
     override suspend fun updateExpense(expense: Expense): Result<Unit> {
         return try {
             if (AppConfig.USE_MOCK_DATA) {
-                // Mock implementation - in real app would call firestoreService.updateExpense()
+                // Mock implementation - just return success
                 Result.success(Unit)
             } else {
-                // TODO: Implement when FirestoreService.updateExpense() is available
-                Result.failure(NotImplementedError("Remote updateExpense not yet implemented"))
+                // Convert domain expense to DTO and update in Firestore
+                val expenseDto = expense.toDto()
+                // Note: For update we would need expense ID, this is a simplified implementation
+                Result.failure(NotImplementedError("Update requires expense ID - to be implemented with proper ID handling"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -62,11 +66,11 @@ class ExpenseRemoteDataSourceImpl(
     override suspend fun deleteExpense(expenseId: String): Result<Unit> {
         return try {
             if (AppConfig.USE_MOCK_DATA) {
-                // Mock implementation - in real app would call firestoreService.deleteExpense()
+                // Mock implementation - just return success
                 Result.success(Unit)
             } else {
-                // TODO: Implement when FirestoreService.deleteExpense() is available
-                Result.failure(NotImplementedError("Remote deleteExpense not yet implemented"))
+                // Delete from Firestore
+                firestoreService.deleteExpense(expenseId)
             }
         } catch (e: Exception) {
             Result.failure(e)

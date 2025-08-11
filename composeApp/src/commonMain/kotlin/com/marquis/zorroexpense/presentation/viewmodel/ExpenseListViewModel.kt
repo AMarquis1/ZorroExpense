@@ -2,11 +2,10 @@ package com.marquis.zorroexpense.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
-import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
@@ -27,6 +26,9 @@ class ExpenseListViewModel(
 
     private val _uiState = MutableStateFlow<ExpenseListUiState>(ExpenseListUiState.Loading)
     val uiState: StateFlow<ExpenseListUiState> = _uiState.asStateFlow()
+    
+    private val _availableCategories = MutableStateFlow<List<Category>>(emptyList())
+    val availableCategories: StateFlow<List<Category>> = _availableCategories.asStateFlow()
     
     private var hasLoadedOnce = false
 
@@ -99,6 +101,9 @@ class ExpenseListViewModel(
                 val expenses = expensesResult.getOrThrow()
                 val categories = categoriesResult.getOrThrow()
                 
+                // Update available categories for the UI
+                _availableCategories.value = categories
+                
                 // Preserve existing UI state if refreshing, otherwise use defaults
                 val existingState = if (isRefresh && currentState is ExpenseListUiState.Success) {
                     currentState
@@ -106,14 +111,16 @@ class ExpenseListViewModel(
                     ExpenseListUiState.Success()
                 }
                 
+                val selectedCats = if (isRefresh && currentState is ExpenseListUiState.Success) {
+                    currentState.selectedCategories
+                } else {
+                    categories.toSet() // Use all categories for initial load
+                }
+                
                 val newState = ExpenseListUiState.Success(
                     expenses = expenses,
                     filteredExpenses = expenses,
-                    selectedCategories = if (isRefresh && currentState is ExpenseListUiState.Success) {
-                        currentState.selectedCategories
-                    } else {
-                        categories.toSet() // Use all categories for initial load
-                    },
+                    selectedCategories = selectedCats,
                     searchQuery = existingState.searchQuery,
                     isSearchExpanded = existingState.isSearchExpanded,
                     sortOption = existingState.sortOption,
@@ -258,9 +265,14 @@ class ExpenseListViewModel(
 
         filtered = if (selectedCategories.isNotEmpty()) {
             filtered.filter { expense ->
-                // Use name-based comparison since categories from Firestore might be different object instances
                 selectedCategories.any { selectedCategory -> 
-                    selectedCategory.name == expense.category.name 
+                    // First try documentId comparison for more reliable matching
+                    if (selectedCategory.documentId.isNotBlank() && expense.category.documentId.isNotBlank()) {
+                        selectedCategory.documentId == expense.category.documentId
+                    } else {
+                        // Fallback to name-based comparison for backward compatibility
+                        selectedCategory.name == expense.category.name
+                    }
                 }
             }
         } else {

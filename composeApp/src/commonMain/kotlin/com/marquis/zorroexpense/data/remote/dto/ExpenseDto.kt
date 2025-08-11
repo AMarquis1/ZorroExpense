@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.data.remote.dto
 
 // Common interface for platform-specific ExpenseDto implementations
 interface ExpenseDto {
+//    val documentId: String
     val description: String
     val name: String
     val price: Double

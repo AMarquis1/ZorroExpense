@@ -40,10 +40,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
@@ -56,6 +58,9 @@ import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
+import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
+import com.marquis.zorroexpense.presentation.state.AddExpenseUiEvent
+import com.marquis.zorroexpense.presentation.state.AddExpenseUiState
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.PaidBySelectionBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.SplitMethodBottomSheet
@@ -71,35 +76,55 @@ private const val MIN_EXPENSE_AMOUNT = 0.01
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
+    viewModel: AddExpenseViewModel,
     onBackClick: () -> Unit,
     onExpenseSaved: () -> Unit = {}
 ) {
-    // State variables
-    var expenseName by remember { mutableStateOf("") }
-    var expenseDescription by remember { mutableStateOf("") }
-    var expensePrice by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<Category?>(null) }
-    var selectedPaidByUser by remember { mutableStateOf<User?>(null) }
-    var selectedSplitWithUsers by remember { mutableStateOf<List<User>>(emptyList()) }
-    var splitMethod by remember { mutableStateOf(SplitMethod.PERCENTAGE) }
-    var percentageSplits by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
-    var numberSplits by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
+    val uiState by viewModel.uiState.collectAsState()
+    val formState by viewModel.formState.collectAsState()
+    // State variables from ViewModel
+    val expenseName = formState.expenseName
+    val expenseDescription = formState.expenseDescription
+    val expensePrice = formState.expensePrice
+    val selectedCategory = formState.selectedCategory
+    val selectedPaidByUser = formState.selectedPaidByUser
+    val selectedSplitWithUsers = formState.selectedSplitWithUsers
+    val splitMethod = formState.splitMethod
+    val percentageSplits = formState.percentageSplits
+    val numberSplits = formState.numberSplits
     var showCategoryBottomSheet by remember { mutableStateOf(false) }
     var showPaidByBottomSheet by remember { mutableStateOf(false) }
     var showSplitWithBottomSheet by remember { mutableStateOf(false) }
+    
+    // Handle UI state changes
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is AddExpenseUiState.Success -> {
+                onExpenseSaved()
+            }
+            is AddExpenseUiState.Error -> {
+                // Error message will be shown in the UI
+            }
+            else -> { /* Handle other states */ }
+        }
+    }
     var showSplitMethodBottomSheet by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    // Loading and error state from ViewModel
+    val isLoading = uiState is AddExpenseUiState.Loading
+    val errorMessage = when (val state = uiState) {
+        is AddExpenseUiState.Error -> state.message
+        else -> null
+    }
     
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
     
-    // Validation logic
-    val isNameValid = expenseName.length >= MIN_EXPENSE_NAME_LENGTH
-    val isPriceValid = expensePrice.isNotBlank() && expensePrice.toDoubleOrNull()?.let { it >= MIN_EXPENSE_AMOUNT } == true
-    val isCategoryValid = selectedCategory != null
-    val isPaidByValid = selectedPaidByUser != null
-    val isFormValid = isNameValid && isPriceValid && isCategoryValid && isPaidByValid
+    // Validation from ViewModel
+    val isNameValid = formState.isNameValid
+    val isPriceValid = formState.isPriceValid
+    val isCategoryValid = formState.isCategoryValid
+    val isPaidByValid = formState.isPaidByValid
+    val isFormValid = formState.isFormValid
     
     // Bottom sheet states
     val categoryBottomSheetState = rememberModalBottomSheetState()
@@ -107,8 +132,8 @@ fun AddExpenseScreen(
     val splitWithBottomSheetState = rememberModalBottomSheetState()
     val splitMethodBottomSheetState = rememberModalBottomSheetState()
     
-    // Available options from MockData
-    val availableCategories = MockExpenseData.allCategories
+    // Get categories from ViewModel instead of MockData
+    val availableCategories by viewModel.categories.collectAsState()
     val availableUsers = listOf(MockExpenseData.userSarah, MockExpenseData.userAlex)
     
     Scaffold(
@@ -175,7 +200,7 @@ fun AddExpenseScreen(
                         // Expense Name Field
                         OutlinedTextField(
                             value = expenseName,
-                            onValueChange = { expenseName = it },
+                            onValueChange = { viewModel.onEvent(AddExpenseUiEvent.NameChanged(it)) },
                             label = { Text("Expense Name") },
                             placeholder = { Text("ex: Croquette, Alfa Longueuil, Café tope") },
                             leadingIcon = {
@@ -209,10 +234,7 @@ fun AddExpenseScreen(
                             OutlinedTextField(
                                 value = expensePrice,
                                 onValueChange = { newValue ->
-                                    // Only allow numbers and decimal point
-                                    if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
-                                        expensePrice = newValue
-                                    }
+                                    viewModel.onEvent(AddExpenseUiEvent.PriceChanged(newValue))
                                 },
                                 label = { Text("Amount") },
                                 placeholder = { Text("0.00") },
@@ -329,23 +351,7 @@ fun AddExpenseScreen(
                             expenseAmount = expensePrice.toFloatOrNull() ?: 0f,
                             onAddClick = { showSplitWithBottomSheet = true },
                             onRemoveUser = { user ->
-                                selectedSplitWithUsers = selectedSplitWithUsers.filter { it.userId != user.userId }
-                                // Remove from split maps when user is removed
-                                percentageSplits = percentageSplits - user.userId
-                                numberSplits = numberSplits - user.userId
-                                // Recalculate equal splits for remaining users
-                                if (selectedSplitWithUsers.isNotEmpty()) {
-                                    val remainingUsers = selectedSplitWithUsers.filter { it.userId != user.userId }
-                                    val equalPercentage = 100f / remainingUsers.size
-                                    percentageSplits = remainingUsers.associate { it.userId to equalPercentage }
-                                    
-                                    // Also update number splits to match the new percentages
-                                    val totalExpense = expensePrice.toFloatOrNull() ?: 0f
-                                    if (totalExpense > 0) {
-                                        val equalAmount = totalExpense / remainingUsers.size
-                                        numberSplits = remainingUsers.associate { it.userId to equalAmount }
-                                    }
-                                }
+                                viewModel.onEvent(AddExpenseUiEvent.RemoveUserFromSplit(user))
                             }
                         )
                         
@@ -382,7 +388,7 @@ fun AddExpenseScreen(
 
                         OutlinedTextField(
                             value = expenseDescription,
-                            onValueChange = { expenseDescription = it },
+                            onValueChange = { viewModel.onEvent(AddExpenseUiEvent.DescriptionChanged(it)) },
                             label = { Text("Note (Optional)") },
                             placeholder = { Text("Add notes about this expense...") },
                             leadingIcon = {
@@ -422,7 +428,7 @@ fun AddExpenseScreen(
                     
                     Button(
                         onClick = {
-                            //todo: Implement save logic
+                            viewModel.onEvent(AddExpenseUiEvent.SaveExpense)
                         },
                         modifier = Modifier.weight(1f),
                         enabled = isFormValid && !isLoading,
@@ -443,18 +449,29 @@ fun AddExpenseScreen(
                 // Error Message
                 errorMessage?.let { error ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.onEvent(AddExpenseUiEvent.DismissError) },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(
-                            text = error,
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                text = "Tap to dismiss",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -465,7 +482,7 @@ fun AddExpenseScreen(
             CategorySelectionBottomSheet(
                 categories = availableCategories,
                 onCategorySelected = { category ->
-                    selectedCategory = category
+                    viewModel.onEvent(AddExpenseUiEvent.CategoryChanged(category))
                     showCategoryBottomSheet = false
                 },
                 onDismiss = {
@@ -480,21 +497,14 @@ fun AddExpenseScreen(
             PaidBySelectionBottomSheet(
                 users = availableUsers,
                 onUserSelected = { user ->
-                    selectedPaidByUser = user
+                    viewModel.onEvent(AddExpenseUiEvent.PaidByChanged(user))
                     // Automatically add the payer to split with if not already included
-                    if (!selectedSplitWithUsers.any { it.userId == user.userId }) {
-                        selectedSplitWithUsers = selectedSplitWithUsers + user
+                    val updatedSplitWithUsers = if (!selectedSplitWithUsers.any { it.userId == user.userId }) {
+                        selectedSplitWithUsers + user
+                    } else {
+                        selectedSplitWithUsers
                     }
-                    // Recalculate equal percentage split
-                    val equalPercentage = 100f / selectedSplitWithUsers.size
-                    percentageSplits = selectedSplitWithUsers.associate { it.userId to equalPercentage }
-                    
-                    // Also update number splits to match the new percentages
-                    val totalExpense = expensePrice.toFloatOrNull() ?: 0f
-                    if (totalExpense > 0) {
-                        val equalAmount = totalExpense / selectedSplitWithUsers.size
-                        numberSplits = selectedSplitWithUsers.associate { it.userId to equalAmount }
-                    }
+                    viewModel.onEvent(AddExpenseUiEvent.SplitWithChanged(updatedSplitWithUsers))
                     showPaidByBottomSheet = false
                 },
                 onDismiss = {
@@ -511,25 +521,16 @@ fun AddExpenseScreen(
                 selectedUsers = selectedSplitWithUsers,
                 paidByUser = selectedPaidByUser,
                 onUserToggled = { user ->
-                    if (selectedSplitWithUsers.any { it.userId == user.userId }) {
-                        // Remove user (only if not the payer)
+                    val updatedSplitWithUsers = if (selectedSplitWithUsers.any { it.userId == user.userId }) {
                         if (user.userId != selectedPaidByUser?.userId) {
-                            selectedSplitWithUsers = selectedSplitWithUsers.filter { it.userId != user.userId }
+                            selectedSplitWithUsers.filter { it.userId != user.userId }
+                        } else {
+                            selectedSplitWithUsers
                         }
                     } else {
-                        // Add user
-                        selectedSplitWithUsers = selectedSplitWithUsers + user
+                        selectedSplitWithUsers + user
                     }
-                    // Recalculate equal splits when user is added or removed
-                    val equalPercentage = 100f / selectedSplitWithUsers.size
-                    percentageSplits = selectedSplitWithUsers.associate { it.userId to equalPercentage }
-                    
-                    // Also update number splits to match the new percentages
-                    val totalExpense = expensePrice.toFloatOrNull() ?: 0f
-                    if (totalExpense > 0) {
-                        val equalAmount = totalExpense / selectedSplitWithUsers.size
-                        numberSplits = selectedSplitWithUsers.associate { it.userId to equalAmount }
-                    }
+                    viewModel.onEvent(AddExpenseUiEvent.SplitWithChanged(updatedSplitWithUsers))
                 },
                 onDismiss = {
                     showSplitWithBottomSheet = false
@@ -546,85 +547,15 @@ fun AddExpenseScreen(
                 percentageSplits = percentageSplits,
                 numberSplits = numberSplits,
                 expenseAmount = expensePrice.toFloatOrNull() ?: 0f,
-                onMethodChanged = { method -> splitMethod = method },
+                onMethodChanged = { method -> viewModel.onEvent(AddExpenseUiEvent.SplitMethodChanged(method)) },
                 onPercentageChanged = { userId, percentage -> 
-                    // Update the changed user's percentage
-                    val updatedSplits = percentageSplits + (userId to percentage)
-                    
-                    // Calculate the remaining percentage to distribute among other users
-                    val remainingPercentage = 100f - percentage
-                    val otherUsers = selectedSplitWithUsers.filter { it.userId != userId }
-                    
-                    if (otherUsers.isNotEmpty()) {
-                        // Distribute remaining percentage equally among other users
-                        val equalShare = remainingPercentage / otherUsers.size
-                        val balancedSplits = updatedSplits + otherUsers.associate { it.userId to equalShare }
-                        percentageSplits = balancedSplits
-                        
-                        // Update amounts to match the new percentages
-                        val totalExpense = expensePrice.toFloatOrNull() ?: 0f
-                        if (totalExpense > 0) {
-                            val updatedAmounts = balancedSplits.mapValues { (_, percentageValue) ->
-                                (percentageValue / 100f) * totalExpense
-                            }
-                            numberSplits = updatedAmounts
-                        }
-                    } else {
-                        percentageSplits = updatedSplits
-                        // Update amount for just this user if total is valid  
-                        val totalExpense = expensePrice.toFloatOrNull() ?: 0f
-                        if (totalExpense > 0) {
-                            val amount = (percentage / 100f) * totalExpense
-                            numberSplits = numberSplits + (userId to amount)
-                        }
-                    }
+                    viewModel.onEvent(AddExpenseUiEvent.PercentageChanged(userId, percentage))
                 },
                 onResetToEqual = {
-                    if (splitMethod == SplitMethod.PERCENTAGE) {
-                        // Reset all users to equal percentage split
-                        val equalPercentage = 100f / selectedSplitWithUsers.size
-                        percentageSplits = selectedSplitWithUsers.associate { it.userId to equalPercentage }
-                    } else {
-                        // Reset all users to equal amount split
-                        val totalExpense = expensePrice.toFloatOrNull() ?: 0f
-                        if (totalExpense > 0) {
-                            val equalAmount = totalExpense / selectedSplitWithUsers.size
-                            numberSplits = selectedSplitWithUsers.associate { it.userId to equalAmount }
-                        }
-                    }
+                    viewModel.onEvent(AddExpenseUiEvent.ResetToEqualSplits)
                 },
                 onNumberChanged = { userId, amount -> 
-                    // Update the changed user's amount
-                    val updatedSplits = numberSplits + (userId to amount)
-                    
-                    // Calculate the remaining amount to distribute among other users
-                    val totalExpense = expensePrice.toFloatOrNull() ?: 0f
-                    if (totalExpense > 0) {
-                        val remainingAmount = totalExpense - amount
-                        val otherUsers = selectedSplitWithUsers.filter { it.userId != userId }
-                        
-                        if (otherUsers.isNotEmpty() && remainingAmount >= 0) {
-                            // Distribute remaining amount equally among other users
-                            val equalShare = remainingAmount / otherUsers.size
-                            val balancedSplits = updatedSplits + otherUsers.associate { it.userId to equalShare }
-                            numberSplits = balancedSplits
-                            
-                            // Update percentages to match the new amounts
-                            val updatedPercentages = balancedSplits.mapValues { (_, amountValue) ->
-                                (amountValue / totalExpense) * 100f
-                            }
-                            percentageSplits = updatedPercentages
-                        } else {
-                            numberSplits = updatedSplits
-                            // Update percentage for just this user if total is valid
-                            if (totalExpense > 0) {
-                                val percentage = (amount / totalExpense) * 100f
-                                percentageSplits = percentageSplits + (userId to percentage)
-                            }
-                        }
-                    } else {
-                        numberSplits = updatedSplits
-                    }
+                    viewModel.onEvent(AddExpenseUiEvent.NumberChanged(userId, amount))
                 },
                 onDismiss = { showSplitMethodBottomSheet = false },
                 bottomSheetState = splitMethodBottomSheetState

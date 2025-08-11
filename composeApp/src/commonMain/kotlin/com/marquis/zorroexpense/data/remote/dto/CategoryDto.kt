@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CategoryDto(
+    val documentId: String = "",
     @SerialName("name")
     val name: String = "",
     @SerialName("icon")

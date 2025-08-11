@@ -488,6 +488,7 @@ fun getMonthYear(timestamp: String): String {
  */
 @Composable
 fun CategoryFilterRow(
+    categories: List<Category>,
     selectedCategories: Set<Category>,
     onCategoryToggle: (Category) -> Unit,
     modifier: Modifier = Modifier
@@ -497,13 +498,13 @@ fun CategoryFilterRow(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        MockExpenseData.allCategories.forEachIndexed { index, category ->
+        categories.forEachIndexed { index, category ->
             val isSelected = selectedCategories.contains(category)
             
             SegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = MockExpenseData.allCategories.size
+                    count = categories.size
                 ),
                 checked = isSelected,
                 onCheckedChange = { onCategoryToggle(category) },

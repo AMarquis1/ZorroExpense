@@ -17,9 +17,9 @@ object MockExpenseData {
     )
     
     // Predefined categories (using Material Icon names)
-    val categoryLoyer = Category(name = "Loyer", icon = "Home", color = "#2196F3") // Home icon for housing
-    val categoryEpicerie = Category(name = "Épicerie", icon = "ShoppingCart", color = "#4CAF50") // Shopping cart for groceries
-    val categoryZorro = Category(name = "Zorro", icon = "Pets", color = "#FF9800") // Pets icon for cat expenses
+    val categoryLoyer = Category(documentId = "category_loyer_001", name = "Loyer", icon = "Home", color = "#2196F3") // Home icon for housing
+    val categoryEpicerie = Category(documentId = "category_epicerie_001", name = "Épicerie", icon = "ShoppingCart", color = "#4CAF50") // Shopping cart for groceries
+    val categoryZorro = Category(documentId = "category_zorro_001", name = "Zorro", icon = "Pets", color = "#FF9800") // Pets icon for cat expenses
     
     // List of all categories for filtering
     val allCategories = listOf(categoryLoyer, categoryEpicerie, categoryZorro)

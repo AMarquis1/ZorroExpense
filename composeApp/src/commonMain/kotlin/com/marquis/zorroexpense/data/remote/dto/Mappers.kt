@@ -6,12 +6,13 @@ import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.data.remote.FirestoreService
 
 fun UserDto.toDomain(userId: String = ""): User = User(
-    userId = userId,
+    userId = userId.ifBlank { documentId },
     name = name,
     profileImage = profileImage
 )
 
 fun CategoryDto.toDomain(): Category = Category(
+    documentId = documentId,
     name = name,
     icon = icon,
     color = color

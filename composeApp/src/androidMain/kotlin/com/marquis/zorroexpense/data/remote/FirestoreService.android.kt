@@ -15,10 +15,48 @@ actual class FirestoreService {
         return try {
             val snapshot = firestore.collection("Expense").get()
             val expenses = snapshot.documents.map { document ->
-                document.data<AndroidExpenseDto>()
+                val expenseDto = document.data<AndroidExpenseDto>()
+//                expenseDto.copy(documentId = document.id)
+                expenseDto
             }
 
             Result.success(expenses)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    actual suspend fun addExpense(expense: ExpenseDto): Result<Unit> {
+        return try {
+            // Cast to AndroidExpenseDto for platform-specific implementation
+            val androidExpenseDto = expense as AndroidExpenseDto
+            
+            // Add the expense to Firestore
+            firestore.collection("Expense").add(androidExpenseDto)
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    actual suspend fun updateExpense(expenseId: String, expense: ExpenseDto): Result<Unit> {
+        return try {
+            val androidExpenseDto = expense as AndroidExpenseDto
+            
+            firestore.collection("Expense").document(expenseId).set(androidExpenseDto)
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    actual suspend fun deleteExpense(expenseId: String): Result<Unit> {
+        return try {
+            firestore.collection("Expense").document(expenseId).delete()
+            
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -42,7 +80,8 @@ actual class FirestoreService {
         return try {
             val snapshot = firestore.collection("Categories").get()
             val categories = snapshot.documents.map { document ->
-                document.data<CategoryDto>()
+                val categoryDto = document.data<CategoryDto>()
+                categoryDto.copy(documentId = document.id)
             }
 
             Result.success(categories)
@@ -70,7 +109,8 @@ actual class FirestoreService {
         return try {
             val document = firestore.document(categoryId).get()
             val category = if (document.exists) {
-                document.data<CategoryDto>()
+                val categoryDto = document.data<CategoryDto>()
+                categoryDto.copy(documentId = document.id)
             } else {
                 null
             }
