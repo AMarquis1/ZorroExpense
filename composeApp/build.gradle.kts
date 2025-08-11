@@ -90,6 +90,7 @@ kotlin {
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
             implementation(libs.material.icons)
+            implementation(libs.kotlinx.datetime)
         }
 
         commonTest.dependencies {

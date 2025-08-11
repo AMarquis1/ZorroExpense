@@ -13,6 +13,7 @@ coil3 = "3.3.0"
 ktor = "3.2.3"
 ksp = "2.2.0-2.0.2"
 kotlinSerialization = "1.9.0"
+kotlinDatetime = "0.6.1"
 gms = "4.4.3"
 firebase-ktx = "2.1.0"
 compose-material3 = "1.4.0-beta01"
@@ -35,9 +36,9 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
-ktor-client-caching = { module = "io.ktor:ktor-client-caching", version.ref = "ktor" }
 jetbrains-compose-navigation = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref= "navigationCompose"}
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinDatetime" }
 firebase-common-ktx = { module = "dev.gitlive:firebase-common", version.ref = "firebase-ktx" }
 firebase-firestore-ktx = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-ktx" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
@@ -66,7 +67,6 @@ ktor-wasm = [
     "ktor-client-core",
     "ktor-client-content-negotiation",
     "ktor-client-logging",
-    "ktor-client-caching",
     "ktor-serialization-kotlinx-json",
 ]
 coil = [

@@ -7,6 +7,7 @@ import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
+import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
@@ -19,16 +20,23 @@ import kotlinx.coroutines.launch
 class ExpenseListViewModel(
     private val getExpensesUseCase: GetExpensesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val refreshExpensesUseCase: RefreshExpensesUseCase,
     private var onExpenseClick: (Expense) -> Unit = {},
     private var onAddExpenseClick: () -> Unit = {}
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ExpenseListUiState>(ExpenseListUiState.Loading)
     val uiState: StateFlow<ExpenseListUiState> = _uiState.asStateFlow()
+    
+    private var hasLoadedOnce = false
 
     init {
-        // Load expenses on initialization - Firestore cache makes this instant after first load
-        loadExpenses(isRefresh = false)
+        // Check if we already have data loaded, if not load from cache or fetch
+        val currentState = _uiState.value
+        if (currentState !is ExpenseListUiState.Success || !currentState.hasInitiallyLoaded) {
+            loadExpenses(isRefresh = false)
+        }
+        hasLoadedOnce = true
     }
 
     fun updateCallbacks(
@@ -37,6 +45,18 @@ class ExpenseListViewModel(
     ) {
         this.onExpenseClick = onExpenseClick
         this.onAddExpenseClick = onAddExpenseClick
+    }
+    
+    /**
+     * Ensure data is loaded when returning from navigation.
+     * Uses cache if available, only fetches from network if cache is empty or expired.
+     */
+    fun ensureDataLoaded() {
+        val currentState = _uiState.value
+        // Only load if we don't have data or haven't loaded initially
+        if (currentState !is ExpenseListUiState.Success || !currentState.hasInitiallyLoaded) {
+            loadExpenses(isRefresh = false)
+        }
     }
 
     fun onEvent(event: ExpenseListUiEvent) {
@@ -67,7 +87,12 @@ class ExpenseListViewModel(
             }
             
             // Load both expenses and categories
-            val expensesResult = getExpensesUseCase()
+            // Use refreshExpensesUseCase for force refresh, otherwise use cached version
+            val expensesResult = if (isRefresh) {
+                refreshExpensesUseCase()
+            } else {
+                getExpensesUseCase()
+            }
             val categoriesResult = getCategoriesUseCase()
             
             if (expensesResult.isSuccess && categoriesResult.isSuccess) {
