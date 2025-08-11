@@ -320,3 +320,72 @@ class GetExpensesUseCase(private val repository: ExpenseRepository) {
 - **Web Platform**: WASM-specific implementations and Firebase REST API
 - **Additional Features**: Edit expenses, categories management, user profiles
 - **Testing**: Comprehensive test coverage for all layers
+
+## Development Best Practices
+
+### When Working with ZorroExpense
+
+#### Code Quality Standards
+- Follow MVVM pattern for new features - always create ViewModels with StateFlow
+- Maintain Clean Architecture principles - dependencies flow inward
+- Use sealed classes for UI states and events for type safety
+- Implement proper error handling with Result<T> throughout the app
+- Write unit tests for ViewModels and Use Cases when adding features
+
+#### Platform-Specific Development
+- **Android**: Use GitLive Firebase SDK, test with real Firestore data
+- **iOS**: Implement expect/actual patterns, ensure proper iOS lifecycle handling
+- **Web**: Use Ktor client for Firebase REST API, handle WASM-specific constraints
+- Always test mock data mode before implementing real data sources
+
+#### Performance Guidelines
+- Use `collectAsState()` for efficient Compose recomposition
+- Implement proper loading states to prevent UI blocking
+- Cache expensive operations in ViewModels
+- Use LazyColumn for large expense lists with proper keys
+
+#### Common Development Tasks
+- **Adding new screens**: Create ViewModel + UiState + UiEvent + Screen composable
+- **New data sources**: Implement Repository interface in data layer first
+- **UI components**: Place reusable components in `components/` package
+- **Navigation**: Use type-safe navigation with proper ViewModel injection
+
+#### Debugging Tips
+- Toggle `AppConfig.USE_MOCK_DATA` for quick testing without network
+- Use Android Studio's Compose Preview for UI development
+- Check Firestore console for data structure validation
+- Run `./gradlew clean` when switching between mock and real data modes
+
+#### Testing Strategy
+- **Unit Tests**: Focus on ViewModels and Use Cases with mock repositories
+- **UI Tests**: Test Compose screens with fake ViewModels
+- **Integration Tests**: Test Repository implementations with real/mock data sources
+- **E2E Tests**: Test complete user flows across navigation
+
+## AI Assistant Guidelines
+
+### When Adding New Features
+1. **Always follow MVVM pattern**: Create ViewModel with StateFlow, UiState sealed class, and UiEvent sealed class
+2. **Update dependency injection**: Add new dependencies to AppModule
+3. **Maintain architecture layers**: Keep domain models clean, implement repository pattern
+4. **Add navigation support**: Update AppDestinations and navigation graph
+5. **Consider all platforms**: Ensure new features work across Android, iOS, and Web
+
+### When Debugging Issues
+1. **Check AppConfig.USE_MOCK_DATA**: Verify data source configuration
+2. **Examine StateFlow emissions**: Look for proper state transitions in ViewModels
+3. **Validate repository implementations**: Ensure expect/actual implementations are correct
+4. **Test platform-specific code**: Check FirestoreService implementations per platform
+
+### When Refactoring
+1. **Preserve MVVM structure**: Don't break existing ViewModel patterns
+2. **Maintain test compatibility**: Ensure existing tests continue to work
+3. **Update all platforms**: Apply changes consistently across commonMain/androidMain/iosMain
+4. **Validate with both data modes**: Test with mock data and real Firestore data
+
+### Code Generation Guidelines
+- Generate ViewModels with proper StateFlow patterns
+- Create sealed classes for states and events
+- Follow existing naming conventions (ExpenseListViewModel, ExpenseListUiState, etc.)
+- Include proper error handling and loading states
+- Add Compose previews for new UI components
