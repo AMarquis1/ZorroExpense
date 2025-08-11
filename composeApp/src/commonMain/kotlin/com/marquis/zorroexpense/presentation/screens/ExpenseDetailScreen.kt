@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -53,6 +54,7 @@ import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.presentation.state.ExpenseDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseDetailUiState
+import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.alex
 import zorroexpense.composeapp.generated.resources.sarah
@@ -62,7 +64,7 @@ import zorroexpense.composeapp.generated.resources.sarah
 fun ExpenseDetailScreen(
     expense: Expense,
     onBackClick: () -> Unit,
-    onExpenseDeleted: () -> Unit = {},
+    onExpenseDeleted: (expenseName: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope
 ) {
@@ -149,8 +151,21 @@ fun ExpenseDetailScreen(
                 }
             }
             is ExpenseDetailUiState.Deleted -> {
-                // Navigate back after successful delete
-                onExpenseDeleted()
+                // Show success state briefly, then navigate back
+                LaunchedEffect(Unit) {
+                    onExpenseDeleted(expense.name)
+                }
+                
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Expense deleted successfully",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
             is ExpenseDetailUiState.Error -> {
                 val errorState = uiState as ExpenseDetailUiState.Error
@@ -518,14 +533,14 @@ private fun DeleteConfirmationDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Delete Expense",
+                text = DeleteConstants.DELETE_CONFIRMATION_TITLE,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             Text(
-                text = "Are you sure you want to delete this expense? This action cannot be undone.",
+                text = DeleteConstants.DELETE_CONFIRMATION_MESSAGE,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

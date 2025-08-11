@@ -16,7 +16,8 @@ sealed class ExpenseListUiState {
         val collapsedMonths: Set<String> = emptySet(),
         val isFabExpanded: Boolean = true,
         val isRefreshing: Boolean = false,
-        val hasInitiallyLoaded: Boolean = false
+        val hasInitiallyLoaded: Boolean = false,
+        val pendingDeletions: Set<String> = emptySet() // Set of expense documentIds pending deletion
     ) : ExpenseListUiState()
     
     data class Error(

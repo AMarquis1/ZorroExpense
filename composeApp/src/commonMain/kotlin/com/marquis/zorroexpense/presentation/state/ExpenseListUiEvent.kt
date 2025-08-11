@@ -18,4 +18,9 @@ sealed class ExpenseListUiEvent {
     
     data class ExpenseClicked(val expense: Expense) : ExpenseListUiEvent()
     object AddExpenseClicked : ExpenseListUiEvent()
+    
+    // Delete-related events
+    data class PendingDeleteExpense(val expenseId: String) : ExpenseListUiEvent()
+    data class UndoDeleteExpense(val expenseId: String) : ExpenseListUiEvent()
+    data class ConfirmDeleteExpense(val expenseId: String) : ExpenseListUiEvent()
 }

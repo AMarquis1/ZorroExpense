@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
@@ -20,6 +21,7 @@ class ExpenseListViewModel(
     private val getExpensesUseCase: GetExpensesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val refreshExpensesUseCase: RefreshExpensesUseCase,
+    private val deleteExpenseUseCase: DeleteExpenseUseCase,
     private var onExpenseClick: (Expense) -> Unit = {},
     private var onAddExpenseClick: () -> Unit = {}
 ) : ViewModel() {
@@ -73,6 +75,9 @@ class ExpenseListViewModel(
             is ExpenseListUiEvent.FabExpandedChanged -> updateFabExpanded(event.isExpanded)
             is ExpenseListUiEvent.ExpenseClicked -> handleExpenseClick(event.expense)
             is ExpenseListUiEvent.AddExpenseClicked -> handleAddExpenseClick()
+            is ExpenseListUiEvent.PendingDeleteExpense -> markForPendingDeletion(event.expenseId)
+            is ExpenseListUiEvent.UndoDeleteExpense -> undoDeleteExpense(event.expenseId)
+            is ExpenseListUiEvent.ConfirmDeleteExpense -> confirmDeleteExpense(event.expenseId)
         }
     }
 
@@ -117,9 +122,29 @@ class ExpenseListViewModel(
                     categories.toSet() // Use all categories for initial load
                 }
                 
+                // Preserve pending deletions when refreshing
+                val preservedPendingDeletions = if (isRefresh && currentState is ExpenseListUiState.Success) {
+                    currentState.pendingDeletions
+                } else {
+                    emptySet()
+                }
+                
+                // When refreshing with pending deletions, we need to merge the new expenses
+                // with any expenses that are pending deletion (so they can be restored)
+                val finalExpenses = if (isRefresh && currentState is ExpenseListUiState.Success && preservedPendingDeletions.isNotEmpty()) {
+                    // Get expenses that are pending deletion from current state
+                    val pendingExpenses = currentState.expenses.filter { expense ->
+                        preservedPendingDeletions.contains(expense.documentId)
+                    }
+                    // Merge new expenses with pending expenses, avoiding duplicates
+                    (expenses + pendingExpenses).distinctBy { it.documentId }
+                } else {
+                    expenses
+                }
+                
                 val newState = ExpenseListUiState.Success(
-                    expenses = expenses,
-                    filteredExpenses = expenses,
+                    expenses = finalExpenses,
+                    filteredExpenses = finalExpenses,
                     selectedCategories = selectedCats,
                     searchQuery = existingState.searchQuery,
                     isSearchExpanded = existingState.isSearchExpanded,
@@ -127,16 +152,18 @@ class ExpenseListViewModel(
                     collapsedMonths = existingState.collapsedMonths,
                     isFabExpanded = existingState.isFabExpanded,
                     isRefreshing = false,
-                    hasInitiallyLoaded = true
+                    hasInitiallyLoaded = true,
+                    pendingDeletions = preservedPendingDeletions
                 )
                 
                 // Apply filtering with current filters
                 _uiState.value = newState.copy(
                     filteredExpenses = filterExpenses(
-                        expenses = expenses,
+                        expenses = finalExpenses,
                         searchQuery = newState.searchQuery,
                         selectedCategories = newState.selectedCategories,
-                        sortOption = newState.sortOption
+                        sortOption = newState.sortOption,
+                        pendingDeletions = preservedPendingDeletions
                     )
                 )
             } else {
@@ -164,7 +191,8 @@ class ExpenseListViewModel(
                         expenses = currentState.expenses,
                         searchQuery = query,
                         selectedCategories = currentState.selectedCategories,
-                        sortOption = currentState.sortOption
+                        sortOption = currentState.sortOption,
+                        pendingDeletions = currentState.pendingDeletions
                     )
                 )
             }
@@ -199,7 +227,8 @@ class ExpenseListViewModel(
                         expenses = currentState.expenses,
                         searchQuery = currentState.searchQuery,
                         selectedCategories = newSelectedCategories,
-                        sortOption = currentState.sortOption
+                        sortOption = currentState.sortOption,
+                        pendingDeletions = currentState.pendingDeletions
                     )
                 )
             }
@@ -216,7 +245,8 @@ class ExpenseListViewModel(
                         expenses = currentState.expenses,
                         searchQuery = currentState.searchQuery,
                         selectedCategories = currentState.selectedCategories,
-                        sortOption = sortOption
+                        sortOption = sortOption,
+                        pendingDeletions = currentState.pendingDeletions
                     )
                 )
             }
@@ -259,9 +289,13 @@ class ExpenseListViewModel(
         expenses: List<Expense>,
         searchQuery: String,
         selectedCategories: Set<Category>,
-        sortOption: SortOption
+        sortOption: SortOption,
+        pendingDeletions: Set<String> = emptySet()
     ): List<Expense> {
-        var filtered = expenses
+        // First, exclude expenses pending deletion
+        var filtered = expenses.filter { expense ->
+            !pendingDeletions.contains(expense.documentId)
+        }
 
         filtered = if (selectedCategories.isNotEmpty()) {
             filtered.filter { expense ->
@@ -299,5 +333,89 @@ class ExpenseListViewModel(
         }
 
         return filtered
+    }
+    
+    private fun markForPendingDeletion(expenseId: String) {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListUiState.Success) {
+            _uiState.update {
+                val newPendingDeletions = currentState.pendingDeletions + expenseId
+                val newFilteredExpenses = filterExpenses(
+                    expenses = currentState.expenses,
+                    searchQuery = currentState.searchQuery,
+                    selectedCategories = currentState.selectedCategories,
+                    sortOption = currentState.sortOption,
+                    pendingDeletions = newPendingDeletions
+                )
+                currentState.copy(
+                    pendingDeletions = newPendingDeletions,
+                    filteredExpenses = newFilteredExpenses
+                )
+            }
+        }
+    }
+    
+    private fun undoDeleteExpense(expenseId: String) {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListUiState.Success) {
+            _uiState.update {
+                val newPendingDeletions = currentState.pendingDeletions - expenseId
+                val newFilteredExpenses = filterExpenses(
+                    expenses = currentState.expenses,
+                    searchQuery = currentState.searchQuery,
+                    selectedCategories = currentState.selectedCategories,
+                    sortOption = currentState.sortOption,
+                    pendingDeletions = newPendingDeletions
+                )
+                currentState.copy(
+                    pendingDeletions = newPendingDeletions,
+                    filteredExpenses = newFilteredExpenses
+                )
+            }
+        }
+    }
+    
+    private fun confirmDeleteExpense(expenseId: String) {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListUiState.Success) {
+            viewModelScope.launch {
+                deleteExpenseUseCase(expenseId).fold(
+                    onSuccess = {
+                        // Remove from pending deletions and expenses list
+                        _uiState.update {
+                            val newExpenses = currentState.expenses.filter { it.documentId != expenseId }
+                            val newPendingDeletions = currentState.pendingDeletions - expenseId
+                            currentState.copy(
+                                expenses = newExpenses,
+                                pendingDeletions = newPendingDeletions,
+                                filteredExpenses = filterExpenses(
+                                    expenses = newExpenses,
+                                    searchQuery = currentState.searchQuery,
+                                    selectedCategories = currentState.selectedCategories,
+                                    sortOption = currentState.sortOption,
+                                    pendingDeletions = newPendingDeletions
+                                )
+                            )
+                        }
+                    },
+                    onFailure = { exception ->
+                        // If actual deletion fails, remove from pending but keep the expense
+                        // Could show error message here
+                        _uiState.update {
+                            currentState.copy(
+                                pendingDeletions = currentState.pendingDeletions - expenseId,
+                                filteredExpenses = filterExpenses(
+                                    expenses = currentState.expenses,
+                                    searchQuery = currentState.searchQuery,
+                                    selectedCategories = currentState.selectedCategories,
+                                    sortOption = currentState.sortOption,
+                                    pendingDeletions = currentState.pendingDeletions - expenseId
+                                )
+                            )
+                        }
+                    }
+                )
+            }
+        }
     }
 }

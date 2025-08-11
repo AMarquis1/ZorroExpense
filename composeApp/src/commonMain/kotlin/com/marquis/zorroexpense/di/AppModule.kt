@@ -125,6 +125,7 @@ object AppModule {
             getExpensesUseCase = getExpensesUseCase,
             getCategoriesUseCase = getCategoriesUseCase,
             refreshExpensesUseCase = refreshExpensesUseCase,
+            deleteExpenseUseCase = deleteExpenseUseCase,
             onExpenseClick = onExpenseClick,
             onAddExpenseClick = onAddExpenseClick
         ).also { expenseListViewModel = it }
@@ -143,7 +144,7 @@ object AppModule {
     }
     
     fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel {
-        return ExpenseDetailViewModel(expense, deleteExpenseUseCase)
+        return ExpenseDetailViewModel(expense)
     }
     
     // =================

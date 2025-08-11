@@ -41,6 +41,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,6 +53,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -72,10 +75,13 @@ import com.marquis.zorroexpense.components.getMonthYear
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.platform.PullToRefreshBox
+import com.marquis.zorroexpense.presentation.components.CustomDeleteSnackbar
+import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.zorro_header
@@ -86,10 +92,33 @@ import kotlin.math.roundToInt
 fun ExpenseListScreen(
     viewModel: ExpenseListViewModel,
     sharedTransitionScope: SharedTransitionScope,
-    animatedContentScope: AnimatedContentScope
+    animatedContentScope: AnimatedContentScope,
+    deletedExpenseName: String? = null,
+    onUndoDelete: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
+    
+    // Refresh data when screen comes back into view (e.g., after delete)
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(ExpenseListUiEvent.RefreshExpenses)
+    }
+    
+    // Snackbar state
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Show snackbar when expense is deleted
+    LaunchedEffect(deletedExpenseName) {
+        deletedExpenseName?.let { name ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = DeleteConstants.DELETED_MESSAGE_TEMPLATE.format(name),
+                    duration = DeleteConstants.SNACKBAR_DURATION
+                )
+            }
+        }
+    }
     
     // Local UI state for things not managed by ViewModel
     var showConfigMenu by remember { mutableStateOf(false) }
@@ -155,6 +184,17 @@ fun ExpenseListScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { 
+            SnackbarHost(hostState = snackbarHostState) { snackbarData ->
+                CustomDeleteSnackbar(
+                    snackbarData = snackbarData,
+                    onUndo = {
+                        onUndoDelete()
+                        snackbarData.dismiss()
+                    }
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -488,3 +528,4 @@ fun ExpenseListScreen(
         }
     }
 }
+

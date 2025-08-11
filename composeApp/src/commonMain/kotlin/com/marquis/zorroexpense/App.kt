@@ -9,6 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -26,6 +31,8 @@ import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
+import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
+import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.ui.theme.ZorroExpenseTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -37,6 +44,8 @@ fun App() {
     ZorroExpenseTheme {
         Box(modifier = Modifier.fillMaxSize()) {
             val navController = rememberNavController()
+            var deletedExpenseName by remember { mutableStateOf<String?>(null) }
+            var deletedExpenseId by remember { mutableStateOf<String?>(null) }
             
             SharedTransitionLayout {
                 NavHost(
@@ -69,8 +78,29 @@ fun App() {
                         ExpenseListScreen(
                             viewModel = viewModel,
                             sharedTransitionScope = this@SharedTransitionLayout,
-                            animatedContentScope = this
+                            animatedContentScope = this,
+                            deletedExpenseName = deletedExpenseName,
+                            onUndoDelete = {
+                                deletedExpenseId?.let { expenseId ->
+                                    viewModel.onEvent(ExpenseListUiEvent.UndoDeleteExpense(expenseId))
+                                    deletedExpenseName = null
+                                    deletedExpenseId = null
+                                }
+                            }
                         )
+                        
+                        // Auto-dismiss after delay - confirm the actual deletion
+                        // This will be cancelled when deletedExpenseName/Id becomes null (undo case)
+                        LaunchedEffect(deletedExpenseId) {
+                            deletedExpenseId?.let { expenseId ->
+                                kotlinx.coroutines.delay(DeleteConstants.AUTO_DELETE_DELAY_MS)
+                                if (deletedExpenseId == expenseId) {
+                                    viewModel.onEvent(ExpenseListUiEvent.ConfirmDeleteExpense(expenseId))
+                                    deletedExpenseName = null
+                                    deletedExpenseId = null
+                                }
+                            }
+                        }
                     }
 
                     composable<AppDestinations.AddExpense> {
@@ -108,7 +138,16 @@ fun App() {
                             onBackClick = {
                                 navController.popBackStack()
                             },
-                            onExpenseDeleted = {
+                            onExpenseDeleted = { expenseName ->
+                                // Set the deleted expense info for snackbar display and undo functionality
+                                deletedExpenseName = expenseName
+                                deletedExpenseId = expense.documentId
+                                
+                                // Use the singleton ViewModel instance 
+                                val listViewModel = AppModule.provideExpenseListViewModel()
+                                listViewModel.onEvent(ExpenseListUiEvent.PendingDeleteExpense(expense.documentId))
+                                
+                                // Navigate back to show snackbar
                                 navController.popBackStack()
                             },
                             sharedTransitionScope = this@SharedTransitionLayout,
