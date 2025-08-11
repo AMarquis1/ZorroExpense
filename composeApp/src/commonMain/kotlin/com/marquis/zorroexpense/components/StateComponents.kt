@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Reusable EmptyState component for displaying empty content states
- * 
+ *
  * @param icon Emoji or icon to display
  * @param title Main title text
  * @param description Supporting description text
@@ -28,39 +28,40 @@ fun EmptyState(
     icon: String = "💸",
     title: String = "No data found",
     description: String = "There's nothing to display right now.",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = icon,
-            style = MaterialTheme.typography.displayLarge
+            style = MaterialTheme.typography.displayLarge,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
 
 /**
  * Reusable ErrorState component for displaying error states
- * 
+ *
  * @param title Error title
  * @param message Error message to display
  * @param icon Error icon/emoji (default: ❌)
@@ -71,18 +72,19 @@ fun ErrorState(
     title: String = "Error occurred",
     message: String,
     icon: String = "❌",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = icon,
-            style = MaterialTheme.typography.displayMedium
+            style = MaterialTheme.typography.displayMedium,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -90,38 +92,39 @@ fun ErrorState(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.error,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
 
 /**
  * Loading state component with circular progress indicator
- * 
+ *
  * @param message Optional loading message
  * @param modifier Optional modifier for styling
  */
 @Composable
 fun LoadingState(
     message: String = "Loading...",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         androidx.compose.material3.CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
         if (message.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -129,7 +132,7 @@ fun LoadingState(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }

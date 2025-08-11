@@ -1,0 +1,24 @@
+root = true
+
+[*.{kt,kts}]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+max_line_length = 140
+trim_trailing_whitespace = true
+
+# Disable function naming rule for Compose functions
+ktlint_function-naming = disabled
+
+# Allow long lines in certain cases
+ktlint_max-line-length = disabled
+
+# Disable generated file checks
+[**/build/**]
+ktlint_disabled_rules = *
+
+# Disable checks for generated resource files
+[**/generated/**]
+ktlint_disabled_rules = *

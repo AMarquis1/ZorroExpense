@@ -40,12 +40,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
@@ -56,11 +56,6 @@ import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.domain.model.Category
-import com.marquis.zorroexpense.domain.model.SplitMethod
-import com.marquis.zorroexpense.domain.model.User
-import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
-import com.marquis.zorroexpense.presentation.state.AddExpenseUiEvent
-import com.marquis.zorroexpense.presentation.state.AddExpenseUiState
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.PaidBySelectionBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.SplitMethodBottomSheet
@@ -68,6 +63,9 @@ import com.marquis.zorroexpense.presentation.components.bottomsheets.SplitWithSe
 import com.marquis.zorroexpense.presentation.components.expense.SplitMethodSelectionSection
 import com.marquis.zorroexpense.presentation.components.expense.SplitWithSelectionSection
 import com.marquis.zorroexpense.presentation.components.expense.UserSelectionSection
+import com.marquis.zorroexpense.presentation.state.AddExpenseUiEvent
+import com.marquis.zorroexpense.presentation.state.AddExpenseUiState
+import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 
 // Constants
 private const val MIN_EXPENSE_NAME_LENGTH = 2
@@ -78,7 +76,7 @@ private const val MIN_EXPENSE_AMOUNT = 0.01
 fun AddExpenseScreen(
     viewModel: AddExpenseViewModel,
     onBackClick: () -> Unit,
-    onExpenseSaved: () -> Unit = {}
+    onExpenseSaved: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
@@ -95,7 +93,7 @@ fun AddExpenseScreen(
     var showCategoryBottomSheet by remember { mutableStateOf(false) }
     var showPaidByBottomSheet by remember { mutableStateOf(false) }
     var showSplitWithBottomSheet by remember { mutableStateOf(false) }
-    
+
     // Handle UI state changes
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -111,31 +109,32 @@ fun AddExpenseScreen(
     var showSplitMethodBottomSheet by remember { mutableStateOf(false) }
     // Loading and error state from ViewModel
     val isLoading = uiState is AddExpenseUiState.Loading
-    val errorMessage = when (val state = uiState) {
-        is AddExpenseUiState.Error -> state.message
-        else -> null
-    }
-    
+    val errorMessage =
+        when (val state = uiState) {
+            is AddExpenseUiState.Error -> state.message
+            else -> null
+        }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
-    
+
     // Validation from ViewModel
     val isNameValid = formState.isNameValid
     val isPriceValid = formState.isPriceValid
     val isCategoryValid = formState.isCategoryValid
     val isPaidByValid = formState.isPaidByValid
     val isFormValid = formState.isFormValid
-    
+
     // Bottom sheet states
     val categoryBottomSheetState = rememberModalBottomSheetState()
     val paidByBottomSheetState = rememberModalBottomSheetState()
     val splitWithBottomSheetState = rememberModalBottomSheetState()
     val splitMethodBottomSheetState = rememberModalBottomSheetState()
-    
+
     // Get categories from ViewModel instead of MockData
     val availableCategories by viewModel.categories.collectAsState()
     val availableUsers = listOf(MockExpenseData.userSarah, MockExpenseData.userAlex)
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -143,48 +142,52 @@ fun AddExpenseScreen(
                     Text(
                         text = "Ajouter une dépense",
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
             )
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
-        }
+        },
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 // Form Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        ),
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -194,7 +197,7 @@ fun AddExpenseScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 12.dp)
+                            modifier = Modifier.padding(bottom = 12.dp),
                         )
 
                         // Expense Name Field
@@ -206,7 +209,7 @@ fun AddExpenseScreen(
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.Person,
-                                    contentDescription = "Expense name"
+                                    contentDescription = "Expense name",
                                 )
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -217,18 +220,20 @@ fun AddExpenseScreen(
                                     Text("Please enter a valid expense name")
                                 }
                             },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                            )
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    imeAction = ImeAction.Next,
+                                ),
+                            keyboardActions =
+                                KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                                ),
                         )
 
                         // Amount and Category Row - 45% and 55%
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             // Expense Price Field (45%)
                             OutlinedTextField(
@@ -241,7 +246,7 @@ fun AddExpenseScreen(
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.AttachMoney,
-                                        contentDescription = "Amount"
+                                        contentDescription = "Amount",
                                     )
                                 },
                                 modifier = Modifier.weight(0.45f),
@@ -252,17 +257,19 @@ fun AddExpenseScreen(
                                         Text("Please enter a valid amount greater than 0")
                                     }
                                 },
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Decimal,
-                                    imeAction = ImeAction.Done
-                                ),
+                                keyboardOptions =
+                                    KeyboardOptions(
+                                        keyboardType = KeyboardType.Decimal,
+                                        imeAction = ImeAction.Done,
+                                    ),
                             )
 
                             // Category Selection Field (55%)
                             Box(
-                                modifier = Modifier
-                                    .weight(0.55f)
-                                    .clickable { showCategoryBottomSheet = true }
+                                modifier =
+                                    Modifier
+                                        .weight(0.55f)
+                                        .clickable { showCategoryBottomSheet = true },
                             ) {
                                 OutlinedTextField(
                                     value = selectedCategory?.name ?: "",
@@ -273,19 +280,19 @@ fun AddExpenseScreen(
                                         if (selectedCategory != null) {
                                             CategoryIconCircle(
                                                 category = selectedCategory!!,
-                                                size = 24.dp
+                                                size = 24.dp,
                                             )
                                         } else {
                                             Icon(
                                                 Icons.Default.Category,
-                                                contentDescription = "Category"
+                                                contentDescription = "Category",
                                             )
                                         }
                                     },
                                     trailingIcon = {
                                         Icon(
                                             Icons.Default.KeyboardArrowDown,
-                                            contentDescription = "Select category"
+                                            contentDescription = "Select category",
                                         )
                                     },
                                     modifier = Modifier.fillMaxWidth(),
@@ -297,14 +304,15 @@ fun AddExpenseScreen(
                                             Text("Please select a category")
                                         }
                                     },
-                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    colors =
+                                        androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        ),
                                 )
                             }
                         }
@@ -315,29 +323,30 @@ fun AddExpenseScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        ),
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
                             text = "Split",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
-                        
+
                         // Paid By Selection
                         UserSelectionSection(
                             title = "Paid By",
                             selectedUser = selectedPaidByUser,
                             onAddClick = { showPaidByBottomSheet = true },
                             showError = selectedPaidByUser == null,
-                            errorMessage = "Please select who paid"
+                            errorMessage = "Please select who paid",
                         )
 
                         // Split With Selection
@@ -352,9 +361,9 @@ fun AddExpenseScreen(
                             onAddClick = { showSplitWithBottomSheet = true },
                             onRemoveUser = { user ->
                                 viewModel.onEvent(AddExpenseUiEvent.RemoveUserFromSplit(user))
-                            }
+                            },
                         )
-                        
+
                         // Split Method Selection
                         if (selectedSplitWithUsers.isNotEmpty()) {
                             SplitMethodSelectionSection(
@@ -362,7 +371,7 @@ fun AddExpenseScreen(
                                 selectedUsers = selectedSplitWithUsers,
                                 percentageSplits = percentageSplits,
                                 numberSplits = numberSplits,
-                                onSplitMethodClick = { showSplitMethodBottomSheet = true }
+                                onSplitMethodClick = { showSplitMethodBottomSheet = true },
                             )
                         }
                     }
@@ -371,10 +380,11 @@ fun AddExpenseScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        ),
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -383,7 +393,7 @@ fun AddExpenseScreen(
                             text = "Notes",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
 
                         OutlinedTextField(
@@ -394,89 +404,95 @@ fun AddExpenseScreen(
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.Description,
-                                    contentDescription = "Description"
+                                    contentDescription = "Description",
                                 )
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp),
                             maxLines = 4,
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusManager.clearFocus()
-                                }
-                            )
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    imeAction = ImeAction.Done,
+                                ),
+                            keyboardActions =
+                                KeyboardActions(
+                                    onDone = {
+                                        focusManager.clearFocus()
+                                    },
+                                ),
                         )
                     }
                 }
-                
+
                 // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     OutlinedButton(
                         onClick = onBackClick,
                         modifier = Modifier.weight(1f),
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         Text("Cancel")
                     }
-                    
+
                     Button(
                         onClick = {
                             viewModel.onEvent(AddExpenseUiEvent.SaveExpense)
                         },
                         modifier = Modifier.weight(1f),
                         enabled = isFormValid && !isLoading,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
                     ) {
                         Icon(
                             Icons.Default.Save,
                             contentDescription = "Save",
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.padding(end = 8.dp),
                         )
                         Text(if (isLoading) "Saving..." else "Save Expense")
                     }
                 }
-                
+
                 // Error Message
                 errorMessage?.let { error ->
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { viewModel.onEvent(AddExpenseUiEvent.DismissError) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                        ),
-                        shape = RoundedCornerShape(8.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.onEvent(AddExpenseUiEvent.DismissError) },
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(16.dp),
                         ) {
                             Text(
                                 text = error,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                             )
                             Text(
                                 text = "Tap to dismiss",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
-                                modifier = Modifier.padding(top = 4.dp)
+                                modifier = Modifier.padding(top = 4.dp),
                             )
                         }
                     }
                 }
             }
         }
-        
+
         // Category Selection Bottom Sheet
         if (showCategoryBottomSheet) {
             CategorySelectionBottomSheet(
@@ -488,10 +504,10 @@ fun AddExpenseScreen(
                 onDismiss = {
                     showCategoryBottomSheet = false
                 },
-                bottomSheetState = categoryBottomSheetState
+                bottomSheetState = categoryBottomSheetState,
             )
         }
-        
+
         // Paid By Selection Bottom Sheet
         if (showPaidByBottomSheet) {
             PaidBySelectionBottomSheet(
@@ -499,21 +515,22 @@ fun AddExpenseScreen(
                 onUserSelected = { user ->
                     viewModel.onEvent(AddExpenseUiEvent.PaidByChanged(user))
                     // Automatically add the payer to split with if not already included
-                    val updatedSplitWithUsers = if (!selectedSplitWithUsers.any { it.userId == user.userId }) {
-                        selectedSplitWithUsers + user
-                    } else {
-                        selectedSplitWithUsers
-                    }
+                    val updatedSplitWithUsers =
+                        if (!selectedSplitWithUsers.any { it.userId == user.userId }) {
+                            selectedSplitWithUsers + user
+                        } else {
+                            selectedSplitWithUsers
+                        }
                     viewModel.onEvent(AddExpenseUiEvent.SplitWithChanged(updatedSplitWithUsers))
                     showPaidByBottomSheet = false
                 },
                 onDismiss = {
                     showPaidByBottomSheet = false
                 },
-                bottomSheetState = paidByBottomSheetState
+                bottomSheetState = paidByBottomSheetState,
             )
         }
-        
+
         // Split With Selection Bottom Sheet
         if (showSplitWithBottomSheet) {
             SplitWithSelectionBottomSheet(
@@ -521,24 +538,25 @@ fun AddExpenseScreen(
                 selectedUsers = selectedSplitWithUsers,
                 paidByUser = selectedPaidByUser,
                 onUserToggled = { user ->
-                    val updatedSplitWithUsers = if (selectedSplitWithUsers.any { it.userId == user.userId }) {
-                        if (user.userId != selectedPaidByUser?.userId) {
-                            selectedSplitWithUsers.filter { it.userId != user.userId }
+                    val updatedSplitWithUsers =
+                        if (selectedSplitWithUsers.any { it.userId == user.userId }) {
+                            if (user.userId != selectedPaidByUser?.userId) {
+                                selectedSplitWithUsers.filter { it.userId != user.userId }
+                            } else {
+                                selectedSplitWithUsers
+                            }
                         } else {
-                            selectedSplitWithUsers
+                            selectedSplitWithUsers + user
                         }
-                    } else {
-                        selectedSplitWithUsers + user
-                    }
                     viewModel.onEvent(AddExpenseUiEvent.SplitWithChanged(updatedSplitWithUsers))
                 },
                 onDismiss = {
                     showSplitWithBottomSheet = false
                 },
-                bottomSheetState = splitWithBottomSheetState
+                bottomSheetState = splitWithBottomSheetState,
             )
         }
-        
+
         // Split Method Selection Bottom Sheet
         if (showSplitMethodBottomSheet) {
             SplitMethodBottomSheet(
@@ -548,17 +566,17 @@ fun AddExpenseScreen(
                 numberSplits = numberSplits,
                 expenseAmount = expensePrice.toFloatOrNull() ?: 0f,
                 onMethodChanged = { method -> viewModel.onEvent(AddExpenseUiEvent.SplitMethodChanged(method)) },
-                onPercentageChanged = { userId, percentage -> 
+                onPercentageChanged = { userId, percentage ->
                     viewModel.onEvent(AddExpenseUiEvent.PercentageChanged(userId, percentage))
                 },
                 onResetToEqual = {
                     viewModel.onEvent(AddExpenseUiEvent.ResetToEqualSplits)
                 },
-                onNumberChanged = { userId, amount -> 
+                onNumberChanged = { userId, amount ->
                     viewModel.onEvent(AddExpenseUiEvent.NumberChanged(userId, amount))
                 },
                 onDismiss = { showSplitMethodBottomSheet = false },
-                bottomSheetState = splitMethodBottomSheetState
+                bottomSheetState = splitMethodBottomSheetState,
             )
         }
     }

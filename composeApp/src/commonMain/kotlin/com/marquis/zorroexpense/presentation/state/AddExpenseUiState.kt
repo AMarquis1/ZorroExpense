@@ -6,11 +6,13 @@ import com.marquis.zorroexpense.domain.model.User
 
 sealed class AddExpenseUiState {
     object Idle : AddExpenseUiState()
+
     object Loading : AddExpenseUiState()
+
     object Success : AddExpenseUiState()
-    
+
     data class Error(
-        val message: String
+        val message: String,
     ) : AddExpenseUiState()
 }
 
@@ -28,5 +30,5 @@ data class AddExpenseFormState(
     val isPriceValid: Boolean = false,
     val isCategoryValid: Boolean = false,
     val isPaidByValid: Boolean = false,
-    val isFormValid: Boolean = false
+    val isFormValid: Boolean = false,
 )

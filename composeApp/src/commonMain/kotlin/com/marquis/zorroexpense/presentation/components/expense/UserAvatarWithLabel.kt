@@ -26,12 +26,13 @@ import com.marquis.zorroexpense.domain.model.User
 fun UserAvatarWithLabel(
     user: User,
     canRemove: Boolean = false,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable(enabled = onClick != null) { onClick?.invoke() }
+        modifier =
+            Modifier
+                .clickable(enabled = onClick != null) { onClick?.invoke() },
     ) {
         Box {
             // User avatar using ProfileAvatar component
@@ -41,40 +42,42 @@ fun UserAvatarWithLabel(
                 backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             )
-            
+
             // Remove button for removable users
             if (canRemove && onClick != null) {
                 Card(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .align(Alignment.TopEnd),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    shape = CircleShape
+                    modifier =
+                        Modifier
+                            .size(20.dp)
+                            .align(Alignment.TopEnd),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                        ),
+                    shape = CircleShape,
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = "Remove",
                             tint = MaterialTheme.colorScheme.onError,
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(12.dp),
                         )
                     }
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         Text(
             text = user.name,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }

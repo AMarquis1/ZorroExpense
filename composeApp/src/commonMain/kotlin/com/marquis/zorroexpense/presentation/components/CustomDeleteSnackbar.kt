@@ -24,50 +24,55 @@ import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 @Composable
 internal fun CustomDeleteSnackbar(
     snackbarData: SnackbarData,
-    onUndo: () -> Unit = {}
+    onUndo: () -> Unit = {},
 ) {
     val scale by animateFloatAsState(
         targetValue = 1f,
-        animationSpec = spring(
-            dampingRatio = 0.6f,
-            stiffness = 300f
-        ),
-        label = "snackbar_scale"
+        animationSpec =
+            spring(
+                dampingRatio = 0.6f,
+                stiffness = 300f,
+            ),
+        label = "snackbar_scale",
     )
 
     Card(
-        modifier = Modifier
-            .scale(scale)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.inverseSurface
-        ),
+        modifier =
+            Modifier
+                .scale(scale)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.inverseSurface,
+            ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        )
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 6.dp,
+            ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             // Message text
             Text(
                 text = snackbarData.visuals.message,
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
-            
+
             // UNDO button
             TextButton(onClick = onUndo) {
                 Text(
                     text = DeleteConstants.UNDO_BUTTON_TEXT,
                     color = MaterialTheme.colorScheme.inversePrimary,
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
         }

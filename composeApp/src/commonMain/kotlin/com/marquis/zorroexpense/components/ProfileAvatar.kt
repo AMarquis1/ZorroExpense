@@ -24,7 +24,6 @@ import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.alex
 import zorroexpense.composeapp.generated.resources.sarah
 
-
 @Composable
 fun ProfileAvatar(
     name: String,
@@ -32,44 +31,47 @@ fun ProfileAvatar(
     userProfile: String,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val fallbackText = if (name.isNotEmpty()) name.first().toString() else "?"
-    val imageResource : DrawableResource? = when (userProfile) {
-        "sarah" -> Res.drawable.sarah
-        "alex" -> Res.drawable.alex
-        else -> null
-    }
+    val imageResource: DrawableResource? =
+        when (userProfile) {
+            "sarah" -> Res.drawable.sarah
+            "alex" -> Res.drawable.alex
+            else -> null
+        }
 
     Surface(
         modifier = modifier.size(size),
         shape = CircleShape,
-        color = backgroundColor
+        color = backgroundColor,
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             if (imageResource != null) {
                 Image(
                     painter = painterResource(imageResource),
                     contentDescription = "Profile picture",
-                    modifier = Modifier
-                        .size(size)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
+                    modifier =
+                        Modifier
+                            .size(size)
+                            .clip(CircleShape),
+                    contentScale = ContentScale.Crop,
                 )
             } else {
                 Text(
                     text = fallbackText.take(2).uppercase(),
-                    style = when {
-                        size <= 40.dp -> MaterialTheme.typography.titleMedium
-                        size <= 56.dp -> MaterialTheme.typography.headlineSmall
-                        else -> MaterialTheme.typography.headlineLarge
-                    },
+                    style =
+                        when {
+                            size <= 40.dp -> MaterialTheme.typography.titleMedium
+                            size <= 56.dp -> MaterialTheme.typography.headlineSmall
+                            else -> MaterialTheme.typography.headlineLarge
+                        },
                     fontWeight = FontWeight.Bold,
                     color = contentColor,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         }

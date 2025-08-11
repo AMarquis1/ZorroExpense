@@ -6,10 +6,10 @@ import kotlinx.serialization.Serializable
 sealed class AppDestinations {
     @Serializable
     data object ExpenseList : AppDestinations()
-    
+
     @Serializable
     data object AddExpense : AppDestinations()
-    
+
     @Serializable
     data class ExpenseDetail(
         val expenseId: String,
@@ -21,6 +21,6 @@ sealed class AppDestinations {
         val categoryIcon: String,
         val categoryColor: String,
         val paidByUserId: String,
-        val splitWithUserIds: List<String>
+        val splitWithUserIds: List<String>,
     ) : AppDestinations()
 }

@@ -9,12 +9,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class ExpenseDetailViewModel(
-    private val expense: Expense
+    private val expense: Expense,
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow<ExpenseDetailUiState>(
-        ExpenseDetailUiState.Success(expense)
-    )
+    private val _uiState =
+        MutableStateFlow<ExpenseDetailUiState>(
+            ExpenseDetailUiState.Success(expense),
+        )
     val uiState: StateFlow<ExpenseDetailUiState> = _uiState.asStateFlow()
 
     fun onEvent(event: ExpenseDetailUiEvent) {
@@ -51,19 +51,21 @@ class ExpenseDetailViewModel(
         if (currentState is ExpenseDetailUiState.Success) {
             // Check if expense has valid documentId for deletion
             if (expense.documentId.isBlank()) {
-                _uiState.value = ExpenseDetailUiState.Error(
-                    message = "Cannot delete expense: missing document ID"
-                )
+                _uiState.value =
+                    ExpenseDetailUiState.Error(
+                        message = "Cannot delete expense: missing document ID",
+                    )
                 return
             }
-            
+
             // Hide dialog and mark as "deleted" to trigger navigation
             // The actual database deletion will be handled by ExpenseListViewModel after delay
-            _uiState.value = currentState.copy(
-                showDeleteDialog = false,
-                isDeleting = false
-            )
-            
+            _uiState.value =
+                currentState.copy(
+                    showDeleteDialog = false,
+                    isDeleting = false,
+                )
+
             // Immediately transition to "Deleted" state to trigger navigation callback
             _uiState.value = ExpenseDetailUiState.Deleted
         }

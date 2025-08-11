@@ -10,12 +10,11 @@ import kotlin.time.Duration.Companion.minutes
  * Centralizes cache behavior configuration following KMP standards
  */
 object CacheConfiguration {
-    
     /**
      * Get cache strategy for expenses based on current configuration
      */
-    fun expensesCacheStrategy(): CacheStrategy {
-        return if (AppConfig.USE_MOCK_DATA) {
+    fun expensesCacheStrategy(): CacheStrategy =
+        if (AppConfig.USE_MOCK_DATA) {
             // No cache for mock data to allow rapid development
             CacheStrategy.NO_CACHE
         } else {
@@ -23,40 +22,37 @@ object CacheConfiguration {
             CacheStrategy(
                 ttl = 5.minutes,
                 enableOfflineAccess = true,
-                maxSize = 1000
+                maxSize = 1000,
             )
         }
-    }
-    
+
     /**
      * Get cache strategy for categories
      */
-    fun categoriesCacheStrategy(): CacheStrategy {
-        return if (AppConfig.USE_MOCK_DATA) {
+    fun categoriesCacheStrategy(): CacheStrategy =
+        if (AppConfig.USE_MOCK_DATA) {
             CacheStrategy.NO_CACHE
         } else {
             // Categories change less frequently, cache for 30 minutes
             CacheStrategy(
                 ttl = 1.hours,
                 enableOfflineAccess = true,
-                maxSize = 100
+                maxSize = 100,
             )
         }
-    }
-    
+
     /**
      * Get cache strategy for user data
      */
-    fun userCacheStrategy(): CacheStrategy {
-        return if (AppConfig.USE_MOCK_DATA) {
+    fun userCacheStrategy(): CacheStrategy =
+        if (AppConfig.USE_MOCK_DATA) {
             CacheStrategy.NO_CACHE
         } else {
             // User data is fairly static, cache for 1 hour
             CacheStrategy(
                 ttl = 60.minutes,
                 enableOfflineAccess = true,
-                maxSize = 50
+                maxSize = 50,
             )
         }
-    }
 }

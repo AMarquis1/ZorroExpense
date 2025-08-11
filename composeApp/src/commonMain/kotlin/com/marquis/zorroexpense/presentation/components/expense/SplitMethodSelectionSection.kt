@@ -28,82 +28,88 @@ fun SplitMethodSelectionSection(
     selectedUsers: List<User>,
     percentageSplits: Map<String, Float>,
     numberSplits: Map<String, Float>,
-    onSplitMethodClick: () -> Unit
+    onSplitMethodClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Text(
             text = "Split Method",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
         )
-        
+
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onSplitMethodClick() },
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            shape = RoundedCornerShape(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onSplitMethodClick() },
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            shape = RoundedCornerShape(8.dp),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
                     Text(
-                        text = when (splitMethod) {
-                            SplitMethod.PERCENTAGE -> "Percentage"
-                            SplitMethod.NUMBER -> "By Amount"
-                        },
+                        text =
+                            when (splitMethod) {
+                                SplitMethod.PERCENTAGE -> "Percentage"
+                                SplitMethod.NUMBER -> "By Amount"
+                            },
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    
+
                     Text(
-                        text = when (splitMethod) {
-                            SplitMethod.PERCENTAGE -> {
-                                if (percentageSplits.isNotEmpty()) {
-                                    // Check if all percentages are equal (default split)
-                                    val expectedEqualPercentage = 100f / selectedUsers.size
-                                    val isEqualSplit = percentageSplits.values.all { 
-                                        kotlin.math.abs(it - expectedEqualPercentage) < 0.1f 
-                                    }
-                                    
-                                    if (isEqualSplit) {
-                                        "Equal percentage split"
+                        text =
+                            when (splitMethod) {
+                                SplitMethod.PERCENTAGE -> {
+                                    if (percentageSplits.isNotEmpty()) {
+                                        // Check if all percentages are equal (default split)
+                                        val expectedEqualPercentage = 100f / selectedUsers.size
+                                        val isEqualSplit =
+                                            percentageSplits.values.all {
+                                                kotlin.math.abs(it - expectedEqualPercentage) < 0.1f
+                                            }
+
+                                        if (isEqualSplit) {
+                                            "Equal percentage split"
+                                        } else {
+                                            "Custom percentage split"
+                                        }
                                     } else {
-                                        "Custom percentage split"
+                                        "Equal percentage split"
                                     }
-                                } else {
-                                    "Equal percentage split"
                                 }
-                            }
-                            SplitMethod.NUMBER -> {
-                                if (numberSplits.isNotEmpty()) {
-                                    "Custom amounts"
-                                } else {
-                                    "Custom amount split"
+                                SplitMethod.NUMBER -> {
+                                    if (numberSplits.isNotEmpty()) {
+                                        "Custom amounts"
+                                    } else {
+                                        "Custom amount split"
+                                    }
                                 }
-                            }
-                        },
+                            },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
                 }
-                
+
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = "Change split method",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

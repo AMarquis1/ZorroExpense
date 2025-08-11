@@ -30,7 +30,7 @@ fun CategorySelectionBottomSheet(
     categories: List<Category>,
     onCategorySelected: (Category) -> Unit,
     onDismiss: () -> Unit,
-    bottomSheetState: androidx.compose.material3.SheetState
+    bottomSheetState: androidx.compose.material3.SheetState,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -38,26 +38,27 @@ fun CategorySelectionBottomSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             Text(
                 text = "Select Category",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp),
             )
-            
+
             LazyColumn {
                 items(categories) { category ->
                     CategoryItem(
                         category = category,
-                        onClick = { onCategorySelected(category) }
+                        onClick = { onCategorySelected(category) },
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -66,24 +67,25 @@ fun CategorySelectionBottomSheet(
 @Composable
 private fun CategoryItem(
     category: Category,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     ListItem(
         headlineContent = {
             Text(
                 text = category.name,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
             )
         },
         leadingContent = {
             CategoryIconCircle(
                 category = category,
-                size = 40.dp
+                size = 40.dp,
             )
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 4.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(vertical = 4.dp),
     )
 }

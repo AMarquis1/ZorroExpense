@@ -60,7 +60,7 @@ fun SplitMethodBottomSheet(
     onNumberChanged: (String, Float) -> Unit,
     onResetToEqual: () -> Unit,
     onDismiss: () -> Unit,
-    bottomSheetState: androidx.compose.material3.SheetState
+    bottomSheetState: androidx.compose.material3.SheetState,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -68,27 +68,29 @@ fun SplitMethodBottomSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             // Title and Done button row
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Split Method",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
-                
+
                 // Done button
                 TextButton(
-                    onClick = onDismiss
+                    onClick = onDismiss,
                 ) {
                     Text(
                         text = "Done".uppercase(),
@@ -97,42 +99,43 @@ fun SplitMethodBottomSheet(
                     )
                 }
             }
-            
+
             // Segmented control for method selection
             SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 SegmentedButton(
                     shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                     onClick = { onMethodChanged(SplitMethod.PERCENTAGE) },
-                    selected = currentMethod == SplitMethod.PERCENTAGE
+                    selected = currentMethod == SplitMethod.PERCENTAGE,
                 ) {
                     Text("Percentage")
                 }
                 SegmentedButton(
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                     onClick = { onMethodChanged(SplitMethod.NUMBER) },
-                    selected = currentMethod == SplitMethod.NUMBER
+                    selected = currentMethod == SplitMethod.NUMBER,
                 ) {
                     Text("Amount")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // User list with split values
             LazyColumn {
                 items(selectedUsers) { user ->
                     val currentPercentage = percentageSplits[user.userId] ?: (100f / selectedUsers.size)
-                    val currentAmount = numberSplits[user.userId] ?: run {
-                        // Pre-fill amount based on percentage if no custom amount is set
-                        if (expenseAmount > 0 && currentPercentage > 0) {
-                            (expenseAmount * currentPercentage / 100f)
-                        } else {
-                            expenseAmount / selectedUsers.size
+                    val currentAmount =
+                        numberSplits[user.userId] ?: run {
+                            // Pre-fill amount based on percentage if no custom amount is set
+                            if (expenseAmount > 0 && currentPercentage > 0) {
+                                (expenseAmount * currentPercentage / 100f)
+                            } else {
+                                expenseAmount / selectedUsers.size
+                            }
                         }
-                    }
-                    
+
                     SplitUserItem(
                         user = user,
                         splitMethod = currentMethod,
@@ -141,48 +144,54 @@ fun SplitMethodBottomSheet(
                         expenseAmount = expenseAmount,
                         selectedUsers = selectedUsers,
                         onPercentageFinalized = { value -> onPercentageChanged(user.userId, value) },
-                        onNumberFinalized = { value -> onNumberChanged(user.userId, value) }
+                        onNumberFinalized = { value -> onNumberChanged(user.userId, value) },
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Reset to Equal button (show when splits are not equal)
-            val shouldShowResetButton = when (currentMethod) {
-                SplitMethod.PERCENTAGE -> {
-                    if (percentageSplits.isNotEmpty()) {
-                        val expectedEqualPercentage = 100f / selectedUsers.size
-                        !percentageSplits.values.all { 
-                            kotlin.math.abs(it - expectedEqualPercentage) < 0.1f 
+            val shouldShowResetButton =
+                when (currentMethod) {
+                    SplitMethod.PERCENTAGE -> {
+                        if (percentageSplits.isNotEmpty()) {
+                            val expectedEqualPercentage = 100f / selectedUsers.size
+                            !percentageSplits.values.all {
+                                kotlin.math.abs(it - expectedEqualPercentage) < 0.1f
+                            }
+                        } else {
+                            false
                         }
-                    } else false
-                }
-                SplitMethod.NUMBER -> {
-                    if (numberSplits.isNotEmpty() && expenseAmount > 0) {
-                        val expectedEqualAmount = expenseAmount / selectedUsers.size
-                        !numberSplits.values.all { 
-                            kotlin.math.abs(it - expectedEqualAmount) < 0.01f 
+                    }
+                    SplitMethod.NUMBER -> {
+                        if (numberSplits.isNotEmpty() && expenseAmount > 0) {
+                            val expectedEqualAmount = expenseAmount / selectedUsers.size
+                            !numberSplits.values.all {
+                                kotlin.math.abs(it - expectedEqualAmount) < 0.01f
+                            }
+                        } else {
+                            false
                         }
-                    } else false
+                    }
                 }
-            }
-            
+
             if (shouldShowResetButton) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Start
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Start,
                 ) {
                     OutlinedButton(
-                        onClick = onResetToEqual
+                        onClick = onResetToEqual,
                     ) {
                         Text("Reset".uppercase())
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -200,13 +209,13 @@ private fun SplitUserItem(
     @Suppress("UNUSED_PARAMETER") expenseAmount: Float,
     @Suppress("UNUSED_PARAMETER") selectedUsers: List<User>,
     onPercentageFinalized: (Float) -> Unit,
-    onNumberFinalized: (Float) -> Unit
+    onNumberFinalized: (Float) -> Unit,
 ) {
     // Local state for the percentage input while editing
-    var tempPercentageText by remember(user.userId, percentageValue) { 
-        mutableStateOf(if (percentageValue > 0) percentageValue.toInt().toString() else "") 
+    var tempPercentageText by remember(user.userId, percentageValue) {
+        mutableStateOf(if (percentageValue > 0) percentageValue.toInt().toString() else "")
     }
-    
+
     // Local state for the amount input while editing
     var tempAmountText by remember(user.userId, numberValue) {
         mutableStateOf(
@@ -218,45 +227,51 @@ private fun SplitUserItem(
                 } else {
                     rounded.toString()
                 }
-            } else ""
+            } else {
+                ""
+            },
         )
     }
-    
+
     // Update temp states when values change (from auto-balancing)
     LaunchedEffect(numberValue) {
         if (numberValue > 0) {
             val rounded = (numberValue * 100).toInt() / 100.0
-            val formattedValue = if (rounded == rounded.toInt().toDouble()) {
-                rounded.toInt().toString()
-            } else {
-                rounded.toString()
-            }
+            val formattedValue =
+                if (rounded == rounded.toInt().toDouble()) {
+                    rounded.toInt().toString()
+                } else {
+                    rounded.toString()
+                }
             tempAmountText = formattedValue
         } else {
             tempAmountText = ""
         }
     }
-    
+
     LaunchedEffect(percentageValue) {
         tempPercentageText = if (percentageValue > 0) percentageValue.toInt().toString() else ""
     }
-    
+
     val focusManager = LocalFocusManager.current
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        shape = RoundedCornerShape(8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             ProfileAvatar(
                 name = user.name,
@@ -265,14 +280,14 @@ private fun SplitUserItem(
                 backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             )
-            
+
             Text(
                 text = user.name,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            
+
             when (splitMethod) {
                 SplitMethod.PERCENTAGE -> {
                     OutlinedTextField(
@@ -281,37 +296,40 @@ private fun SplitUserItem(
                             // Update local state immediately for responsive UI
                             tempPercentageText = value
                         },
-                        modifier = Modifier
-                            .width(80.dp)
-                            .onFocusChanged { focusState ->
-                                // Finalize percentage when user loses focus
-                                if (!focusState.isFocused && tempPercentageText.isNotEmpty()) {
+                        modifier =
+                            Modifier
+                                .width(80.dp)
+                                .onFocusChanged { focusState ->
+                                    // Finalize percentage when user loses focus
+                                    if (!focusState.isFocused && tempPercentageText.isNotEmpty()) {
+                                        tempPercentageText.toIntOrNull()?.let { percentage ->
+                                            if (percentage in 0..100) {
+                                                onPercentageFinalized(percentage.toFloat())
+                                            }
+                                        }
+                                    }
+                                },
+                        singleLine = true,
+                        keyboardOptions =
+                            KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done,
+                            ),
+                        keyboardActions =
+                            KeyboardActions(
+                                onDone = {
+                                    // Finalize percentage when user presses Done
                                     tempPercentageText.toIntOrNull()?.let { percentage ->
                                         if (percentage in 0..100) {
                                             onPercentageFinalized(percentage.toFloat())
                                         }
                                     }
-                                }
-                            },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                // Finalize percentage when user presses Done
-                                tempPercentageText.toIntOrNull()?.let { percentage ->
-                                    if (percentage in 0..100) {
-                                        onPercentageFinalized(percentage.toFloat())
-                                    }
-                                }
-                                // Clear focus to hide keyboard
-                                focusManager.clearFocus()
-                            }
-                        ),
+                                    // Clear focus to hide keyboard
+                                    focusManager.clearFocus()
+                                },
+                            ),
                         placeholder = { Text("0") },
-                        suffix = { Text("%") }
+                        suffix = { Text("%") },
                     )
                 }
                 SplitMethod.NUMBER -> {
@@ -321,37 +339,40 @@ private fun SplitUserItem(
                             // Update local state immediately for responsive UI
                             tempAmountText = value
                         },
-                        modifier = Modifier
-                            .width(100.dp)
-                            .onFocusChanged { focusState ->
-                                // Finalize amount when user loses focus
-                                if (!focusState.isFocused && tempAmountText.isNotEmpty()) {
+                        modifier =
+                            Modifier
+                                .width(100.dp)
+                                .onFocusChanged { focusState ->
+                                    // Finalize amount when user loses focus
+                                    if (!focusState.isFocused && tempAmountText.isNotEmpty()) {
+                                        tempAmountText.toFloatOrNull()?.let { amount ->
+                                            if (amount >= 0) {
+                                                onNumberFinalized(amount)
+                                            }
+                                        }
+                                    }
+                                },
+                        singleLine = true,
+                        keyboardOptions =
+                            KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                                imeAction = ImeAction.Done,
+                            ),
+                        keyboardActions =
+                            KeyboardActions(
+                                onDone = {
+                                    // Finalize amount when user presses Done
                                     tempAmountText.toFloatOrNull()?.let { amount ->
                                         if (amount >= 0) {
                                             onNumberFinalized(amount)
                                         }
                                     }
-                                }
-                            },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Decimal,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                // Finalize amount when user presses Done
-                                tempAmountText.toFloatOrNull()?.let { amount ->
-                                    if (amount >= 0) {
-                                        onNumberFinalized(amount)
-                                    }
-                                }
-                                // Clear focus to hide keyboard
-                                focusManager.clearFocus()
-                            }
-                        ),
+                                    // Clear focus to hide keyboard
+                                    focusManager.clearFocus()
+                                },
+                            ),
                         placeholder = { Text("0.00") },
-                        prefix = { Text("$") }
+                        prefix = { Text("$") },
                     )
                 }
             }

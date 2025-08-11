@@ -25,7 +25,7 @@ import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
 
 /**
  * Clean dependency injection module following KMP and Clean Architecture standards
- * 
+ *
  * Features:
  * - Proper abstraction layers
  * - Clean dependency graph
@@ -34,133 +34,135 @@ import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
  * - Easy testing and mocking
  */
 object AppModule {
-    
     // =================
     // Infrastructure Layer
     // =================
-    
+
     private val firestoreService: FirestoreService by lazy {
         FirestoreService()
     }
-    
+
     // =================
     // Cache Layer
     // =================
-    
+
     private val expensesCacheManager: CacheManager<String, List<Expense>> by lazy {
         InMemoryCacheManager(CacheConfiguration.expensesCacheStrategy())
     }
-    
+
     // =================
     // Data Sources
     // =================
-    
+
     private val expenseRemoteDataSource: ExpenseRemoteDataSource by lazy {
         ExpenseRemoteDataSourceImpl(firestoreService)
     }
-    
+
     private val expenseLocalDataSource: ExpenseLocalDataSource by lazy {
         ExpenseLocalDataSourceImpl(expensesCacheManager)
     }
-    
+
     // =================
     // Repository Layer
     // =================
-    
+
     private val expenseRepository: ExpenseRepository by lazy {
         ExpenseRepositoryImpl(
             remoteDataSource = expenseRemoteDataSource,
-            localDataSource = expenseLocalDataSource
+            localDataSource = expenseLocalDataSource,
         )
     }
-    
+
     private val categoryRepository: CategoryRepository by lazy {
         CategoryRepositoryImpl(firestoreService)
     }
-    
+
     // =================
     // Use Case Layer
     // =================
-    
+
     private val getExpensesUseCase: GetExpensesUseCase by lazy {
         GetExpensesUseCase(expenseRepository)
     }
-    
+
     private val refreshExpensesUseCase: RefreshExpensesUseCase by lazy {
         RefreshExpensesUseCase(expenseRepository)
     }
-    
+
     private val getCategoriesUseCase: GetCategoriesUseCase by lazy {
         GetCategoriesUseCase(categoryRepository)
     }
-    
+
     private val addExpenseUseCase: AddExpenseUseCase by lazy {
         AddExpenseUseCase(expenseRepository)
     }
-    
+
     private val updateExpenseUseCase: UpdateExpenseUseCase by lazy {
         UpdateExpenseUseCase(expenseRepository)
     }
-    
+
     private val deleteExpenseUseCase: DeleteExpenseUseCase by lazy {
         DeleteExpenseUseCase(expenseRepository)
     }
-    
+
     // =================
     // Presentation Layer
     // =================
-    
+
     private var expenseListViewModel: ExpenseListViewModel? = null
-    
+
     /**
      * Provide ExpenseListViewModel with proper lifecycle management
      * Uses clean dependency injection with interfaces
      */
     fun provideExpenseListViewModel(
         onExpenseClick: (Expense) -> Unit = {},
-        onAddExpenseClick: () -> Unit = {}
+        onAddExpenseClick: () -> Unit = {},
     ): ExpenseListViewModel {
         // Get or create singleton instance
-        val viewModel = expenseListViewModel ?: ExpenseListViewModel(
-            getExpensesUseCase = getExpensesUseCase,
-            getCategoriesUseCase = getCategoriesUseCase,
-            refreshExpensesUseCase = refreshExpensesUseCase,
-            deleteExpenseUseCase = deleteExpenseUseCase,
-            onExpenseClick = onExpenseClick,
-            onAddExpenseClick = onAddExpenseClick
-        ).also { expenseListViewModel = it }
-        
+        val viewModel =
+            expenseListViewModel ?: ExpenseListViewModel(
+                getExpensesUseCase = getExpensesUseCase,
+                getCategoriesUseCase = getCategoriesUseCase,
+                refreshExpensesUseCase = refreshExpensesUseCase,
+                deleteExpenseUseCase = deleteExpenseUseCase,
+                onExpenseClick = onExpenseClick,
+                onAddExpenseClick = onAddExpenseClick,
+            ).also { expenseListViewModel = it }
+
         // Update callbacks for navigation
         viewModel.updateCallbacks(onExpenseClick, onAddExpenseClick)
-        
+
         // Ensure data is loaded (uses cache-first strategy)
         viewModel.ensureDataLoaded()
-        
+
         return viewModel
     }
-    
-    fun provideAddExpenseViewModel(): AddExpenseViewModel {
-        return AddExpenseViewModel(addExpenseUseCase, getCategoriesUseCase)
-    }
-    
-    fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel {
-        return ExpenseDetailViewModel(expense)
-    }
-    
+
+    fun provideAddExpenseViewModel(): AddExpenseViewModel = AddExpenseViewModel(addExpenseUseCase, getCategoriesUseCase)
+
+    fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel = ExpenseDetailViewModel(expense)
+
     // =================
     // Public API for Testing and Direct Access
     // =================
-    
+
     fun provideExpenseRepository(): ExpenseRepository = expenseRepository
+
     fun provideCategoryRepository(): CategoryRepository = categoryRepository
-    
+
     fun provideGetExpensesUseCase(): GetExpensesUseCase = getExpensesUseCase
+
     fun provideRefreshExpensesUseCase(): RefreshExpensesUseCase = refreshExpensesUseCase
+
     fun provideGetCategoriesUseCase(): GetCategoriesUseCase = getCategoriesUseCase
+
     fun provideAddExpenseUseCase(): AddExpenseUseCase = addExpenseUseCase
+
     fun provideUpdateExpenseUseCase(): UpdateExpenseUseCase = updateExpenseUseCase
+
     fun provideDeleteExpenseUseCase(): DeleteExpenseUseCase = deleteExpenseUseCase
-    
+
     /**
      * Clear all caches - useful for testing or logout scenarios
      */
@@ -170,7 +172,7 @@ object AppModule {
             // For now, this is a placeholder
         }
     }
-    
+
     /**
      * Reset all singletons - useful for testing
      */

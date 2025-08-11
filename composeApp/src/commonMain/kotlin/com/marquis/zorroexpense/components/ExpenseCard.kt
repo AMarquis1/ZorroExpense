@@ -47,16 +47,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
-import zorroexpense.composeapp.generated.resources.Res
-import zorroexpense.composeapp.generated.resources.alex
-import zorroexpense.composeapp.generated.resources.sarah
 
 /**
  * Wrapper component that displays date on the left and expense card on the right
- * 
+ *
  * @param expense The expense data to display
  * @param onCardClick Optional click handler for the card
  * @param sharedTransitionScope Optional shared transition scope for shared element transitions
@@ -70,13 +66,14 @@ fun ExpenseCardWithDate(
     onCardClick: (() -> Unit)? = null,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Date display on the left
         ExpenseDateDisplay(date = expense.date)
@@ -86,7 +83,7 @@ fun ExpenseCardWithDate(
             expense = expense,
             onCardClick = onCardClick,
             sharedTransitionScope = sharedTransitionScope,
-            animatedContentScope = animatedContentScope
+            animatedContentScope = animatedContentScope,
         )
     }
 }
@@ -94,7 +91,7 @@ fun ExpenseCardWithDate(
 /**
  * Reusable ExpenseCard component that displays expense information with profile avatar
  * Profile image is automatically determined from the expense.paidBy userId
- * 
+ *
  * @param expense The expense data to display
  * @param onCardClick Optional click handler for the card
  * @param sharedTransitionScope Optional shared transition scope for shared element transitions
@@ -108,49 +105,55 @@ fun ExpenseCard(
     onCardClick: (() -> Unit)? = null,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, bottom = 8.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, bottom = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        onClick = { onCardClick?.invoke() }
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
+        onClick = { onCardClick?.invoke() },
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Category icon on the left with shared element transition
             if (expense.category.icon.isNotEmpty()) {
-                val categoryModifier = if (sharedTransitionScope != null && animatedContentScope != null) {
-                    with(sharedTransitionScope) {
-                        Modifier.sharedElement(
-                            sharedContentState = rememberSharedContentState(key = "category-${expense.category.name}-${expense.name}-${expense.date}"),
-                            animatedVisibilityScope = animatedContentScope
-                        )
+                val categoryModifier =
+                    if (sharedTransitionScope != null && animatedContentScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier.sharedElement(
+                                sharedContentState =
+                                    rememberSharedContentState(
+                                        key = "category-${expense.category.name}-${expense.name}-${expense.date}",
+                                    ),
+                                animatedVisibilityScope = animatedContentScope,
+                            )
+                        }
+                    } else {
+                        Modifier
                     }
-                } else {
-                    Modifier
-                }
-                
+
                 CategoryIconCircle(
                     category = expense.category,
                     size = 40.dp,
-                    modifier = categoryModifier
+                    modifier = categoryModifier,
                 )
                 Spacer(modifier = Modifier.width(12.dp))
             }
-            
+
             // Content column
             ExpenseCardContent(
                 expense = expense,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -165,14 +168,14 @@ private fun ExpenseCardContent(
     expense: Expense,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         // Header row with buyer profile and price
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Expense name on the left
             Text(
@@ -182,20 +185,20 @@ private fun ExpenseCardContent(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // Right side with price and split users
             Column(
-                horizontalAlignment = Alignment.End
+                horizontalAlignment = Alignment.End,
             ) {
                 ExpensePriceChip(
                     price = expense.price,
-                    categoryColor = expense.category.color
+                    categoryColor = expense.category.color,
                 )
-                
+
                 // Split users avatars with buyer emphasized
                 if (expense.splitWith.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -206,7 +209,6 @@ private fun ExpenseCardContent(
                 }
             }
         }
-        
     }
 }
 
@@ -216,25 +218,25 @@ private fun ExpenseCardContent(
 @Composable
 private fun ExpenseDateDisplay(
     date: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val formattedDate = formatDateToMonthDay(date)
-    
+
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = formattedDate.first, // Month (e.g., "JAN")
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
         Text(
             text = formattedDate.second, // Day (e.g., "25")
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -248,17 +250,17 @@ private fun ExpenseDateDisplay(
 private fun SplitUsersRow(
     users: List<com.marquis.zorroexpense.domain.model.User>,
     buyer: com.marquis.zorroexpense.domain.model.User,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         ProfileAvatar(
             name = buyer.name,
             size = 32.dp,
-            userProfile = buyer.profileImage
+            userProfile = buyer.profileImage,
         )
 
         val otherUsers = users.filter { it.userId != buyer.userId }
@@ -267,16 +269,17 @@ private fun SplitUsersRow(
                 imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                 contentDescription = "splits with",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .size(20.dp)
-                    .padding(horizontal = 2.dp)
+                modifier =
+                    Modifier
+                        .size(20.dp)
+                        .padding(horizontal = 2.dp),
             )
 
             otherUsers.forEach { user ->
                 ProfileAvatar(
                     name = user.name,
                     size = 20.dp,
-                    userProfile = user.profileImage
+                    userProfile = user.profileImage,
                 )
             }
         }
@@ -291,25 +294,27 @@ private fun SplitUsersRow(
 fun ExpensePriceChip(
     price: Double,
     categoryColor: String = "",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = if (categoryColor.isNotEmpty()) {
-        parseHexColor(categoryColor)
-    } else {
-        MaterialTheme.colorScheme.primaryContainer
-    }
-    
+    val backgroundColor =
+        if (categoryColor.isNotEmpty()) {
+            parseHexColor(categoryColor)
+        } else {
+            MaterialTheme.colorScheme.primaryContainer
+        }
+
     // Calculate contrasting text color
-    val textColor = if (categoryColor.isNotEmpty()) {
-        Color.White // Use white text on colored backgrounds
-    } else {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    }
-    
+    val textColor =
+        if (categoryColor.isNotEmpty()) {
+            Color.White // Use white text on colored backgrounds
+        } else {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        }
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = backgroundColor
+        color = backgroundColor,
     ) {
         Text(
             text = "$${formatPrice(price)}",
@@ -317,9 +322,10 @@ fun ExpensePriceChip(
             fontWeight = FontWeight.Bold,
             color = textColor,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .widthIn(min = 72.dp) // Minimum width to accommodate 5-digit prices
-                .padding(horizontal = 12.dp, vertical = 4.dp)
+            modifier =
+                Modifier
+                    .widthIn(min = 72.dp) // Minimum width to accommodate 5-digit prices
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
         )
     }
 }
@@ -333,56 +339,57 @@ fun MonthSeparator(
     month: String,
     isCollapsed: Boolean = false,
     onToggleCollapsed: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // Interaction source for press feedback
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     // Animate the arrow rotation
     val rotationAngle by animateFloatAsState(
         targetValue = if (isCollapsed) -90f else 0f,
         animationSpec = tween(durationMillis = 300),
-        label = "arrow_rotation"
+        label = "arrow_rotation",
     )
-    
+
     // Animate press scale
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(durationMillis = 100),
-        label = "press_scale"
+        label = "press_scale",
     )
-    
+
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null // We handle the feedback with scale animation
-            ) { onToggleCollapsed() }
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }.clickable(
+                    interactionSource = interactionSource,
+                    indication = null, // We handle the feedback with scale animation
+                ) { onToggleCollapsed() }
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = month,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
-        
+
         // Animated collapse/expand indicator
         Text(
             text = "▼",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.graphicsLayer {
-                rotationZ = rotationAngle
-            }
+            modifier =
+                Modifier.graphicsLayer {
+                    rotationZ = rotationAngle
+                },
         )
     }
 }
@@ -390,15 +397,14 @@ fun MonthSeparator(
 /**
  * Utility function to parse hex color string to Compose Color
  */
-private fun parseHexColor(hexColor: String): Color {
-    return try {
+private fun parseHexColor(hexColor: String): Color =
+    try {
         val cleanHex = hexColor.removePrefix("#")
         val colorInt = cleanHex.toLong(16)
         Color(colorInt or 0xFF000000) // Add alpha if not present
     } catch (e: Exception) {
         Color(0xFF6200EE) // Default purple color
     }
-}
 
 /**
  * Utility function to format price with proper decimal places
@@ -425,31 +431,42 @@ private fun formatDateToMonthDay(timestamp: String): Pair<String, String> {
     if (timestamp.isBlank()) {
         return "NOV" to "1"
     }
-    
+
     try {
         // Extract date part if it's an ISO timestamp
         val dateStr = timestamp.substringBefore("T")
-        
+
         // Parse date in format YYYY-MM-DD
         val parts = dateStr.split("-")
         if (parts.size >= 3) {
             val month = parts[1].toIntOrNull() ?: 1
             val day = parts[2].toIntOrNull() ?: 1
-            
-            val monthNames = arrayOf(
-                "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
-            )
-            
+
+            val monthNames =
+                arrayOf(
+                    "JAN",
+                    "FEB",
+                    "MAR",
+                    "APR",
+                    "MAY",
+                    "JUN",
+                    "JUL",
+                    "AUG",
+                    "SEP",
+                    "OCT",
+                    "NOV",
+                    "DEC",
+                )
+
             val monthName = if (month in 1..12) monthNames[month - 1] else "JAN"
             val dayStr = day.toString()
-            
+
             return monthName to dayStr
         }
     } catch (_: Exception) {
         // Fall back to default if parsing fails
     }
-    
+
     return "NOV" to "1"
 }
 
@@ -460,26 +477,37 @@ fun getMonthYear(timestamp: String): String {
     if (timestamp.isBlank()) {
         return "November 2024"
     }
-    
+
     try {
         val dateStr = timestamp.substringBefore("T")
         val parts = dateStr.split("-")
         if (parts.size >= 3) {
             val year = parts[0]
             val month = parts[1].toIntOrNull() ?: 11
-            
-            val monthNames = arrayOf(
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            )
-            
+
+            val monthNames =
+                arrayOf(
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                )
+
             val monthName = if (month in 1..12) monthNames[month - 1] else "November"
             return "$monthName $year"
         }
     } catch (_: Exception) {
         // Fall back to default if parsing fails
     }
-    
+
     return "November 2024"
 }
 
@@ -491,41 +519,44 @@ fun CategoryFilterRow(
     categories: List<Category>,
     selectedCategories: Set<Category>,
     onCategoryToggle: (Category) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     MultiChoiceSegmentedButtonRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
     ) {
         categories.forEachIndexed { index, category ->
             val isSelected = selectedCategories.contains(category)
-            
+
             SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = categories.size
-                ),
+                shape =
+                    SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = categories.size,
+                    ),
                 checked = isSelected,
                 onCheckedChange = { onCategoryToggle(category) },
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    activeContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    inactiveContainerColor = MaterialTheme.colorScheme.surface,
-                    inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                colors =
+                    SegmentedButtonDefaults.colors(
+                        activeContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        activeContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        inactiveContainerColor = MaterialTheme.colorScheme.surface,
+                        inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     CategoryIconCircle(
                         category = category,
-                        size = 20.dp
+                        size = 20.dp,
                     )
                     Text(
                         text = category.name,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 }
             }
@@ -540,22 +571,23 @@ fun CategoryFilterRow(
 fun CategoryIconCircle(
     category: Category,
     size: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .size(size)
-            .background(
-                color = parseHexColor(category.color),
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .size(size)
+                .background(
+                    color = parseHexColor(category.color),
+                    shape = CircleShape,
+                ),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = getCategoryIcon(category.icon),
             contentDescription = category.name,
             tint = Color.White,
-            modifier = Modifier.size(size * 0.6f)
+            modifier = Modifier.size(size * 0.6f),
         )
     }
 }
@@ -563,11 +595,10 @@ fun CategoryIconCircle(
 /**
  * Helper function to get Material Icon based on category icon name
  */
-private fun getCategoryIcon(iconName: String): ImageVector {
-    return when (iconName) {
+private fun getCategoryIcon(iconName: String): ImageVector =
+    when (iconName) {
         "Home" -> Icons.Outlined.Home
         "ShoppingCart" -> Icons.Outlined.ShoppingCart
         "Pets" -> Icons.Outlined.Pets
         else -> Icons.Outlined.Home // Default fallback
     }
-}

@@ -5,11 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-actual fun PullToRefreshBox(
+actual fun pullToRefreshBox(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     // For WASM, just wrap the content without pull-to-refresh for now
     // Could be implemented with web-specific gestures later

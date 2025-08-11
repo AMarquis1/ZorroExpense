@@ -5,7 +5,7 @@ import com.marquis.zorroexpense.domain.model.Expense
 
 sealed class ExpenseListUiState {
     object Loading : ExpenseListUiState()
-    
+
     data class Success(
         val expenses: List<Expense> = emptyList(),
         val filteredExpenses: List<Expense> = emptyList(),
@@ -17,19 +17,21 @@ sealed class ExpenseListUiState {
         val isFabExpanded: Boolean = true,
         val isRefreshing: Boolean = false,
         val hasInitiallyLoaded: Boolean = false,
-        val pendingDeletions: Set<String> = emptySet() // Set of expense documentIds pending deletion
+        val pendingDeletions: Set<String> = emptySet(), // Set of expense documentIds pending deletion
     ) : ExpenseListUiState()
-    
+
     data class Error(
-        val message: String
+        val message: String,
     ) : ExpenseListUiState()
 }
 
-enum class SortOption(val displayName: String) {
+enum class SortOption(
+    val displayName: String,
+) {
     DATE_DESC("Date (Newest first)"),
     DATE_ASC("Date (Oldest first)"),
     PRICE_DESC("Price (Highest first)"),
     PRICE_ASC("Price (Lowest first)"),
     NAME_ASC("Name (A-Z)"),
-    NAME_DESC("Name (Z-A)")
+    NAME_DESC("Name (Z-A)"),
 }

@@ -30,7 +30,7 @@ fun PaidBySelectionBottomSheet(
     users: List<User>,
     onUserSelected: (User) -> Unit,
     onDismiss: () -> Unit,
-    bottomSheetState: androidx.compose.material3.SheetState
+    bottomSheetState: androidx.compose.material3.SheetState,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -38,26 +38,27 @@ fun PaidBySelectionBottomSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             Text(
                 text = "Select Who Paid",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp),
             )
-            
+
             LazyColumn {
                 items(users) { user ->
                     UserItem(
                         user = user,
-                        onClick = { onUserSelected(user) }
+                        onClick = { onUserSelected(user) },
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -66,13 +67,13 @@ fun PaidBySelectionBottomSheet(
 @Composable
 private fun UserItem(
     user: User,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     ListItem(
         headlineContent = {
             Text(
                 text = user.name,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
             )
         },
         leadingContent = {
@@ -84,9 +85,10 @@ private fun UserItem(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 4.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(vertical = 4.dp),
     )
 }

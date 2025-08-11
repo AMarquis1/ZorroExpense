@@ -11,16 +11,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.marquis.zorroexpense.domain.model.Expense
 
-/**
- * Reusable AppHeader component that displays app title and expense summary with Zorro header image background
- * Designed to work with edge-to-edge layout extending behind status bar
- * 
- * @param appTitle The main title of the app
- * @param expenses List of expenses to calculate totals
- * @param isLoading Loading state
- * @param modifier Optional modifier for styling (should include status bar padding)
- */
-/*@Composable
+/*
+@Composable
 fun AppHeader(
     appTitle: String = "ZorroExpense",
     expenses: List<Expense> = emptyList(),
@@ -51,7 +43,7 @@ fun AppHeader(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AppTitle(title = appTitle)
-                
+
                 if (expenses.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
                     ExpenseSummary(expenses = expenses)
@@ -59,7 +51,7 @@ fun AppHeader(
                     Spacer(modifier = Modifier.height(8.dp))
                     AppSubtitle(subtitle = "Suivi des dépenses")
                 }
-                
+
                 if (isLoading) {
                     Spacer(modifier = Modifier.height(16.dp))
                     CircularProgressIndicator(
@@ -77,7 +69,7 @@ fun AppHeader(
 @Composable
 private fun AppTitle(
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Text(
         text = title,
@@ -85,7 +77,7 @@ private fun AppTitle(
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurface,
         textAlign = TextAlign.Center,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -95,14 +87,14 @@ private fun AppTitle(
 @Composable
 private fun AppSubtitle(
     subtitle: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Text(
         text = subtitle,
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -112,29 +104,28 @@ private fun AppSubtitle(
 @Composable
 private fun ExpenseSummary(
     expenses: List<Expense>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        modifier = modifier,
     ) {
         val totalAmount = expenses.sumOf { it.price }
-        
+
         Text(
             text = "$$totalAmount",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
-        
+
         Text(
             text = "${expenses.size} dépenses pour les criss",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
-

@@ -9,5 +9,5 @@ data class UserDto(
     @SerialName("name")
     val name: String = "",
     @SerialName("profileImage")
-    val profileImage: String = ""
+    val profileImage: String = "",
 )

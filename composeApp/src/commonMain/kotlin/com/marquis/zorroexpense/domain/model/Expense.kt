@@ -8,5 +8,5 @@ data class Expense(
     val date: String = "",
     val category: Category = Category(),
     val paidBy: User = User(), // User object of who paid
-    val splitWith: List<User> = emptyList() // List of User objects who split the expense
+    val splitWith: List<User> = emptyList(), // List of User objects who split the expense
 )

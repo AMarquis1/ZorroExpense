@@ -1,0 +1,10 @@
+root = true
+
+[*.{kt,kts}]
+ktlint_function-naming = disabled
+ktlint_standard_function-naming = disabled
+ktlint_standard_filename = disabled
+
+# Main entry point files should be named main.kt
+[**/main.kt]
+ktlint_filename = disabled

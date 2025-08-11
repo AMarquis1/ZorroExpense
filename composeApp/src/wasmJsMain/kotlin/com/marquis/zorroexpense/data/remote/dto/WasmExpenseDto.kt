@@ -9,7 +9,7 @@ data class WasmExpenseDto(
     override val description: String = "",
     @SerialName("name")
     override val name: String = "",
-    @SerialName("price") 
+    @SerialName("price")
     override val price: Double = 0.0,
     @SerialName("date")
     override val date: String = "",
@@ -18,7 +18,8 @@ data class WasmExpenseDto(
     @SerialName("paidBy")
     val paidById: String = "",
     @SerialName("splitWith")
-    val splitWithIds: List<String> = emptyList()
+    val splitWithIds: List<String> = emptyList(),
+    override val documentId: String,
 ) : ExpenseDto {
     override val category: Any? get() = categoryId
     override val paidBy: Any? get() = paidById

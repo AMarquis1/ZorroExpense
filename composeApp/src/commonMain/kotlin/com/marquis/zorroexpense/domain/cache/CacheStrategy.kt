@@ -9,7 +9,7 @@ import kotlin.time.Duration.Companion.minutes
 data class CacheStrategy(
     val ttl: Duration = 5.minutes,
     val enableOfflineAccess: Boolean = true,
-    val maxSize: Int = 1000
+    val maxSize: Int = 1000,
 ) {
     companion object {
         val DEFAULT = CacheStrategy()

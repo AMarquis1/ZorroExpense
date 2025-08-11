@@ -11,5 +11,5 @@ data class CategoryDto(
     @SerialName("icon")
     val icon: String = "",
     @SerialName("color")
-    val color: String = ""
+    val color: String = "",
 )

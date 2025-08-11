@@ -4,9 +4,7 @@ import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 
 class UpdateExpenseUseCase(
-    private val expenseRepository: ExpenseRepository
+    private val expenseRepository: ExpenseRepository,
 ) {
-    suspend operator fun invoke(expense: Expense): Result<Unit> {
-        return expenseRepository.updateExpense(expense)
-    }
+    suspend operator fun invoke(expense: Expense): Result<Unit> = expenseRepository.updateExpense(expense)
 }

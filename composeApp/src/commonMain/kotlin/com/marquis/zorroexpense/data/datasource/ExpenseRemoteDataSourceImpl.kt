@@ -12,15 +12,15 @@ import com.marquis.zorroexpense.domain.model.Expense
  * Handles network-based data operations
  */
 class ExpenseRemoteDataSourceImpl(
-    private val firestoreService: FirestoreService
+    private val firestoreService: FirestoreService,
 ) : ExpenseRemoteDataSource {
-
-    override suspend fun getExpenses(): Result<List<Expense>> {
-        return try {
+    override suspend fun getExpenses(): Result<List<Expense>> =
+        try {
             if (AppConfig.USE_MOCK_DATA) {
                 MockExpenseData.getMockExpenses()
             } else {
-                firestoreService.getExpenses()
+                firestoreService
+                    .getExpenses()
                     .mapCatching { expenseDtos ->
                         expenseDtos.map { dto ->
                             dto.toDomain(firestoreService)
@@ -30,10 +30,9 @@ class ExpenseRemoteDataSourceImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
 
-    override suspend fun addExpense(expense: Expense): Result<Unit> {
-        return try {
+    override suspend fun addExpense(expense: Expense): Result<Unit> =
+        try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - just return success
                 Result.success(Unit)
@@ -45,10 +44,9 @@ class ExpenseRemoteDataSourceImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
 
-    override suspend fun updateExpense(expense: Expense): Result<Unit> {
-        return try {
+    override suspend fun updateExpense(expense: Expense): Result<Unit> =
+        try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - just return success
                 Result.success(Unit)
@@ -61,10 +59,9 @@ class ExpenseRemoteDataSourceImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
 
-    override suspend fun deleteExpense(expenseId: String): Result<Unit> {
-        return try {
+    override suspend fun deleteExpense(expenseId: String): Result<Unit> =
+        try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - just return success
                 Result.success(Unit)
@@ -75,5 +72,4 @@ class ExpenseRemoteDataSourceImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
 }

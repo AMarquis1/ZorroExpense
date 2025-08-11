@@ -46,7 +46,7 @@ fun SplitWithSelectionBottomSheet(
     paidByUser: User?,
     onUserToggled: (User) -> Unit,
     onDismiss: () -> Unit,
-    bottomSheetState: androidx.compose.material3.SheetState
+    bottomSheetState: androidx.compose.material3.SheetState,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -54,48 +54,50 @@ fun SplitWithSelectionBottomSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             // Header with Done button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Split With",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
-                
+
                 TextButton(
                     onClick = onDismiss,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ),
                 ) {
                     Text("Done".uppercase())
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             LazyColumn {
                 items(users) { user ->
                     val isSelected = selectedUsers.any { it.userId == user.userId }
                     val isPayer = user.userId == paidByUser?.userId
-                    
+
                     SplitWithUserItem(
                         user = user,
                         isSelected = isSelected,
                         isPayer = isPayer,
-                        onClick = { onUserToggled(user) }
+                        onClick = { onUserToggled(user) },
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -106,46 +108,50 @@ private fun SplitWithUserItem(
     user: User,
     isSelected: Boolean,
     isPayer: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
-    val backgroundColor = when {
-        isPayer -> MaterialTheme.colorScheme.primaryContainer
-        isSelected -> MaterialTheme.colorScheme.secondaryContainer
-        else -> Color.Transparent
-    }
-    
-    val textColor = when {
-        isPayer -> MaterialTheme.colorScheme.onPrimaryContainer
-        isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
-        else -> MaterialTheme.colorScheme.onSurface
-    }
-    
+    val backgroundColor =
+        when {
+            isPayer -> MaterialTheme.colorScheme.primaryContainer
+            isSelected -> MaterialTheme.colorScheme.secondaryContainer
+            else -> Color.Transparent
+        }
+
+    val textColor =
+        when {
+            isPayer -> MaterialTheme.colorScheme.onPrimaryContainer
+            isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
+            else -> MaterialTheme.colorScheme.onSurface
+        }
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = !isPayer) { onClick() }
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        ),
-        shape = RoundedCornerShape(8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(enabled = !isPayer) { onClick() }
+                .padding(vertical = 4.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = backgroundColor,
+            ),
+        shape = RoundedCornerShape(8.dp),
     ) {
         ListItem(
             headlineContent = {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = user.name,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = textColor
+                        color = textColor,
                     )
                     if (isPayer) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "(Payer)",
                             style = MaterialTheme.typography.bodySmall,
-                            color = textColor.copy(alpha = 0.7f)
+                            color = textColor.copy(alpha = 0.7f),
                         )
                     }
                 }
@@ -165,10 +171,10 @@ private fun SplitWithUserItem(
                         Icons.Default.Add, // We could use a checkmark here
                         contentDescription = "Selected",
                         tint = textColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                 }
-            }
+            },
         )
     }
 }

@@ -74,7 +74,7 @@ import com.marquis.zorroexpense.components.MonthSeparator
 import com.marquis.zorroexpense.components.getMonthYear
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
-import com.marquis.zorroexpense.platform.PullToRefreshBox
+import com.marquis.zorroexpense.platform.pullToRefreshBox
 import com.marquis.zorroexpense.presentation.components.CustomDeleteSnackbar
 import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
@@ -94,32 +94,32 @@ fun ExpenseListScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     deletedExpenseName: String? = null,
-    onUndoDelete: () -> Unit = {}
+    onUndoDelete: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
-    
+
     // Refresh data when screen comes back into view (e.g., after delete)
     LaunchedEffect(Unit) {
         viewModel.onEvent(ExpenseListUiEvent.RefreshExpenses)
     }
-    
+
     // Snackbar state
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    
+
     // Show snackbar when expense is deleted
     LaunchedEffect(deletedExpenseName) {
         deletedExpenseName?.let { name ->
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
-                    message = DeleteConstants.DELETED_MESSAGE_TEMPLATE.format(name),
-                    duration = DeleteConstants.SNACKBAR_DURATION
+                    message = "Expense \"$name\" has been deleted",
+                    duration = DeleteConstants.SNACKBAR_DURATION,
                 )
             }
         }
     }
-    
+
     // Local UI state for things not managed by ViewModel
     var showConfigMenu by remember { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
@@ -143,7 +143,8 @@ fun ExpenseListScreen(
 
     val groupedExpenses by remember(filteredExpenses) {
         derivedStateOf {
-            filteredExpenses.groupBy { expense -> getMonthYear(expense.date) }
+            filteredExpenses
+                .groupBy { expense -> getMonthYear(expense.date) }
                 .toList()
                 .sortedByDescending { (monthYear, _) -> monthYear }
                 .toMap()
@@ -163,19 +164,20 @@ fun ExpenseListScreen(
     LaunchedEffect(listState) {
         var previousFirstVisibleItemIndex = 0
         var previousFirstVisibleItemScrollOffset = 0
-        
-        snapshotFlow { 
-            listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset 
+
+        snapshotFlow {
+            listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
         }.collect { (currentIndex, currentOffset) ->
-            val isScrollingDown = if (currentIndex != previousFirstVisibleItemIndex) {
-                currentIndex > previousFirstVisibleItemIndex
-            } else {
-                currentOffset > previousFirstVisibleItemScrollOffset
-            }
-            
+            val isScrollingDown =
+                if (currentIndex != previousFirstVisibleItemIndex) {
+                    currentIndex > previousFirstVisibleItemIndex
+                } else {
+                    currentOffset > previousFirstVisibleItemScrollOffset
+                }
+
             // Update FAB expanded state based on scroll direction
             isFabExpanded = !isScrollingDown
-            
+
             // Update previous values
             previousFirstVisibleItemIndex = currentIndex
             previousFirstVisibleItemScrollOffset = currentOffset
@@ -184,14 +186,14 @@ fun ExpenseListScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = { 
+        snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { snackbarData ->
                 CustomDeleteSnackbar(
                     snackbarData = snackbarData,
                     onUndo = {
                         onUndoDelete()
                         snackbarData.dismiss()
-                    }
+                    },
                 )
             }
         },
@@ -201,167 +203,178 @@ fun ExpenseListScreen(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .layout { measurable, constraints ->
-                                val paddingCompensation = 16.dp.toPx().roundToInt()
-                                val adjustedConstraints = constraints.copy(
-                                    maxWidth = constraints.maxWidth + paddingCompensation * 2
-                                )
-                                val placeable = measurable.measure(adjustedConstraints)
-                                layout(placeable.width, placeable.height) {
-                                    placeable.place(-paddingCompensation, 0)
-                                }
-                            }
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .layout { measurable, constraints ->
+                                    val paddingCompensation = 16.dp.toPx().roundToInt()
+                                    val adjustedConstraints =
+                                        constraints.copy(
+                                            maxWidth = constraints.maxWidth + paddingCompensation * 2,
+                                        )
+                                    val placeable = measurable.measure(adjustedConstraints)
+                                    layout(placeable.width, placeable.height) {
+                                        placeable.place(-paddingCompensation, 0)
+                                    }
+                                },
                     ) {
                         // Background image - true full width with custom layout compensation
                         Image(
                             painter = painterResource(Res.drawable.zorro_header),
                             contentDescription = "Zorro header background",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(
-                                    60.dp + with(LocalDensity.current) {
-                                        WindowInsets.statusBars.getTop(this).toDp()
-                                    }
-                                ),
-                            contentScale = ContentScale.Crop
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(
+                                        60.dp +
+                                            with(LocalDensity.current) {
+                                                WindowInsets.statusBars.getTop(this).toDp()
+                                            },
+                                    ),
+                            contentScale = ContentScale.Crop,
                         )
                     }
-                        Row(
-                            modifier = Modifier
+                    Row(
+                        modifier =
+                            Modifier
                                 .fillMaxWidth()
                                 .padding(
-                                    top = with(LocalDensity.current) {
-                                        WindowInsets.statusBars.getTop(this).toDp()
-                                    }
+                                    top =
+                                        with(LocalDensity.current) {
+                                            WindowInsets.statusBars.getTop(this).toDp()
+                                        },
                                 ),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (isSearchExpanded) {
-                                // Expanded search field
-                                OutlinedTextField(
-                                    value = searchQuery,
-                                    onValueChange = { query -> viewModel.onEvent(ExpenseListUiEvent.SearchQueryChanged(query)) },
-                                    placeholder = {
-                                        Text(
-                                            "Search expenses...",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = androidx.compose.ui.graphics.Color.Gray
-                                        )
-                                    },
-                                    leadingIcon = {
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (isSearchExpanded) {
+                            // Expanded search field
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { query -> viewModel.onEvent(ExpenseListUiEvent.SearchQueryChanged(query)) },
+                                placeholder = {
+                                    Text(
+                                        "Search expenses...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = androidx.compose.ui.graphics.Color.Gray,
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = androidx.compose.ui.graphics.Color.Gray,
+                                    )
+                                },
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.onEvent(ExpenseListUiEvent.SearchQueryChanged(""))
+                                            viewModel.onEvent(ExpenseListUiEvent.SearchExpandedChanged(false))
+                                        },
+                                    ) {
                                         Icon(
-                                            Icons.Default.Search,
-                                            contentDescription = "Search",
-                                            tint = androidx.compose.ui.graphics.Color.Gray
+                                            Icons.Default.Close,
+                                            contentDescription = "Close search",
+                                            tint = androidx.compose.ui.graphics.Color.Gray,
                                         )
-                                    },
-                                    trailingIcon = {
-                                        IconButton(
-                                            onClick = {
-                                                viewModel.onEvent(ExpenseListUiEvent.SearchQueryChanged(""))
-                                                viewModel.onEvent(ExpenseListUiEvent.SearchExpandedChanged(false))
-                                            }
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Close,
-                                                contentDescription = "Close search",
-                                                tint = androidx.compose.ui.graphics.Color.Gray
-                                            )
-                                        }
-                                    },
-                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    }
+                                },
+                                colors =
+                                    androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                         focusedContainerColor = androidx.compose.ui.graphics.Color.White,
                                         unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
                                         focusedTextColor = androidx.compose.ui.graphics.Color.Black,
                                         unfocusedTextColor = androidx.compose.ui.graphics.Color.Black,
                                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = androidx.compose.ui.graphics.Color.Gray
+                                        unfocusedBorderColor = androidx.compose.ui.graphics.Color.Gray,
                                     ),
-                                    modifier = Modifier
+                                modifier =
+                                    Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp)
                                         .focusRequester(searchFocusRequester),
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(25.dp)
-                                )
-                            } else {
-                                // Collapsed state: App title + search icon + filter icon
-                                Text(
-                                    text = "Zorro Expense",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = androidx.compose.ui.graphics.Color.White,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                singleLine = true,
+                                shape = RoundedCornerShape(25.dp),
+                            )
+                        } else {
+                            // Collapsed state: App title + search icon + filter icon
+                            Text(
+                                text = "Zorro Expense",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = androidx.compose.ui.graphics.Color.White,
+                                modifier = Modifier.weight(1f),
+                            )
 
-                                // Search icon button
+                            // Search icon button
+                            IconButton(
+                                onClick = {
+                                    viewModel.onEvent(ExpenseListUiEvent.SearchExpandedChanged(true))
+                                },
+                            ) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = androidx.compose.ui.graphics.Color.White,
+                                    modifier = Modifier.size(28.dp),
+                                )
+                            }
+
+                            // Filter dropdown button
+                            Box {
                                 IconButton(
-                                    onClick = {
-                                        viewModel.onEvent(ExpenseListUiEvent.SearchExpandedChanged(true))
-                                    }
+                                    onClick = { showConfigMenu = true },
                                 ) {
                                     Icon(
-                                        Icons.Default.Search,
-                                        contentDescription = "Search",
+                                        Icons.Default.FilterList,
+                                        contentDescription = "Filter and sort",
                                         tint = androidx.compose.ui.graphics.Color.White,
-                                        modifier = Modifier.size(28.dp)
+                                        modifier = Modifier.size(28.dp),
                                     )
                                 }
 
-                                // Filter dropdown button
-                                Box {
-                                    IconButton(
-                                        onClick = { showConfigMenu = true }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.FilterList,
-                                            contentDescription = "Filter and sort",
-                                            tint = androidx.compose.ui.graphics.Color.White,
-                                            modifier = Modifier.size(28.dp)
-                                        )
-                                    }
+                                DropdownMenu(
+                                    expanded = showConfigMenu,
+                                    onDismissRequest = { showConfigMenu = false },
+                                ) {
+                                    Text(
+                                        text = "Sort by",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    )
 
-                                    DropdownMenu(
-                                        expanded = showConfigMenu,
-                                        onDismissRequest = { showConfigMenu = false }
-                                    ) {
-                                        Text(
-                                            text = "Sort by",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                                        )
-
-                                        SortOption.entries.forEach { option ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Text(
-                                                        text = option.displayName,
-                                                        color = if (sortBy == option)
+                                    SortOption.entries.forEach { option ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = option.displayName,
+                                                    color =
+                                                        if (sortBy == option) {
                                                             MaterialTheme.colorScheme.primary
-                                                        else
+                                                        } else {
                                                             MaterialTheme.colorScheme.onSurface
-                                                    )
-                                                },
-                                                onClick = {
-                                                    viewModel.onEvent(ExpenseListUiEvent.SortOptionChanged(option))
-                                                    showConfigMenu = false
-                                                }
-                                            )
-                                        }
+                                                        },
+                                                )
+                                            },
+                                            onClick = {
+                                                viewModel.onEvent(ExpenseListUiEvent.SortOptionChanged(option))
+                                                showConfigMenu = false
+                                            },
+                                        )
                                     }
                                 }
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
+                    }
+                },
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
                         containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        titleContentColor = androidx.compose.ui.graphics.Color.White
-                    )
-                )
+                        titleContentColor = androidx.compose.ui.graphics.Color.White,
+                    ),
+            )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -370,7 +383,7 @@ fun ExpenseListScreen(
                 icon = {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = "Add expense"
+                        contentDescription = "Add expense",
                     )
                 },
                 text = {
@@ -378,36 +391,39 @@ fun ExpenseListScreen(
                 },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 16.dp
-                )
+                elevation =
+                    FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 16.dp,
+                    ),
             )
-        }
+        },
     ) { paddingValues ->
-        PullToRefreshBox(
+        pullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = { viewModel.onEvent(ExpenseListUiEvent.RefreshExpenses) },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding())
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = paddingValues.calculateTopPadding()),
         ) {
             when {
                 errorMessage != null -> {
                     ErrorState(
                         title = "Error loading expenses",
-                        message = errorMessage
+                        message = errorMessage,
                     )
                 }
-                
+
                 filteredExpenses.isEmpty() && !isLoading -> {
                     // Show category filter even when empty, but not in error state
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            top = 8.dp,
-                            bottom = 72.dp
-                        )
+                        contentPadding =
+                            PaddingValues(
+                                top = 8.dp,
+                                bottom = 72.dp,
+                            ),
                     ) {
                         // Category filter row
                         item {
@@ -419,42 +435,44 @@ fun ExpenseListScreen(
                                 },
                             )
                         }
-                        
+
                         // Empty state message
                         item {
                             if (searchQuery.isNotEmpty()) {
                                 EmptyState(
                                     icon = "🔍",
                                     title = "No matching expenses",
-                                    description = "Try adjusting your search query to find expenses."
+                                    description = "Try adjusting your search query to find expenses.",
                                 )
                             } else if (selectedCategories.isNotEmpty()) {
                                 EmptyState(
                                     icon = "📂",
                                     title = "No expenses in selected categories",
-                                    description = "Try selecting different categories or add expenses to these categories."
+                                    description = "Try selecting different categories or add expenses to these categories.",
                                 )
                             } else {
                                 EmptyState(
                                     icon = "💸",
                                     title = "No expenses found",
-                                    description = "Start tracking your expenses by adding some data."
+                                    description = "Start tracking your expenses by adding some data.",
                                 )
                             }
                         }
                     }
                 }
-                
+
                 else -> {
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            top = 8.dp,
-                            bottom = with(LocalDensity.current) { 
-                                WindowInsets.navigationBars.getBottom(this).toDp() + 72.dp // 56dp FAB + 16dp spacing
-                            }
-                        )
+                        contentPadding =
+                            PaddingValues(
+                                top = 8.dp,
+                                bottom =
+                                    with(LocalDensity.current) {
+                                        WindowInsets.navigationBars.getBottom(this).toDp() + 72.dp // 56dp FAB + 16dp spacing
+                                    },
+                            ),
                     ) {
                         // Category filter row - always first item
                         item {
@@ -466,7 +484,7 @@ fun ExpenseListScreen(
                                 },
                             )
                         }
-                        
+
                         // Display search results count if searching
                         if (searchQuery.isNotEmpty()) {
                             item {
@@ -474,11 +492,11 @@ fun ExpenseListScreen(
                                     text = "${filteredExpenses.size} expense(s) found",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 )
                             }
                         }
-                        
+
                         // Display grouped expenses with month separators
                         groupedExpenses.forEach { entry ->
                             val monthYear = entry.key
@@ -489,35 +507,39 @@ fun ExpenseListScreen(
                                     isCollapsed = collapsedMonths.contains(monthYear),
                                     onToggleCollapsed = {
                                         viewModel.onEvent(ExpenseListUiEvent.MonthToggleCollapsed(monthYear))
-                                    }
+                                    },
                                 )
                             }
-                            
+
                             // Animated visibility for expenses
                             items(
                                 items = expensesInMonth,
-                                key = { expense: Expense -> "expense_${expense.date}_${expense.name}_${expense.price}" }
+                                key = { expense: Expense -> "expense_${expense.date}_${expense.name}_${expense.price}" },
                             ) { expense: Expense ->
                                 AnimatedVisibility(
                                     visible = !collapsedMonths.contains(monthYear),
-                                    enter = fadeIn(
-                                        animationSpec = tween(durationMillis = 300)
-                                    ) + slideInVertically(
-                                        animationSpec = tween(durationMillis = 300),
-                                        initialOffsetY = { -it / 2 }
-                                    ),
-                                    exit = fadeOut(
-                                        animationSpec = tween(durationMillis = 200)
-                                    ) + slideOutVertically(
-                                        animationSpec = tween(durationMillis = 200),
-                                        targetOffsetY = { -it / 2 }
-                                    )
+                                    enter =
+                                        fadeIn(
+                                            animationSpec = tween(durationMillis = 300),
+                                        ) +
+                                            slideInVertically(
+                                                animationSpec = tween(durationMillis = 300),
+                                                initialOffsetY = { -it / 2 },
+                                            ),
+                                    exit =
+                                        fadeOut(
+                                            animationSpec = tween(durationMillis = 200),
+                                        ) +
+                                            slideOutVertically(
+                                                animationSpec = tween(durationMillis = 200),
+                                                targetOffsetY = { -it / 2 },
+                                            ),
                                 ) {
                                     ExpenseCardWithDate(
                                         expense = expense,
                                         onCardClick = { viewModel.onEvent(ExpenseListUiEvent.ExpenseClicked(expense)) },
                                         sharedTransitionScope = sharedTransitionScope,
-                                        animatedContentScope = animatedContentScope
+                                        animatedContentScope = animatedContentScope,
                                     )
                                 }
                             }
@@ -528,4 +550,3 @@ fun ExpenseListScreen(
         }
     }
 }
-

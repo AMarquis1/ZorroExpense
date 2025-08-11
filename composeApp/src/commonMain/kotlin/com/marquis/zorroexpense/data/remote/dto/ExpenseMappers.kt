@@ -12,6 +12,4 @@ expect fun Expense.toDto(): ExpenseDto
 /**
  * Generate current timestamp as ISO string for cross-platform compatibility
  */
-fun generateCurrentTimestamp(): String {
-    return Clock.System.now().toString()
-}
+fun generateCurrentTimestamp(): String = Clock.System.now().toString()

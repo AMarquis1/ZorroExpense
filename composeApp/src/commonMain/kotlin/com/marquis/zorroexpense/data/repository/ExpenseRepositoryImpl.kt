@@ -7,14 +7,13 @@ import com.marquis.zorroexpense.domain.error.toExpenseError
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
  * Clean ExpenseRepository implementation following KMP and Clean Architecture standards
- * 
+ *
  * Features:
  * - Proper separation of concerns with dedicated data sources
  * - Cache-first strategy with network fallback
@@ -25,9 +24,8 @@ import kotlinx.coroutines.sync.withLock
  */
 class ExpenseRepositoryImpl(
     private val remoteDataSource: ExpenseRemoteDataSource,
-    private val localDataSource: ExpenseLocalDataSource
+    private val localDataSource: ExpenseLocalDataSource,
 ) : ExpenseRepository {
-
     private val repositoryMutex = Mutex()
 
     /**
@@ -37,12 +35,13 @@ class ExpenseRepositoryImpl(
         return try {
             supervisorScope {
                 // Start cache lookup immediately
-                val cacheDeferred = async {
-                    localDataSource.getExpenses()
-                }
+                val cacheDeferred =
+                    async {
+                        localDataSource.getExpenses()
+                    }
 
                 val cacheResult = cacheDeferred.await()
-                
+
                 // Return cached data if available and valid
                 if (cacheResult.isSuccess && cacheResult.getOrNull()?.isNotEmpty() == true) {
                     return@supervisorScope cacheResult
@@ -59,44 +58,44 @@ class ExpenseRepositoryImpl(
     /**
      * Force refresh with optimized error handling
      */
-    override suspend fun refreshExpenses(): Result<List<Expense>> {
-        return try {
+    override suspend fun refreshExpenses(): Result<List<Expense>> =
+        try {
             supervisorScope {
                 val remoteResult = remoteDataSource.getExpenses()
-                
+
                 if (remoteResult.isSuccess) {
                     val expenses = remoteResult.getOrThrow()
-                    
+
                     // Update cache in background without blocking
                     async {
                         runCatching {
                             localDataSource.cacheExpenses(expenses)
                         }
                     }
-                    
+
                     Result.success(expenses)
                 } else {
                     // Convert to domain error
-                    val error = remoteResult.exceptionOrNull()?.toExpenseError()
-                        ?: ExpenseError.NetworkError("Failed to refresh expenses")
+                    val error =
+                        remoteResult.exceptionOrNull()?.toExpenseError()
+                            ?: ExpenseError.NetworkError("Failed to refresh expenses")
                     Result.failure(error)
                 }
             }
         } catch (e: Exception) {
             Result.failure(e.toExpenseError())
         }
-    }
 
     /**
      * Optimized add with cache synchronization
      */
-    override suspend fun addExpense(expense: Expense): Result<Unit> {
-        return repositoryMutex.withLock {
+    override suspend fun addExpense(expense: Expense): Result<Unit> =
+        repositoryMutex.withLock {
             try {
                 supervisorScope {
                     // Add to remote first
                     val remoteResult = remoteDataSource.addExpense(expense)
-                    
+
                     if (remoteResult.isSuccess) {
                         // Update cache asynchronously
                         async {
@@ -106,8 +105,9 @@ class ExpenseRepositoryImpl(
                         }
                         Result.success(Unit)
                     } else {
-                        val error = remoteResult.exceptionOrNull()?.toExpenseError()
-                            ?: ExpenseError.UnknownError("Failed to add expense")
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.UnknownError("Failed to add expense")
                         Result.failure(error)
                     }
                 }
@@ -115,17 +115,16 @@ class ExpenseRepositoryImpl(
                 Result.failure(e.toExpenseError())
             }
         }
-    }
 
     /**
      * Optimized update with cache synchronization
      */
-    override suspend fun updateExpense(expense: Expense): Result<Unit> {
-        return repositoryMutex.withLock {
+    override suspend fun updateExpense(expense: Expense): Result<Unit> =
+        repositoryMutex.withLock {
             try {
                 supervisorScope {
                     val remoteResult = remoteDataSource.updateExpense(expense)
-                    
+
                     if (remoteResult.isSuccess) {
                         // Update cache asynchronously
                         async {
@@ -135,8 +134,9 @@ class ExpenseRepositoryImpl(
                         }
                         Result.success(Unit)
                     } else {
-                        val error = remoteResult.exceptionOrNull()?.toExpenseError()
-                            ?: ExpenseError.UnknownError("Failed to update expense")
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.UnknownError("Failed to update expense")
                         Result.failure(error)
                     }
                 }
@@ -144,17 +144,16 @@ class ExpenseRepositoryImpl(
                 Result.failure(e.toExpenseError())
             }
         }
-    }
 
     /**
      * Optimized delete with cache synchronization
      */
-    override suspend fun deleteExpense(expenseId: String): Result<Unit> {
-        return repositoryMutex.withLock {
+    override suspend fun deleteExpense(expenseId: String): Result<Unit> =
+        repositoryMutex.withLock {
             try {
                 supervisorScope {
                     val remoteResult = remoteDataSource.deleteExpense(expenseId)
-                    
+
                     if (remoteResult.isSuccess) {
                         // Update cache asynchronously
                         async {
@@ -164,8 +163,9 @@ class ExpenseRepositoryImpl(
                         }
                         Result.success(Unit)
                     } else {
-                        val error = remoteResult.exceptionOrNull()?.toExpenseError()
-                            ?: ExpenseError.UnknownError("Failed to delete expense")
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.UnknownError("Failed to delete expense")
                         Result.failure(error)
                     }
                 }
@@ -173,7 +173,6 @@ class ExpenseRepositoryImpl(
                 Result.failure(e.toExpenseError())
             }
         }
-    }
 
     /**
      * Non-blocking cache clear
@@ -194,21 +193,21 @@ class ExpenseRepositoryImpl(
     /**
      * Private helper for fetch with cache fallback strategy
      */
-    private suspend fun fetchWithCacheFallback(): Result<List<Expense>> {
-        return supervisorScope {
+    private suspend fun fetchWithCacheFallback(): Result<List<Expense>> =
+        supervisorScope {
             try {
                 val remoteResult = remoteDataSource.getExpenses()
-                
+
                 if (remoteResult.isSuccess) {
                     val expenses = remoteResult.getOrThrow()
-                    
+
                     // Cache update in background
                     async {
                         runCatching {
                             localDataSource.cacheExpenses(expenses)
                         }
                     }
-                    
+
                     Result.success(expenses)
                 } else {
                     // Remote failed - try cache fallback
@@ -217,8 +216,9 @@ class ExpenseRepositoryImpl(
                         cacheResult
                     } else {
                         // Convert remote error to domain error
-                        val error = remoteResult.exceptionOrNull()?.toExpenseError()
-                            ?: ExpenseError.NetworkError("Failed to fetch expenses")
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.NetworkError("Failed to fetch expenses")
                         Result.failure(error)
                     }
                 }
@@ -232,5 +232,4 @@ class ExpenseRepositoryImpl(
                 }
             }
         }
-    }
 }

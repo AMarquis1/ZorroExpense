@@ -14,8 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
-import com.marquis.zorroexpense.presentation.components.expense.UserAvatarWithSplitLabel
 import com.marquis.zorroexpense.presentation.components.expense.AddUserButton
+import com.marquis.zorroexpense.presentation.components.expense.UserAvatarWithSplitLabel
 
 /**
  * Section displaying selected users for expense splitting with amounts
@@ -30,59 +30,66 @@ fun SplitWithSelectionSection(
     numberSplits: Map<String, Float>,
     expenseAmount: Float,
     onAddClick: () -> Unit,
-    onRemoveUser: (User) -> Unit
+    onRemoveUser: (User) -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             // Show selected users
             items(selectedUsers) { user ->
                 val isPayer = user.userId == paidByUser?.userId
-                
+
                 // Calculate display amount for this user (always show amount, never percentage)
-                val amount = numberSplits[user.userId] ?: run {
-                    // Calculate from percentage if no custom amount is set
-                    val percentage = percentageSplits[user.userId] ?: (100f / selectedUsers.size)
-                    if (expenseAmount > 0) {
-                        (expenseAmount * percentage / 100f)
-                    } else {
-                        0f
+                val amount =
+                    numberSplits[user.userId] ?: run {
+                        // Calculate from percentage if no custom amount is set
+                        val percentage = percentageSplits[user.userId] ?: (100f / selectedUsers.size)
+                        if (expenseAmount > 0) {
+                            (expenseAmount * percentage / 100f)
+                        } else {
+                            0f
+                        }
                     }
-                }
-                
-                val displayText = if (amount == amount.toInt().toFloat()) {
-                    "$${amount.toInt()}"
-                } else {
-                    // Format to 2 decimal places
-                    val rounded = (amount * 100).toInt() / 100.0
-                    "$${rounded}"
-                }
-                
+
+                val displayText =
+                    if (amount == amount.toInt().toFloat()) {
+                        "$${amount.toInt()}"
+                    } else {
+                        // Format to 2 decimal places
+                        val rounded = (amount * 100).toInt() / 100.0
+                        "$$rounded"
+                    }
+
                 UserAvatarWithSplitLabel(
                     user = user,
                     splitText = displayText,
                     canRemove = !isPayer,
-                    onClick = if (!isPayer) { { onRemoveUser(user) } } else null
+                    onClick =
+                        if (!isPayer) {
+                            { onRemoveUser(user) }
+                        } else {
+                            null
+                        },
                 )
             }
-            
+
             // Add button
             item {
                 AddUserButton(
                     onClick = onAddClick,
-                    label = "Add New"
+                    label = "Add New",
                 )
             }
         }

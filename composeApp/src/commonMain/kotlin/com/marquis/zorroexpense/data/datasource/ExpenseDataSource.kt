@@ -8,8 +8,11 @@ import com.marquis.zorroexpense.domain.model.Expense
  */
 interface ExpenseDataSource {
     suspend fun getExpenses(): Result<List<Expense>>
+
     suspend fun addExpense(expense: Expense): Result<Unit>
+
     suspend fun updateExpense(expense: Expense): Result<Unit>
+
     suspend fun deleteExpense(expenseId: String): Result<Unit>
 }
 
@@ -20,10 +23,11 @@ interface ExpenseDataSource {
 interface ExpenseRemoteDataSource : ExpenseDataSource
 
 /**
- * Local data source interface  
+ * Local data source interface
  * Represents local storage or cache-based data access
  */
 interface ExpenseLocalDataSource : ExpenseDataSource {
     suspend fun clearAll()
+
     suspend fun cacheExpenses(expenses: List<Expense>)
 }

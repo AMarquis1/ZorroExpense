@@ -23,52 +23,57 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AddUserButton(
     onClick: () -> Unit,
-    label: String
+    label: String,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier.clickable { onClick() },
     ) {
         Box(
             modifier = Modifier.size(72.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             // Dashed circle border
             val primaryColor = MaterialTheme.colorScheme.primary
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val strokeWidth = 2.dp.toPx()
                 val radius = (size.minDimension - strokeWidth) / 2f
-                val center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
-                
+                val center =
+                    androidx.compose.ui.geometry
+                        .Offset(size.width / 2, size.height / 2)
+
                 drawCircle(
                     color = primaryColor,
                     radius = radius,
                     center = center,
-                    style = Stroke(
-                        width = strokeWidth,
-                        pathEffect = PathEffect.dashPathEffect(
-                            floatArrayOf(20f, 8f), 0f
-                        )
-                    )
+                    style =
+                        Stroke(
+                            width = strokeWidth,
+                            pathEffect =
+                                PathEffect.dashPathEffect(
+                                    floatArrayOf(20f, 8f),
+                                    0f,
+                                ),
+                        ),
                 )
             }
-            
+
             // Plus icon
             Icon(
                 Icons.Default.Add,
                 contentDescription = "Add user",
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
         }
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
