@@ -43,6 +43,7 @@ suspend fun ExpenseDto.toDomain(
     }
 
     return Expense(
+        documentId = documentId,
         description = description,
         name = name,
         price = price,

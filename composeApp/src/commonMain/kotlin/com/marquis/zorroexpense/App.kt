@@ -49,6 +49,7 @@ fun App() {
                             onExpenseClick = { expense ->
                                 navController.navigate(
                                     AppDestinations.ExpenseDetail(
+                                        expenseId = expense.documentId,
                                         expenseName = expense.name,
                                         expenseDescription = expense.description,
                                         expensePrice = expense.price,
@@ -88,6 +89,7 @@ fun App() {
                     composable<AppDestinations.ExpenseDetail> { backStackEntry ->
                         val expenseDetail = backStackEntry.toRoute<AppDestinations.ExpenseDetail>()
                         val expense = Expense(
+                            documentId = expenseDetail.expenseId,
                             name = expenseDetail.expenseName,
                             description = expenseDetail.expenseDescription,
                             price = expenseDetail.expensePrice,
@@ -104,6 +106,9 @@ fun App() {
                         ExpenseDetailScreen(
                             expense = expense,
                             onBackClick = {
+                                navController.popBackStack()
+                            },
+                            onExpenseDeleted = {
                                 navController.popBackStack()
                             },
                             sharedTransitionScope = this@SharedTransitionLayout,

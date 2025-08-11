@@ -15,9 +15,7 @@ actual class FirestoreService {
         return try {
             val snapshot = firestore.collection("Expense").get()
             val expenses = snapshot.documents.map { document ->
-                val expenseDto = document.data<AndroidExpenseDto>()
-//                expenseDto.copy(documentId = document.id)
-                expenseDto
+                document.data<AndroidExpenseDto>().copy(documentId = document.id)
             }
 
             Result.success(expenses)

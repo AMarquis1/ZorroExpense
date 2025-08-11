@@ -1,6 +1,7 @@
 package com.marquis.zorroexpense.domain.model
 
 data class Expense(
+    val documentId: String = "",
     val description: String = "",
     val name: String = "",
     val price: Double = 0.0,

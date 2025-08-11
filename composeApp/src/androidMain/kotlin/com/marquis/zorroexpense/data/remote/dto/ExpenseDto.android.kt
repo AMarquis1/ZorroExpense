@@ -7,7 +7,7 @@ import dev.gitlive.firebase.firestore.DocumentReference
 
 @Serializable
 data class AndroidExpenseDto(
-//    override val documentId: String = "",
+    override val documentId: String = "",
     @SerialName("description")
     override val description: String = "",
     @SerialName("name")

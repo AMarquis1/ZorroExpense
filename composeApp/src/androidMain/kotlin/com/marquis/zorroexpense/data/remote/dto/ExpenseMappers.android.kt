@@ -14,7 +14,7 @@ actual fun Expense.toDto(): ExpenseDto {
     val firestore = Firebase.firestore
     
     return AndroidExpenseDto(
-//        documentId = this.documentId,
+        documentId = this.documentId,
         name = this.name,
         description = this.description,
         price = this.price,

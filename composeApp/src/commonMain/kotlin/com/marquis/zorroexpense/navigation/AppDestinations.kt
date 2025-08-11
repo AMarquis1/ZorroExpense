@@ -12,6 +12,7 @@ sealed class AppDestinations {
     
     @Serializable
     data class ExpenseDetail(
+        val expenseId: String,
         val expenseName: String,
         val expenseDescription: String,
         val expensePrice: Double,

@@ -143,7 +143,7 @@ object AppModule {
     }
     
     fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel {
-        return ExpenseDetailViewModel(expense)
+        return ExpenseDetailViewModel(expense, deleteExpenseUseCase)
     }
     
     // =================

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,6 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -35,6 +39,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,19 +51,26 @@ import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.components.ProfileAvatar
-import com.marquis.zorroexpense.MockExpenseData
+import com.marquis.zorroexpense.presentation.state.ExpenseDetailUiEvent
+import com.marquis.zorroexpense.presentation.state.ExpenseDetailUiState
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.alex
 import zorroexpense.composeapp.generated.resources.sarah
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun SharedTransitionScope.ExpenseDetailScreen(
+fun ExpenseDetailScreen(
     expense: Expense,
     onBackClick: () -> Unit,
+    onExpenseDeleted: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope
 ) {
+    // Create ViewModel with the expense
+    val viewModel = remember { 
+        com.marquis.zorroexpense.di.AppModule.provideExpenseDetailViewModel(expense) 
+    }
+    val uiState by viewModel.uiState.collectAsState()
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
         topBar = {
@@ -89,7 +103,7 @@ fun SharedTransitionScope.ExpenseDetailScreen(
                     }
                     IconButton(
                         onClick = { 
-                            // TODO: Implement delete functionality
+                            viewModel.onEvent(ExpenseDetailUiEvent.DeleteExpense)
                         }
                     ) {
                         Icon(
@@ -107,6 +121,62 @@ fun SharedTransitionScope.ExpenseDetailScreen(
             )
         }
     ) { paddingValues ->
+        // Handle different UI states
+        when (uiState) {
+            is ExpenseDetailUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Loading...")
+                }
+            }
+            is ExpenseDetailUiState.Success -> {
+                val successState = uiState as ExpenseDetailUiState.Success
+                ExpenseDetailContent(
+                    expense = successState.expense,
+                    paddingValues = paddingValues,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
+                )
+                
+                // Show delete confirmation dialog
+                if (successState.showDeleteDialog) {
+                    DeleteConfirmationDialog(
+                        onConfirm = { viewModel.onEvent(ExpenseDetailUiEvent.ConfirmDelete) },
+                        onDismiss = { viewModel.onEvent(ExpenseDetailUiEvent.CancelDelete) }
+                    )
+                }
+            }
+            is ExpenseDetailUiState.Deleted -> {
+                // Navigate back after successful delete
+                onExpenseDeleted()
+            }
+            is ExpenseDetailUiState.Error -> {
+                val errorState = uiState as ExpenseDetailUiState.Error
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Error: ${errorState.message}",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun ExpenseDetailContent(
+    expense: Expense,
+    paddingValues: PaddingValues,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
+) {
+    with(sharedTransitionScope) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -437,4 +507,49 @@ private fun parseHexColor(hexColor: String): Color {
     } catch (_: Exception) {
         Color(0xFF6200EE) // Default purple color
     }
+}
+
+@Composable
+private fun DeleteConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Delete Expense",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "Are you sure you want to delete this expense? This action cannot be undone.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text(
+                    text = "Delete",
+                    color = MaterialTheme.colorScheme.onError
+                )
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text(
+                    text = "Cancel",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    )
 }

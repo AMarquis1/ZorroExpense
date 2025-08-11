@@ -4,6 +4,7 @@ import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 expect class FirestoreService() {
     suspend fun getExpenses(): Result<List<ExpenseDto>>
     suspend fun addExpense(expense: ExpenseDto): Result<Unit>
