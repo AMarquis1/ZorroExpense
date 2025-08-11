@@ -325,39 +325,6 @@ fun ExpensePriceChip(
 }
 
 /**
- * Reusable date chip component
- */
-@Composable
-fun ExpenseDateChip(
-    date: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer
-    ) {
-        Text(
-            text = formatTimestamp(date),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
-    }
-}
-
-/**
- * Utility function to format timestamps (moved from App.kt)
- */
-private fun formatTimestamp(timestamp: String): String {
-    return if (timestamp.isBlank()) {
-        "No date"
-    } else {
-        timestamp.substringBefore("T").takeIf { it.isNotBlank() } ?: timestamp
-    }
-}
-
-/**
  * Month separator component for grouping expenses by month
  * Clickable to collapse/expand expenses in that month
  */
