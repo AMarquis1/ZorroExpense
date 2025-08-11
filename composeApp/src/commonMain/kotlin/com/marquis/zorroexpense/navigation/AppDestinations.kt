@@ -19,7 +19,7 @@ sealed class AppDestinations {
         val categoryName: String,
         val categoryIcon: String,
         val categoryColor: String,
-        val paidBy: String,
-        val splitWith: List<String>
+        val paidByUserId: String,
+        val splitWithUserIds: List<String>
     ) : AppDestinations()
 }

@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marquis.zorroexpense.di.AppModule
 import com.marquis.zorroexpense.domain.model.Category
+import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
@@ -55,8 +56,8 @@ fun App() {
                                         categoryName = expense.category.name,
                                         categoryIcon = expense.category.icon,
                                         categoryColor = expense.category.color,
-                                        paidBy = expense.paidBy,
-                                        splitWith = expense.splitWith
+                                        paidByUserId = expense.paidBy.userId,
+                                        splitWithUserIds = expense.splitWith.map { it.userId }
                                     )
                                 )
                             },
@@ -94,8 +95,8 @@ fun App() {
                                 icon = expenseDetail.categoryIcon,
                                 color = expenseDetail.categoryColor
                             ),
-                            paidBy = expenseDetail.paidBy,
-                            splitWith = expenseDetail.splitWith
+                            paidBy = MockExpenseData.usersMap[expenseDetail.paidByUserId] ?: User(),
+                            splitWith = expenseDetail.splitWithUserIds.mapNotNull { MockExpenseData.usersMap[it] }
                         )
 
                         ExpenseDetailScreen(

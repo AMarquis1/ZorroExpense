@@ -186,13 +186,13 @@ fun SharedTransitionScope.ExpenseDetailScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             // Buyer information
-            val buyer = MockExpenseData.usersMap[expense.paidBy]
-            val profileImageResource = when (buyer?.profileImage) {
+            val buyer = expense.paidBy
+            val profileImageResource = when (buyer.profileImage) {
                 "sarah" -> Res.drawable.sarah
                 "alex" -> Res.drawable.alex
                 else -> Res.drawable.sarah
             }
-            if (buyer != null) {
+            if (buyer.userId.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -259,13 +259,10 @@ fun SharedTransitionScope.ExpenseDetailScreen(
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(expense.splitWith) { userId ->
-                                val user = MockExpenseData.usersMap[userId]
-
-                                if (user != null) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
+                            items(expense.splitWith) { user ->
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
                                         ProfileAvatar(
                                             name = user.name,
                                             size = 56.dp,
@@ -293,7 +290,6 @@ fun SharedTransitionScope.ExpenseDetailScreen(
                                             textAlign = TextAlign.Center
                                         )
                                     }
-                                }
                             }
                         }
                     }
