@@ -28,7 +28,8 @@ actual class FirestoreService {
         return try {
             val snapshot = firestore.collection("Users").get()
             val users = snapshot.documents.map { document ->
-                document.data<UserDto>()
+                val userData = document.data<UserDto>()
+                userData.copy(documentId = document.id) // Set the document ID
             }
 
             Result.success(users)
@@ -52,7 +53,7 @@ actual class FirestoreService {
 
     actual suspend fun getUserById(userId: String): Result<UserDto?> {
         return try {
-            val document = firestore.collection("Users").document(userId).get()
+            val document = firestore.document(userId).get()
             val user = if (document.exists) {
                 document.data<UserDto>()
             } else {

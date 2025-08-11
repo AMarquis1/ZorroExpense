@@ -38,16 +38,14 @@ suspend fun ExpenseDto.toDomain(
         categoryResult.getOrNull()?.toDomain()
     } ?: Category()
 
-    // Resolve paidBy user reference
     val resolvedPaidBy = paidBy.getReferencePath()?.let { path ->
         val userId = path.substringAfterLast("/")
-        firestoreService.getUserById(userId).getOrNull()?.name ?: userId
-    } ?: ""
+        firestoreService.getUserById(path).getOrNull()?.toDomain(userId)
+    } ?: User()
 
-    // Resolve splitWith user references
-    val resolvedSplitWith = splitWith.getReferencePaths().map { path ->
+    val resolvedSplitWith = splitWith.getReferencePaths().mapNotNull { path ->
         val userId = path.substringAfterLast("/")
-        firestoreService.getUserById(userId).getOrNull()?.name ?: userId
+        firestoreService.getUserById(path).getOrNull()?.toDomain(userId)
     }
 
     return Expense(
