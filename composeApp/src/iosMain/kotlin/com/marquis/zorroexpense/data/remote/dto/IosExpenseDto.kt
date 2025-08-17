@@ -6,6 +6,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class IosSplitDetailDto(
+    @SerialName("user")
+    val userRef: DocumentReference? = null,
+    @SerialName("amount")
+    val amount: Double = 0.0
+)
+
+@Serializable
 data class IosExpenseDto(
     @SerialName("description")
     override val description: String = "",
@@ -19,13 +27,13 @@ data class IosExpenseDto(
     val categoryRef: DocumentReference? = null,
     @SerialName("paidBy")
     val paidByRef: DocumentReference? = null,
-    @SerialName("splitWith")
-    val splitWithRefs: List<DocumentReference> = emptyList(),
+    @SerialName("splitDetails")
+    val splitDetailsDto: List<IosSplitDetailDto> = emptyList(),
     @SerialName("isFromRecurring")
     override val isFromRecurring: Boolean = false,
     override val documentId: String,
 ) : ExpenseDto {
     override val category: Any? get() = categoryRef
     override val paidBy: Any? get() = paidByRef
-    override val splitWith: List<Any> get() = splitWithRefs
+    override val splitDetails: List<Any> get() = splitDetailsDto
 }

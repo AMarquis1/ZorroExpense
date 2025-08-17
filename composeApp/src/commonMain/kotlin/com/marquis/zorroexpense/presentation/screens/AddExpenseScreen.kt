@@ -441,6 +441,7 @@ fun AddExpenseScreen(
                                     showSplitMethodBottomSheet = true 
                                 },
                             )
+
                         }
                     }
                 }

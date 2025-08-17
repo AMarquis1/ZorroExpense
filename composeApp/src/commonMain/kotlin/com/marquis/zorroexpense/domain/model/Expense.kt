@@ -8,7 +8,7 @@ data class Expense(
     val date: String = "",
     val category: Category = Category(),
     val paidBy: User = User(), // User object of who paid
-    val splitWith: List<User> = emptyList(), // List of User objects who split the expense
+    val splitDetails: List<SplitDetail> = emptyList(), // List of split details with users and amounts
     val isFromRecurring: Boolean = false, // True if this expense was created from a recurring pattern
     // Recurring expense fields
     val isRecurring: Boolean = false,

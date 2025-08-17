@@ -22,16 +22,15 @@ class CalculateDebtsUseCase {
         val debtMatrix = mutableMapOf<Pair<String, String>, Double>()
 
         expenses.forEach { expense ->
-            if (expense.splitWith.isNotEmpty() && expense.price > 0) {
-                val splitAmount = expense.price / expense.splitWith.size
+            if (expense.splitDetails.isNotEmpty() && expense.price > 0) {
                 val payer = expense.paidBy
 
-                // Each person in splitWith owes their share to the payer
-                expense.splitWith.forEach { participant ->
-                    if (participant.userId != payer.userId) {
+                // Each person in splitDetails owes their amount to the payer
+                expense.splitDetails.forEach { splitDetail ->
+                    if (splitDetail.user.userId != payer.userId) {
                         // This participant owes money to the payer
-                        val debtKey = Pair(participant.userId, payer.userId)
-                        debtMatrix[debtKey] = (debtMatrix[debtKey] ?: 0.0) + splitAmount
+                        val debtKey = Pair(splitDetail.user.userId, payer.userId)
+                        debtMatrix[debtKey] = (debtMatrix[debtKey] ?: 0.0) + splitDetail.amount
                     }
                 }
             }
@@ -41,7 +40,7 @@ class CalculateDebtsUseCase {
         val allUsers = mutableSetOf<User>()
         expenses.forEach { expense ->
             allUsers.add(expense.paidBy)
-            allUsers.addAll(expense.splitWith)
+            allUsers.addAll(expense.splitDetails.map { it.user })
         }
         val userList = allUsers.toList()
 

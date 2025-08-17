@@ -3,6 +3,7 @@ package com.marquis.zorroexpense.data.remote.dto
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.model.SplitDetail
 import com.marquis.zorroexpense.domain.model.User
 
 fun UserDto.toDomain(userId: String = ""): User =
@@ -26,6 +27,8 @@ expect fun Any?.getReferencePath(): String?
 
 expect fun List<Any>.getReferencePaths(): List<String>
 
+expect fun List<Any>.getSplitDetailData(): List<Pair<String, Double>>
+
 suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
     val categoryPath = category.getReferencePath()
 
@@ -41,10 +44,12 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
             firestoreService.getUserById(path).getOrNull()?.toDomain(userId)
         } ?: User()
 
-    val resolvedSplitWith =
-        splitWith.getReferencePaths().mapNotNull { path ->
-            val userId = path.substringAfterLast("/")
-            firestoreService.getUserById(path).getOrNull()?.toDomain(userId)
+    val resolvedSplitDetails =
+        splitDetails.getSplitDetailData().mapNotNull { (userPath, amount) ->
+            val userId = userPath.substringAfterLast("/")
+            firestoreService.getUserById(userPath).getOrNull()?.toDomain(userId)?.let { user ->
+                SplitDetail(user = user, amount = amount)
+            }
         }
 
     return Expense(
@@ -55,7 +60,7 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
         date = date.toDateString(),
         category = resolvedCategory,
         paidBy = resolvedPaidBy,
-        splitWith = resolvedSplitWith,
+        splitDetails = resolvedSplitDetails,
         isFromRecurring = isFromRecurring,
     )
 }

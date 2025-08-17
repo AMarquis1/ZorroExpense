@@ -13,3 +13,13 @@ actual fun Any?.getReferencePath(): String? {
 }
 
 actual fun List<Any>.getReferencePaths(): List<String> = this.mapNotNull { it as? String }
+
+actual fun List<Any>.getSplitDetailData(): List<Pair<String, Double>> = this.mapNotNull { item ->
+    (item as? WasmSplitDetailDto)?.let { splitDetail ->
+        if (splitDetail.userId.isNotBlank()) {
+            Pair("Users/${splitDetail.userId}", splitDetail.amount)
+        } else {
+            null
+        }
+    }
+}

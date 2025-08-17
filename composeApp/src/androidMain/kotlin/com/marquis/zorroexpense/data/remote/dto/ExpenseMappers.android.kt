@@ -50,10 +50,13 @@ actual fun Expense.toDto(): ExpenseDto {
             } else {
                 null
             },
-        splitWithRefs =
-            this.splitWith.mapNotNull { user ->
-                if (user.userId.isNotBlank()) {
-                    firestore.collection("Users").document(user.userId)
+        splitDetailsDto =
+            this.splitDetails.mapNotNull { splitDetail ->
+                if (splitDetail.user.userId.isNotBlank()) {
+                    SplitDetailDto(
+                        userRef = firestore.collection("Users").document(splitDetail.user.userId),
+                        amount = splitDetail.amount
+                    )
                 } else {
                     null
                 }

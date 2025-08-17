@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.model.RecurrenceType
+import com.marquis.zorroexpense.domain.model.SplitDetail
 import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
@@ -139,6 +140,9 @@ class AddExpenseViewModel(
                         listOf(currentFormState.selectedDate)
                     }
 
+                // Create split details based on custom amounts or equal split
+                val splitDetails = createSplitDetails(currentFormState)
+
                 // Create expense objects for each date (without recurrence metadata)
                 val expenses =
                     expenseDates.map { date ->
@@ -149,7 +153,7 @@ class AddExpenseViewModel(
                             date = date,
                             category = currentFormState.selectedCategory ?: Category(),
                             paidBy = currentFormState.selectedPaidByUser ?: User(),
-                            splitWith = currentFormState.selectedSplitWithUsers,
+                            splitDetails = splitDetails,
                             isFromRecurring = currentFormState.isRecurring && expenseDates.size > 1,
                             // Remove recurrence metadata - each expense is standalone
                             isRecurring = false,
@@ -307,7 +311,8 @@ class AddExpenseViewModel(
         state.isNameValid &&
             state.isPriceValid &&
             state.isCategoryValid &&
-            state.isPaidByValid
+            state.isPaidByValid &&
+            validateSplitAmounts(state)
 
     private fun calculateEqualSplits(
         users: List<User>,
@@ -713,6 +718,53 @@ class AddExpenseViewModel(
             occurrences
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    private fun createSplitDetails(formState: AddExpenseFormState): List<SplitDetail> {
+        return when (formState.splitMethod) {
+            SplitMethod.NUMBER -> {
+                // Use number splits (custom amounts)
+                formState.selectedSplitWithUsers.mapNotNull { user ->
+                    val amount = formState.numberSplits[user.userId]?.toDouble()
+                    if (amount != null && amount > 0) {
+                        SplitDetail(user = user, amount = amount)
+                    } else {
+                        null
+                    }
+                }
+            }
+            SplitMethod.PERCENTAGE -> {
+                // Use percentage splits
+                val totalPrice = formState.expensePrice.toDoubleOrNull() ?: 0.0
+                formState.selectedSplitWithUsers.mapNotNull { user ->
+                    val percentage = formState.percentageSplits[user.userId]?.toDouble()
+                    if (percentage != null && percentage > 0) {
+                        val amount = (totalPrice * percentage) / 100.0
+                        SplitDetail(user = user, amount = amount)
+                    } else {
+                        null
+                    }
+                }
+            }
+        }
+    }
+
+    private fun validateSplitAmounts(formState: AddExpenseFormState): Boolean {
+        return when (formState.splitMethod) {
+            SplitMethod.NUMBER -> {
+                val totalPrice = formState.expensePrice.toDoubleOrNull() ?: return false
+                val totalSplitAmount = formState.numberSplits.values.sum().toDouble()
+                
+                // Allow small rounding differences (within 0.01)
+                kotlin.math.abs(totalPrice - totalSplitAmount) < 0.01
+            }
+            SplitMethod.PERCENTAGE -> {
+                val totalPercentage = formState.percentageSplits.values.sum()
+                
+                // Allow small rounding differences (within 0.01%)
+                kotlin.math.abs(totalPercentage - 100.0f) < 0.01f
+            }
         }
     }
 

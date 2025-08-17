@@ -67,7 +67,14 @@ fun App() {
                                             categoryIcon = expense.category.icon,
                                             categoryColor = expense.category.color,
                                             paidByUserId = expense.paidBy.userId,
-                                            splitWithUserIds = expense.splitWith.map { it.userId },
+                                            splitDetailsJson = AppDestinations.ExpenseDetail.createSplitDetailsJson(
+                                                expense.splitDetails.map { splitDetail ->
+                                                    AppDestinations.SplitDetailNavigation(
+                                                        userId = splitDetail.user.userId,
+                                                        amount = splitDetail.amount
+                                                    )
+                                                }
+                                            ),
                                         ),
                                     )
                                 },
@@ -132,7 +139,14 @@ fun App() {
                                         color = expenseDetail.categoryColor,
                                     ),
                                 paidBy = MockExpenseData.usersMap[expenseDetail.paidByUserId] ?: User(),
-                                splitWith = expenseDetail.splitWithUserIds.mapNotNull { MockExpenseData.usersMap[it] },
+                                splitDetails = expenseDetail.splitDetails.mapNotNull { splitDetailNav ->
+                                    val user = MockExpenseData.usersMap[splitDetailNav.userId]
+                                    if (user != null) {
+                                        com.marquis.zorroexpense.domain.model.SplitDetail(user = user, amount = splitDetailNav.amount)
+                                    } else {
+                                        null
+                                    }
+                                },
                             )
 
                         ExpenseDetailScreen(

@@ -338,7 +338,7 @@ private fun ExpenseDetailContent(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            if (expense.splitWith.isNotEmpty()) {
+            if (expense.splitDetails.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors =
@@ -361,14 +361,14 @@ private fun ExpenseDetailContent(
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            items(expense.splitWith) { user ->
+                            items(expense.splitDetails) { splitDetail ->
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     ProfileAvatar(
-                                        name = user.name,
+                                        name = splitDetail.user.name,
                                         size = 56.dp,
-                                        userProfile = user.profileImage,
+                                        userProfile = splitDetail.user.profileImage,
                                         backgroundColor = MaterialTheme.colorScheme.secondary,
                                         contentColor = MaterialTheme.colorScheme.onSecondary,
                                     )
@@ -376,15 +376,15 @@ private fun ExpenseDetailContent(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     Text(
-                                        text = user.name,
+                                        text = splitDetail.user.name,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onSurface,
                                         textAlign = TextAlign.Center,
                                     )
 
-                                    // Calculate split amount
-                                    val splitAmount = expense.price / expense.splitWith.size
+                                    // Use the actual split amount
+                                    val splitAmount = splitDetail.amount
                                     Text(
                                         text = "$${formatPrice(splitAmount)}",
                                         style = MaterialTheme.typography.bodySmall,

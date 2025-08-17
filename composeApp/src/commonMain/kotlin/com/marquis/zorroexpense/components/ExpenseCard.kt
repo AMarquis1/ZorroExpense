@@ -267,10 +267,10 @@ private fun ExpenseCardContent(
                 )
 
                 // Split users avatars with buyer emphasized
-                if (expense.splitWith.isNotEmpty()) {
+                if (expense.splitDetails.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     SplitUsersRow(
-                        users = expense.splitWith,
+                        users = expense.splitDetails.map { it.user },
                         buyer = expense.paidBy,
                     )
                 }
