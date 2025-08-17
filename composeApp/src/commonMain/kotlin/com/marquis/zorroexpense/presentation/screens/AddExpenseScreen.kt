@@ -1,6 +1,7 @@
 package com.marquis.zorroexpense.presentation.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -129,8 +130,6 @@ fun AddExpenseScreen(
     // Validation from ViewModel
     val isNameValid = formState.isNameValid
     val isPriceValid = formState.isPriceValid
-    val isCategoryValid = formState.isCategoryValid
-    val isPaidByValid = formState.isPaidByValid
     val isFormValid = formState.isFormValid
 
     // Bottom sheet states
@@ -179,7 +178,13 @@ fun AddExpenseScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        focusManager.clearFocus()
+                    },
         ) {
             Column(
                 modifier =
@@ -279,7 +284,10 @@ fun AddExpenseScreen(
                                 modifier =
                                     Modifier
                                         .weight(0.55f)
-                                        .clickable { showCategoryBottomSheet = true },
+                                        .clickable { 
+                                            focusManager.clearFocus()
+                                            showCategoryBottomSheet = true 
+                                        },
                             ) {
                                 OutlinedTextField(
                                     value = selectedCategory?.name ?: "",
@@ -289,7 +297,7 @@ fun AddExpenseScreen(
                                     leadingIcon = {
                                         if (selectedCategory != null) {
                                             CategoryIconCircle(
-                                                category = selectedCategory!!,
+                                                category = selectedCategory,
                                                 size = 24.dp,
                                             )
                                         } else {
@@ -332,7 +340,10 @@ fun AddExpenseScreen(
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .clickable { showDatePickerBottomSheet = true },
+                                    .clickable { 
+                                        focusManager.clearFocus()
+                                        showDatePickerBottomSheet = true 
+                                    },
                         ) {
                             OutlinedTextField(
                                 value = formatDateForDisplay(selectedDate),
@@ -393,7 +404,10 @@ fun AddExpenseScreen(
                         UserSelectionSection(
                             title = "Paid By",
                             selectedUser = selectedPaidByUser,
-                            onAddClick = { showPaidByBottomSheet = true },
+                            onAddClick = { 
+                                focusManager.clearFocus()
+                                showPaidByBottomSheet = true 
+                            },
                             showError = selectedPaidByUser == null,
                             errorMessage = "Please select who paid",
                         )
@@ -402,12 +416,14 @@ fun AddExpenseScreen(
                         SplitWithSelectionSection(
                             title = "Split With",
                             selectedUsers = selectedSplitWithUsers,
-                            paidByUser = selectedPaidByUser,
                             splitMethod = splitMethod,
                             percentageSplits = percentageSplits,
                             numberSplits = numberSplits,
                             expenseAmount = expensePrice.toFloatOrNull() ?: 0f,
-                            onAddClick = { showSplitWithBottomSheet = true },
+                            onAddClick = { 
+                                focusManager.clearFocus()
+                                showSplitWithBottomSheet = true 
+                            },
                             onRemoveUser = { user ->
                                 viewModel.onEvent(AddExpenseUiEvent.RemoveUserFromSplit(user))
                             },
@@ -420,7 +436,10 @@ fun AddExpenseScreen(
                                 selectedUsers = selectedSplitWithUsers,
                                 percentageSplits = percentageSplits,
                                 numberSplits = numberSplits,
-                                onSplitMethodClick = { showSplitMethodBottomSheet = true },
+                                onSplitMethodClick = { 
+                                    focusManager.clearFocus()
+                                    showSplitMethodBottomSheet = true 
+                                },
                             )
                         }
                     }
@@ -620,11 +639,7 @@ fun AddExpenseScreen(
                 onUserToggled = { user ->
                     val updatedSplitWithUsers =
                         if (selectedSplitWithUsers.any { it.userId == user.userId }) {
-                            if (user.userId != selectedPaidByUser?.userId) {
-                                selectedSplitWithUsers.filter { it.userId != user.userId }
-                            } else {
-                                selectedSplitWithUsers
-                            }
+                            selectedSplitWithUsers.filter { it.userId != user.userId }
                         } else {
                             selectedSplitWithUsers + user
                         }

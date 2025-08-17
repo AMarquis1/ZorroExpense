@@ -24,7 +24,6 @@ import com.marquis.zorroexpense.presentation.components.expense.UserAvatarWithSp
 fun SplitWithSelectionSection(
     title: String,
     selectedUsers: List<User>,
-    paidByUser: User?,
     @Suppress("UNUSED_PARAMETER") splitMethod: SplitMethod,
     percentageSplits: Map<String, Float>,
     numberSplits: Map<String, Float>,
@@ -47,11 +46,7 @@ fun SplitWithSelectionSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            // Show selected users
             items(selectedUsers) { user ->
-                val isPayer = user.userId == paidByUser?.userId
-
-                // Calculate display amount for this user (always show amount, never percentage)
                 val amount =
                     numberSplits[user.userId] ?: run {
                         // Calculate from percentage if no custom amount is set
@@ -75,13 +70,7 @@ fun SplitWithSelectionSection(
                 UserAvatarWithSplitLabel(
                     user = user,
                     splitText = displayText,
-                    canRemove = !isPayer,
-                    onClick =
-                        if (!isPayer) {
-                            { onRemoveUser(user) }
-                        } else {
-                            null
-                        },
+                    onClick = { onRemoveUser(user) },
                 )
             }
 

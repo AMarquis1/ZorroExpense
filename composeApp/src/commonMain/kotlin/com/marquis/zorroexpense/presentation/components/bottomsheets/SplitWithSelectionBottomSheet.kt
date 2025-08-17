@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -59,7 +60,6 @@ fun SplitWithSelectionBottomSheet(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
         ) {
-            // Header with Done button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -112,15 +112,15 @@ private fun SplitWithUserItem(
 ) {
     val backgroundColor =
         when {
-            isPayer -> MaterialTheme.colorScheme.primaryContainer
-            isSelected -> MaterialTheme.colorScheme.secondaryContainer
+            isPayer -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            isSelected -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
             else -> Color.Transparent
         }
 
     val textColor =
         when {
-            isPayer -> MaterialTheme.colorScheme.onPrimaryContainer
-            isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
+            isPayer -> MaterialTheme.colorScheme.primary
+            isSelected -> MaterialTheme.colorScheme.secondary
             else -> MaterialTheme.colorScheme.onSurface
         }
 
@@ -128,7 +128,7 @@ private fun SplitWithUserItem(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clickable(enabled = !isPayer) { onClick() }
+                .clickable { onClick() }
                 .padding(vertical = 4.dp),
         colors =
             CardDefaults.cardColors(
@@ -161,14 +161,14 @@ private fun SplitWithUserItem(
                     name = user.name,
                     size = 40.dp,
                     userProfile = user.profileImage,
-                    backgroundColor = if (isPayer) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = if (isPayer) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer,
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             },
             trailingContent = {
                 if (isSelected) {
                     Icon(
-                        Icons.Default.Add, // We could use a checkmark here
+                        Icons.Default.Check,
                         contentDescription = "Selected",
                         tint = textColor,
                         modifier = Modifier.size(20.dp),

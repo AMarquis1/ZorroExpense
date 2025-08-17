@@ -442,19 +442,14 @@ class AddExpenseViewModel(
 
     private fun removeUserFromSplit(user: User) {
         _formState.update { currentState ->
-            // Only remove if not the payer
-            if (user.userId != currentState.selectedPaidByUser?.userId) {
-                val updatedUsers = currentState.selectedSplitWithUsers.filter { it.userId != user.userId }
-                val (updatedPercentageSplits, updatedNumberSplits) = calculateEqualSplits(updatedUsers, currentState.expensePrice)
+            val updatedUsers = currentState.selectedSplitWithUsers.filter { it.userId != user.userId }
+            val (updatedPercentageSplits, updatedNumberSplits) = calculateEqualSplits(updatedUsers, currentState.expensePrice)
 
-                currentState.copy(
-                    selectedSplitWithUsers = updatedUsers,
-                    percentageSplits = updatedPercentageSplits,
-                    numberSplits = updatedNumberSplits,
-                )
-            } else {
-                currentState
-            }
+            currentState.copy(
+                selectedSplitWithUsers = updatedUsers,
+                percentageSplits = updatedPercentageSplits,
+                numberSplits = updatedNumberSplits,
+            )
         }
     }
 

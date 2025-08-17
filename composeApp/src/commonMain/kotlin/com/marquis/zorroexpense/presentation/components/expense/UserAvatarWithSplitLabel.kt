@@ -26,7 +26,6 @@ import com.marquis.zorroexpense.domain.model.User
 fun UserAvatarWithSplitLabel(
     user: User,
     splitText: String,
-    canRemove: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     Column(
@@ -45,7 +44,7 @@ fun UserAvatarWithSplitLabel(
             )
 
             // Remove button for removable users
-            if (canRemove && onClick != null) {
+            if (onClick != null) {
                 Card(
                     modifier =
                         Modifier
