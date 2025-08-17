@@ -31,7 +31,7 @@ actual class FirestoreService {
             val snapshot = firestore.collection("Expense").get()
             val expenses =
                 snapshot.documents.map { document ->
-                    document.data<IosExpenseDto>()
+                    document.data<IosExpenseDto>().copy(documentId = document.id)
                 }
 
             Result.success(expenses)
@@ -57,7 +57,8 @@ actual class FirestoreService {
             val snapshot = firestore.collection("Categories").get()
             val categories =
                 snapshot.documents.map { document ->
-                    document.data<CategoryDto>()
+                    val categoryDto = document.data<CategoryDto>()
+                    categoryDto.copy(documentId = document.id)
                 }
 
             Result.success(categories)
@@ -67,9 +68,7 @@ actual class FirestoreService {
 
     actual suspend fun getUserById(userId: String): Result<UserDto?> =
         try {
-            // Extract document ID from full path if needed (e.g., "Users/yblRlB470XiMuiJhbxSZ" -> "yblRlB470XiMuiJhbxSZ")
-            val documentId = userId.substringAfterLast("/")
-            val document = firestore.collection("Users").document(documentId).get()
+            val document = firestore.document(userId).get()
             val user =
                 if (document.exists) {
                     document.data<UserDto>()
@@ -84,11 +83,11 @@ actual class FirestoreService {
 
     actual suspend fun getCategoryById(categoryId: String): Result<CategoryDto?> =
         try {
-            val documentId = categoryId.substringAfterLast("/")
-            val document = firestore.collection("Categories").document(documentId).get()
+            val document = firestore.document(categoryId).get()
             val category =
                 if (document.exists) {
-                    document.data<CategoryDto>()
+                    val categoryDto = document.data<CategoryDto>()
+                    categoryDto.copy(documentId = document.id)
                 } else {
                     null
                 }
@@ -98,18 +97,39 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun addExpense(expense: ExpenseDto): Result<Unit> {
-        TODO("Not yet implemented")
-    }
+    actual suspend fun addExpense(expense: ExpenseDto): Result<Unit> =
+        try {
+            // Cast to IosExpenseDto for platform-specific implementation
+            val iosExpenseDto = expense as IosExpenseDto
+
+            println("YOLO ${iosExpenseDto.categoryRef} ${iosExpenseDto.paidByRef} ${iosExpenseDto.splitDetailsDto}")
+            firestore.collection("Expense").add(iosExpenseDto)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 
     actual suspend fun updateExpense(
         expenseId: String,
         expense: ExpenseDto,
-    ): Result<Unit> {
-        TODO("Not yet implemented")
-    }
+    ): Result<Unit> =
+        try {
+            val iosExpenseDto = expense as IosExpenseDto
 
-    actual suspend fun deleteExpense(expenseId: String): Result<Unit> {
-        TODO("Not yet implemented")
-    }
+            firestore.collection("Expense").document(expenseId).set(iosExpenseDto)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun deleteExpense(expenseId: String): Result<Unit> =
+        try {
+            firestore.collection("Expense").document(expenseId).delete()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 }

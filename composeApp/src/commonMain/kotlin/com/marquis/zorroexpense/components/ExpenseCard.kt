@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,6 +53,7 @@ import com.marquis.zorroexpense.domain.model.Expense
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.math.exp
 
 /**
  * Utility function to check if an expense date is in the future
@@ -158,22 +160,48 @@ fun ExpenseCard(
                         MaterialTheme.colorScheme.surface
                     },
             ),
-        onClick = { onCardClick?.invoke() }, // Allow clicking on future expenses too
+        onClick = { onCardClick?.invoke() },
     ) {
         Box {
-            // "Not counted yet" label at top left for future expenses
+            // Top left indicator for future or recurring expenses
             if (isFuture) {
                 Surface(
                     shape = RoundedCornerShape(bottomEnd = 8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.align(Alignment.TopStart),
                 ) {
-                    Text(
-                        text = "Not counted yet",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    Row {
+                        Icon(
+                            imageVector = Icons.Outlined.Repeat,
+                            contentDescription = "Recurring expense",
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(4.dp),
+                        )
+
+                        Text(
+                            text = "Not counted yet",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        )
+                    }
+                }
+            } else if (expense.isFromRecurring) {
+                Surface(
+                    shape = RoundedCornerShape(bottomEnd = 8.dp),
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    modifier = Modifier.align(Alignment.TopStart),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Repeat,
+                        contentDescription = "Recurring expense",
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(4.dp),
                     )
                 }
             }
@@ -262,7 +290,6 @@ private fun ExpenseCardContent(
                     price = expense.price,
                     categoryColor = expense.category.color,
                     isScheduled = isScheduled,
-                    isFuture = isFuture,
                     isFromRecurring = expense.isFromRecurring,
                 )
 
@@ -377,7 +404,6 @@ fun ExpensePriceChip(
     price: Double,
     categoryColor: String = "",
     isScheduled: Boolean = false,
-    isFuture: Boolean = false,
     isFromRecurring: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -434,34 +460,6 @@ fun ExpensePriceChip(
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     )
-                }
-            }
-
-            // "Recurring" badge for expenses from recurring patterns
-            if (isFromRecurring) {
-                if (isScheduled) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                }
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text(
-                            text = "🔄",
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                        Text(
-                            text = "Recurring",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        )
-                    }
                 }
             }
         }

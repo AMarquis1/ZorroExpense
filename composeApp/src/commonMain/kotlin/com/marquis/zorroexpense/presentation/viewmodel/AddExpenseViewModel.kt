@@ -151,8 +151,8 @@ class AddExpenseViewModel(
                             description = currentFormState.expenseDescription.trim(),
                             price = currentFormState.expensePrice.toDouble(),
                             date = date,
-                            category = currentFormState.selectedCategory ?: Category(),
-                            paidBy = currentFormState.selectedPaidByUser ?: User(),
+                            category = requireNotNull(currentFormState.selectedCategory) { "Category must be selected" },
+                            paidBy = requireNotNull(currentFormState.selectedPaidByUser) { "Paid by user must be selected" },
                             splitDetails = splitDetails,
                             isFromRecurring = currentFormState.isRecurring && expenseDates.size > 1,
                             // Remove recurrence metadata - each expense is standalone
@@ -751,16 +751,27 @@ class AddExpenseViewModel(
     }
 
     private fun validateSplitAmounts(formState: AddExpenseFormState): Boolean {
+        // If no users are selected for splitting, consider it valid (form not complete yet)
+        if (formState.selectedSplitWithUsers.isEmpty()) {
+            return true
+        }
+        
         return when (formState.splitMethod) {
             SplitMethod.NUMBER -> {
                 val totalPrice = formState.expensePrice.toDoubleOrNull() ?: return false
                 val totalSplitAmount = formState.numberSplits.values.sum().toDouble()
+                
+                // If no split amounts are set yet, consider it valid (equal splits will be calculated)
+                if (formState.numberSplits.isEmpty()) return true
                 
                 // Allow small rounding differences (within 0.01)
                 kotlin.math.abs(totalPrice - totalSplitAmount) < 0.01
             }
             SplitMethod.PERCENTAGE -> {
                 val totalPercentage = formState.percentageSplits.values.sum()
+                
+                // If no split percentages are set yet, consider it valid (equal splits will be calculated)
+                if (formState.percentageSplits.isEmpty()) return true
                 
                 // Allow small rounding differences (within 0.01%)
                 kotlin.math.abs(totalPercentage - 100.0f) < 0.01f

@@ -15,6 +15,7 @@ data class IosSplitDetailDto(
 
 @Serializable
 data class IosExpenseDto(
+    override val documentId: String = "",
     @SerialName("description")
     override val description: String = "",
     @SerialName("name")
@@ -31,7 +32,6 @@ data class IosExpenseDto(
     val splitDetailsDto: List<IosSplitDetailDto> = emptyList(),
     @SerialName("isFromRecurring")
     override val isFromRecurring: Boolean = false,
-    override val documentId: String,
 ) : ExpenseDto {
     override val category: Any? get() = categoryRef
     override val paidBy: Any? get() = paidByRef

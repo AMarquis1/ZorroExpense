@@ -9,12 +9,12 @@ object DeleteConstants {
     /**
      * Duration for delete confirmation snackbar
      */
-    val SNACKBAR_DURATION = SnackbarDuration.Long
+    val SNACKBAR_DURATION = SnackbarDuration.Short
 
     /**
-     * Auto-delete delay in milliseconds (matches SnackbarDuration.Long = 10 seconds)
+     * Auto-delete delay in milliseconds (5 seconds for more responsive UX)
      */
-    const val AUTO_DELETE_DELAY_MS = 10000L
+    const val AUTO_DELETE_DELAY_MS = 5000L
 
     /**
      * Delete confirmation dialog text
