@@ -67,7 +67,9 @@ actual class FirestoreService {
 
     actual suspend fun getUserById(userId: String): Result<UserDto?> =
         try {
-            val document = firestore.collection("Users").document(userId).get()
+            // Extract document ID from full path if needed (e.g., "Users/yblRlB470XiMuiJhbxSZ" -> "yblRlB470XiMuiJhbxSZ")
+            val documentId = userId.substringAfterLast("/")
+            val document = firestore.collection("Users").document(documentId).get()
             val user =
                 if (document.exists) {
                     document.data<UserDto>()
@@ -82,7 +84,8 @@ actual class FirestoreService {
 
     actual suspend fun getCategoryById(categoryId: String): Result<CategoryDto?> =
         try {
-            val document = firestore.document(categoryId).get()
+            val documentId = categoryId.substringAfterLast("/")
+            val document = firestore.collection("Categories").document(documentId).get()
             val category =
                 if (document.exists) {
                     document.data<CategoryDto>()
