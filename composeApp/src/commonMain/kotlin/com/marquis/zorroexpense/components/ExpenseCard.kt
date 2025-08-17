@@ -49,6 +49,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+/**
+ * Utility function to check if an expense date is in the future
+ */
+@OptIn(kotlin.time.ExperimentalTime::class)
+private fun isFutureExpense(expenseDate: String): Boolean {
+    return try {
+        val today = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val expenseLocalDate = LocalDate.parse(expenseDate.substringBefore("T")) // Handle both ISO format and date-only
+        expenseLocalDate > today
+    } catch (e: Exception) {
+        false // If parsing fails, treat as not future
+    }
+}
 
 /**
  * Wrapper component that displays date on the left and expense card on the right
@@ -69,6 +86,8 @@ fun ExpenseCardWithDate(
     isScheduled: Boolean = false, // For future recurring expenses
     modifier: Modifier = Modifier,
 ) {
+    val isFuture = isFutureExpense(expense.date)
+    
     Row(
         modifier =
             modifier
@@ -77,7 +96,10 @@ fun ExpenseCardWithDate(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Date display on the left
-        ExpenseDateDisplay(date = expense.date)
+        ExpenseDateDisplay(
+            date = expense.date,
+            isFuture = isFuture
+        )
 
         // Expense card
         ExpenseCard(
@@ -86,6 +108,7 @@ fun ExpenseCardWithDate(
             sharedTransitionScope = sharedTransitionScope,
             animatedContentScope = animatedContentScope,
             isScheduled = isScheduled,
+            isFuture = isFuture,
         )
     }
 }
@@ -108,33 +131,54 @@ fun ExpenseCard(
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
     isScheduled: Boolean = false,
+    isFuture: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val shouldGrayOut = isScheduled || isFuture
+    
     Card(
         modifier =
             modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, bottom = 8.dp)
-                .let { if (isScheduled) it.graphicsLayer(alpha = 0.6f) else it },
+                .let { if (shouldGrayOut) it.graphicsLayer(alpha = 0.6f) else it },
         elevation =
             CardDefaults.cardElevation(
-                defaultElevation = if (isScheduled) 2.dp else 4.dp,
+                defaultElevation = if (shouldGrayOut) 2.dp else 4.dp,
             ),
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    if (isScheduled) {
+                    if (shouldGrayOut) {
                         MaterialTheme.colorScheme.surfaceContainerLow
                     } else {
                         MaterialTheme.colorScheme.surface
                     },
             ),
-        onClick = { if (!isScheduled) onCardClick?.invoke() },
+        onClick = { onCardClick?.invoke() }, // Allow clicking on future expenses too
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Box {
+            // "Not counted yet" label at top left for future expenses
+            if (isFuture) {
+                Surface(
+                    shape = RoundedCornerShape(bottomEnd = 8.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    Text(
+                        text = "Not counted yet",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
+            }
+            
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
             // Category icon on the left with shared element transition
             if (expense.category.icon.isNotEmpty()) {
                 val categoryModifier =
@@ -160,14 +204,16 @@ fun ExpenseCard(
                 Spacer(modifier = Modifier.width(12.dp))
             }
 
-            // Content column
-            ExpenseCardContent(
-                expense = expense,
-                isScheduled = isScheduled,
-                sharedTransitionScope = sharedTransitionScope,
-                animatedContentScope = animatedContentScope,
-                modifier = Modifier.weight(1f),
-            )
+                // Content column
+                ExpenseCardContent(
+                    expense = expense,
+                    isScheduled = isScheduled,
+                    isFuture = isFuture,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }
@@ -180,6 +226,7 @@ fun ExpenseCard(
 private fun ExpenseCardContent(
     expense: Expense,
     isScheduled: Boolean = false,
+    isFuture: Boolean = false,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
     modifier: Modifier = Modifier,
@@ -212,6 +259,8 @@ private fun ExpenseCardContent(
                     price = expense.price,
                     categoryColor = expense.category.color,
                     isScheduled = isScheduled,
+                    isFuture = isFuture,
+                    isFromRecurring = expense.isFromRecurring,
                 )
 
                 // Split users avatars with buyer emphasized
@@ -233,9 +282,22 @@ private fun ExpenseCardContent(
 @Composable
 private fun ExpenseDateDisplay(
     date: String,
+    isFuture: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val formattedDate = formatDateToMonthDay(date)
+    
+    val monthColor = if (isFuture) {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+    
+    val dayColor = if (isFuture) {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
 
     Column(
         modifier = modifier,
@@ -245,13 +307,13 @@ private fun ExpenseDateDisplay(
             text = formattedDate.first, // Month (e.g., "JAN")
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
+            color = monthColor,
         )
         Text(
             text = formattedDate.second, // Day (e.g., "25")
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = dayColor,
         )
     }
 }
@@ -310,6 +372,8 @@ fun ExpensePriceChip(
     price: Double,
     categoryColor: String = "",
     isScheduled: Boolean = false,
+    isFuture: Boolean = false,
+    isFromRecurring: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor =
@@ -348,20 +412,52 @@ fun ExpensePriceChip(
             )
         }
 
-        // Scheduled badge
-        if (isScheduled) {
+        // Status badges (excluding "Not counted yet" which is now at top left)
+        if (isScheduled || isFromRecurring) {
             Spacer(modifier = Modifier.height(4.dp))
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-            ) {
-                Text(
-                    text = "Scheduled",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                )
+            
+            // "Scheduled" badge for scheduled expenses
+            if (isScheduled) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    Text(
+                        text = "Scheduled",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    )
+                }
+            }
+            
+            // "Recurring" badge for expenses from recurring patterns
+            if (isFromRecurring) {
+                if (isScheduled) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "🔄",
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                        Text(
+                            text = "Recurring",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    }
+                }
             }
         }
     }

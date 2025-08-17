@@ -143,6 +143,26 @@ object MockExpenseData {
                 paidBy = userSarah,
                 splitWith = listOf(userSarah, userAlex),
             ),
+            // Future expenses for testing
+            Expense(
+                name = "Loyer Mai",
+                description = "Paiement mensuel du loyer - appartement rue Saint-Denis",
+                price = 1250.00,
+                date = "2025-05-01T09:00:00Z",
+                category = categoryLoyer,
+                paidBy = userSarah,
+                splitWith = listOf(userSarah, userAlex),
+                isFromRecurring = true,
+            ),
+            Expense(
+                name = "Épicerie Future",
+                description = "Courses prévues pour la semaine prochaine",
+                price = 95.50,
+                date = "2025-02-15T14:30:00Z",
+                category = categoryEpicerie,
+                paidBy = userAlex,
+                splitWith = listOf(userSarah, userAlex),
+            ),
         )
 
     suspend fun getMockExpenses(): Result<List<Expense>> {

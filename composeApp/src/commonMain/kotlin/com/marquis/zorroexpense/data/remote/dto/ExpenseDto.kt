@@ -10,4 +10,5 @@ interface ExpenseDto {
     val category: Any?
     val paidBy: Any?
     val splitWith: List<Any>
+    val isFromRecurring: Boolean
 }

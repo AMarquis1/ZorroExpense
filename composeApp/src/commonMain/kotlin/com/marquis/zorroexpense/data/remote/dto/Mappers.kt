@@ -56,5 +56,6 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
         category = resolvedCategory,
         paidBy = resolvedPaidBy,
         splitWith = resolvedSplitWith,
+        isFromRecurring = isFromRecurring,
     )
 }

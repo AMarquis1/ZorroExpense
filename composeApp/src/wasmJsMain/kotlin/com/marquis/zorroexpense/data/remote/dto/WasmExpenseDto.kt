@@ -19,6 +19,8 @@ data class WasmExpenseDto(
     val paidById: String = "",
     @SerialName("splitWith")
     val splitWithIds: List<String> = emptyList(),
+    @SerialName("isFromRecurring")
+    override val isFromRecurring: Boolean = false,
     override val documentId: String,
 ) : ExpenseDto {
     override val category: Any? get() = categoryId

@@ -148,6 +148,7 @@ class AddExpenseViewModel(
                         category = currentFormState.selectedCategory ?: Category(),
                         paidBy = currentFormState.selectedPaidByUser ?: User(),
                         splitWith = currentFormState.selectedSplitWithUsers,
+                        isFromRecurring = currentFormState.isRecurring && expenseDates.size > 1, // Mark as from recurring if multiple dates
                         // Remove recurrence metadata - each expense is standalone
                         isRecurring = false,
                         recurrenceType = RecurrenceType.NONE,

@@ -50,4 +50,6 @@ sealed class ExpenseListUiEvent {
     data class ConfirmDeleteExpense(
         val expenseId: String,
     ) : ExpenseListUiEvent()
+
+    object ToggleUpcomingExpenses : ExpenseListUiEvent()
 }

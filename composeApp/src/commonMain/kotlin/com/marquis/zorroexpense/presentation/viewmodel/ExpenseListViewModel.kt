@@ -77,6 +77,7 @@ class ExpenseListViewModel(
             is ExpenseListUiEvent.PendingDeleteExpense -> markForPendingDeletion(event.expenseId)
             is ExpenseListUiEvent.UndoDeleteExpense -> undoDeleteExpense(event.expenseId)
             is ExpenseListUiEvent.ConfirmDeleteExpense -> confirmDeleteExpense(event.expenseId)
+            is ExpenseListUiEvent.ToggleUpcomingExpenses -> toggleUpcomingExpenses()
         }
     }
 
@@ -160,6 +161,7 @@ class ExpenseListViewModel(
                         isRefreshing = false,
                         hasInitiallyLoaded = true,
                         pendingDeletions = preservedPendingDeletions,
+                        showUpcomingExpenses = existingState.showUpcomingExpenses,
                     )
 
                 // Apply filtering with current filters
@@ -437,6 +439,15 @@ class ExpenseListViewModel(
                         }
                     },
                 )
+            }
+        }
+    }
+
+    private fun toggleUpcomingExpenses() {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListUiState.Success) {
+            _uiState.update {
+                currentState.copy(showUpcomingExpenses = !currentState.showUpcomingExpenses)
             }
         }
     }

@@ -18,6 +18,7 @@ sealed class ExpenseListUiState {
         val isRefreshing: Boolean = false,
         val hasInitiallyLoaded: Boolean = false,
         val pendingDeletions: Set<String> = emptySet(), // Set of expense documentIds pending deletion
+        val showUpcomingExpenses: Boolean = true, // Whether to show upcoming/future expenses
     ) : ExpenseListUiState()
 
     data class Error(

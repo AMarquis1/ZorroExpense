@@ -22,6 +22,8 @@ data class AndroidExpenseDto(
     val paidByRef: DocumentReference? = null,
     @SerialName("splitWith")
     val splitWithRefs: List<DocumentReference> = emptyList(),
+    @SerialName("isFromRecurring")
+    override val isFromRecurring: Boolean = false,
 ) : ExpenseDto {
     override val category: Any? get() = categoryRef
     override val paidBy: Any? get() = paidByRef
