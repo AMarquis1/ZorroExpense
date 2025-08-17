@@ -1,6 +1,7 @@
 package com.marquis.zorroexpense.presentation.state
 
 import com.marquis.zorroexpense.domain.model.Category
+import com.marquis.zorroexpense.domain.model.RecurrenceType
 import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
 
@@ -63,4 +64,22 @@ sealed class AddExpenseUiEvent {
     object ResetForm : AddExpenseUiEvent()
 
     object DismissError : AddExpenseUiEvent()
+
+    // Date and recurring events
+    data class DateChanged(
+        val date: String,
+    ) : AddExpenseUiEvent()
+
+    data class RecurringToggled(
+        val isRecurring: Boolean,
+    ) : AddExpenseUiEvent()
+
+    data class RecurrenceTypeChanged(
+        val type: RecurrenceType,
+    ) : AddExpenseUiEvent()
+
+    // Recurrence limit event
+    data class RecurrenceLimitChanged(
+        val limit: Int?,
+    ) : AddExpenseUiEvent()
 }

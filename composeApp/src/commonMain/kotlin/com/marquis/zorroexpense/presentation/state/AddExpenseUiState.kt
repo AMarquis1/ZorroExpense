@@ -1,8 +1,12 @@
 package com.marquis.zorroexpense.presentation.state
 
 import com.marquis.zorroexpense.domain.model.Category
+import com.marquis.zorroexpense.domain.model.RecurrenceType
 import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.ExperimentalTime
 
 sealed class AddExpenseUiState {
     object Idle : AddExpenseUiState()
@@ -16,6 +20,7 @@ sealed class AddExpenseUiState {
     ) : AddExpenseUiState()
 }
 
+@OptIn(ExperimentalTime::class)
 data class AddExpenseFormState(
     val expenseName: String = "",
     val expenseDescription: String = "",
@@ -31,4 +36,17 @@ data class AddExpenseFormState(
     val isCategoryValid: Boolean = false,
     val isPaidByValid: Boolean = false,
     val isFormValid: Boolean = false,
+    // Date and recurring fields
+    val selectedDate: String =
+        kotlin.time.Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+            .toString(),
+    val isRecurring: Boolean = false,
+    val recurrenceType: RecurrenceType = RecurrenceType.NONE,
+    val recurrenceDay: Int? = null,
+    val futureOccurrences: List<String> = emptyList(), // List of future occurrence dates for preview
+    // Recurrence limit field (always required when recurring is enabled)
+    val recurrenceLimit: Int? = null, // Maximum number of occurrences (required for recurring expenses)
 )

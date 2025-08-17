@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -55,11 +56,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.components.CategoryIconCircle
-import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionBottomSheet
+import com.marquis.zorroexpense.presentation.components.bottomsheets.DatePickerBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.PaidBySelectionBottomSheet
+import com.marquis.zorroexpense.presentation.components.bottomsheets.RecurrenceTypeSelectionBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.SplitMethodBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.SplitWithSelectionBottomSheet
+import com.marquis.zorroexpense.presentation.components.bottomsheets.formatDateForDisplay
+import com.marquis.zorroexpense.presentation.components.expense.RecurringExpensePreview
+import com.marquis.zorroexpense.presentation.components.expense.RecurringExpenseSection
 import com.marquis.zorroexpense.presentation.components.expense.SplitMethodSelectionSection
 import com.marquis.zorroexpense.presentation.components.expense.SplitWithSelectionSection
 import com.marquis.zorroexpense.presentation.components.expense.UserSelectionSection
@@ -67,9 +72,6 @@ import com.marquis.zorroexpense.presentation.state.AddExpenseUiEvent
 import com.marquis.zorroexpense.presentation.state.AddExpenseUiState
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 
-// Constants
-private const val MIN_EXPENSE_NAME_LENGTH = 2
-private const val MIN_EXPENSE_AMOUNT = 0.01
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +82,6 @@ fun AddExpenseScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
-    // State variables from ViewModel
     val expenseName = formState.expenseName
     val expenseDescription = formState.expenseDescription
     val expensePrice = formState.expensePrice
@@ -90,9 +91,17 @@ fun AddExpenseScreen(
     val splitMethod = formState.splitMethod
     val percentageSplits = formState.percentageSplits
     val numberSplits = formState.numberSplits
+    val selectedDate = formState.selectedDate
+    val isRecurring = formState.isRecurring
+    val recurrenceType = formState.recurrenceType
+    val recurrenceDay = formState.recurrenceDay
+    val futureOccurrences = formState.futureOccurrences
+    val recurrenceLimit = formState.recurrenceLimit
     var showCategoryBottomSheet by remember { mutableStateOf(false) }
     var showPaidByBottomSheet by remember { mutableStateOf(false) }
     var showSplitWithBottomSheet by remember { mutableStateOf(false) }
+    var showDatePickerBottomSheet by remember { mutableStateOf(false) }
+    var showRecurrenceTypeBottomSheet by remember { mutableStateOf(false) }
 
     // Handle UI state changes
     LaunchedEffect(uiState) {
@@ -130,6 +139,8 @@ fun AddExpenseScreen(
     val paidByBottomSheetState = rememberModalBottomSheetState()
     val splitWithBottomSheetState = rememberModalBottomSheetState()
     val splitMethodBottomSheetState = rememberModalBottomSheetState()
+    val datePickerBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val recurrenceTypeBottomSheetState = rememberModalBottomSheetState()
 
     // Get categories from ViewModel instead of MockData
     val availableCategories by viewModel.categories.collectAsState()
@@ -316,6 +327,43 @@ fun AddExpenseScreen(
                                 )
                             }
                         }
+
+                        // Date Selection Field
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showDatePickerBottomSheet = true }
+                        ) {
+                            OutlinedTextField(
+                                value = formatDateForDisplay(selectedDate),
+                                onValueChange = { },
+                                label = { Text("Date") },
+                                placeholder = { Text("Select date") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.CalendarToday,
+                                        contentDescription = "Date",
+                                    )
+                                },
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Select date",
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                readOnly = true,
+                                enabled = false,
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                            )
+                        }
                     }
                 }
 
@@ -426,7 +474,37 @@ fun AddExpenseScreen(
                     }
                 }
 
-                // Action Buttons
+                // Recurring Expense Section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    RecurringExpenseSection(
+                        isRecurring = isRecurring,
+                        recurrenceType = recurrenceType,
+                        recurrenceDay = recurrenceDay,
+                        recurrenceLimit = recurrenceLimit,
+                        onRecurringToggled = { viewModel.onEvent(AddExpenseUiEvent.RecurringToggled(it)) },
+                        onRecurrenceTypeClick = { showRecurrenceTypeBottomSheet = true },
+                        onRecurrenceLimitChanged = { viewModel.onEvent(AddExpenseUiEvent.RecurrenceLimitChanged(it)) },
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+
+                if (isRecurring && futureOccurrences.isNotEmpty()) {
+                    RecurringExpensePreview(
+                        futureOccurrences = futureOccurrences,
+                        expenseAmount = expensePrice,
+                        expenseName = expenseName.ifBlank { "Recurring Expense" },
+                        recurrenceLimit = recurrenceLimit,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -577,6 +655,36 @@ fun AddExpenseScreen(
                 },
                 onDismiss = { showSplitMethodBottomSheet = false },
                 bottomSheetState = splitMethodBottomSheetState,
+            )
+        }
+
+        // Date Picker Bottom Sheet
+        if (showDatePickerBottomSheet) {
+            DatePickerBottomSheet(
+                selectedDate = selectedDate,
+                onDateSelected = { date ->
+                    viewModel.onEvent(AddExpenseUiEvent.DateChanged(date))
+                    showDatePickerBottomSheet = false
+                },
+                onDismiss = {
+                    showDatePickerBottomSheet = false
+                },
+                bottomSheetState = datePickerBottomSheetState,
+            )
+        }
+
+        // Recurrence Type Selection Bottom Sheet
+        if (showRecurrenceTypeBottomSheet) {
+            RecurrenceTypeSelectionBottomSheet(
+                selectedType = recurrenceType,
+                onTypeSelected = { type ->
+                    viewModel.onEvent(AddExpenseUiEvent.RecurrenceTypeChanged(type))
+                    showRecurrenceTypeBottomSheet = false
+                },
+                onDismiss = {
+                    showRecurrenceTypeBottomSheet = false
+                },
+                bottomSheetState = recurrenceTypeBottomSheetState,
             )
         }
     }
