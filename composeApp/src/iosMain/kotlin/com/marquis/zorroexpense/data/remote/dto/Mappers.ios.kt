@@ -2,7 +2,6 @@ package com.marquis.zorroexpense.data.remote.dto
 
 import dev.gitlive.firebase.firestore.DocumentReference
 import dev.gitlive.firebase.firestore.Timestamp
-
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime

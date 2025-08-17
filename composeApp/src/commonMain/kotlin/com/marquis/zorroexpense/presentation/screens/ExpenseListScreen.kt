@@ -11,10 +11,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -63,15 +63,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.components.CategoryFilterRow
 import com.marquis.zorroexpense.components.EmptyState
@@ -82,9 +82,6 @@ import com.marquis.zorroexpense.components.getMonthYear
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.platform.pullToRefreshBox
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import com.marquis.zorroexpense.presentation.components.CustomDeleteSnackbar
 import com.marquis.zorroexpense.presentation.components.DebtSummaryBar
 import com.marquis.zorroexpense.presentation.constants.DeleteConstants
@@ -93,6 +90,9 @@ import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.zorro_header
@@ -102,15 +102,18 @@ import kotlin.math.roundToInt
  * Utility function to check if an expense date is in the future
  */
 @OptIn(kotlin.time.ExperimentalTime::class)
-private fun isFutureExpense(expenseDate: String): Boolean {
-    return try {
-        val today = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+private fun isFutureExpense(expenseDate: String): Boolean =
+    try {
+        val today =
+            kotlin.time.Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
         val expenseLocalDate = LocalDate.parse(expenseDate.substringBefore("T")) // Handle both ISO format and date-only
         expenseLocalDate > today
     } catch (e: Exception) {
         false // If parsing fails, treat as not future
     }
-}
 
 /**
  * Upcoming expenses separator component with chevron toggle
@@ -141,27 +144,28 @@ private fun UpcomingExpensesSeparator(
     )
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null, // We handle the feedback with scale animation
-            ) { onToggleUpcomingExpenses() }
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }.clickable(
+                    interactionSource = interactionSource,
+                    indication = null, // We handle the feedback with scale animation
+                ) { onToggleUpcomingExpenses() }
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Left line
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
         )
-        
+
         // Label with count
         Text(
             text = "Upcoming expenses ($expenseCount)",
@@ -170,13 +174,14 @@ private fun UpcomingExpensesSeparator(
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
-        
-        // Right line  
+
+        // Right line
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
         )
 
         // Animated collapse/expand indicator
@@ -184,11 +189,12 @@ private fun UpcomingExpensesSeparator(
             text = "▼",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .padding(start = 12.dp)
-                .graphicsLayer {
-                    rotationZ = rotationAngle
-                },
+            modifier =
+                Modifier
+                    .padding(start = 12.dp)
+                    .graphicsLayer {
+                        rotationZ = rotationAngle
+                    },
         )
     }
 }
@@ -249,10 +255,11 @@ fun ExpenseListScreen(
     val errorMessage = if (currentState is ExpenseListUiState.Error) currentState.message else null
 
     // Separate current/past and future expenses
-    val (currentExpenses, futureExpenses) = remember(filteredExpenses) {
-        filteredExpenses.partition { expense -> !isFutureExpense(expense.date) }
-    }
-    
+    val (currentExpenses, futureExpenses) =
+        remember(filteredExpenses) {
+            filteredExpenses.partition { expense -> !isFutureExpense(expense.date) }
+        }
+
     val groupedCurrentExpenses by remember(currentExpenses) {
         derivedStateOf {
             currentExpenses
@@ -262,7 +269,7 @@ fun ExpenseListScreen(
                 .toMap()
         }
     }
-    
+
     val groupedFutureExpenses by remember(futureExpenses) {
         derivedStateOf {
             futureExpenses
@@ -551,11 +558,11 @@ fun ExpenseListScreen(
                         if (currentState is ExpenseListUiState.Success && currentState.debtSummaries.isNotEmpty()) {
                             item {
                                 DebtSummaryBar(
-                                    debtSummaries = currentState.debtSummaries
+                                    debtSummaries = currentState.debtSummaries,
                                 )
                             }
                         }
-                        
+
                         // Category filter row
                         item {
                             CategoryFilterRow(
@@ -609,11 +616,11 @@ fun ExpenseListScreen(
                         if (currentState is ExpenseListUiState.Success && currentState.debtSummaries.isNotEmpty()) {
                             item {
                                 DebtSummaryBar(
-                                    debtSummaries = currentState.debtSummaries
+                                    debtSummaries = currentState.debtSummaries,
                                 )
                             }
                         }
-                        
+
                         // Category filter row - always after debt summary
                         item {
                             CategoryFilterRow(
@@ -643,59 +650,59 @@ fun ExpenseListScreen(
                                 UpcomingExpensesSeparator(
                                     showUpcomingExpenses = showUpcoming,
                                     onToggleUpcomingExpenses = { viewModel.onEvent(ExpenseListUiEvent.ToggleUpcomingExpenses) },
-                                    expenseCount = futureExpenses.size
+                                    expenseCount = futureExpenses.size,
                                 )
                             }
                         }
-                        
+
                         // Display future expenses with month separators (AT TOP, only if toggle is on)
                         if (showUpcoming) {
                             groupedFutureExpenses.forEach { entry ->
-                            val monthYear = entry.key
-                            val expensesInMonth = entry.value
-                            item(key = "header_future_$monthYear") {
-                                MonthSeparator(
-                                    month = monthYear,
-                                    isCollapsed = collapsedMonths.contains(monthYear),
-                                    onToggleCollapsed = {
-                                        viewModel.onEvent(ExpenseListUiEvent.MonthToggleCollapsed(monthYear))
-                                    },
-                                )
-                            }
-
-                            // Animated visibility for future expenses
-                            items(
-                                items = expensesInMonth,
-                                key = { expense: Expense -> "expense_future_${expense.date}_${expense.name}_${expense.price}" },
-                            ) { expense: Expense ->
-                                AnimatedVisibility(
-                                    visible = !collapsedMonths.contains(monthYear),
-                                    enter =
-                                        fadeIn(
-                                            animationSpec = tween(durationMillis = 300),
-                                        ) +
-                                            slideInVertically(
-                                                animationSpec = tween(durationMillis = 300),
-                                                initialOffsetY = { -it / 2 },
-                                            ),
-                                    exit =
-                                        fadeOut(
-                                            animationSpec = tween(durationMillis = 200),
-                                        ) +
-                                            slideOutVertically(
-                                                animationSpec = tween(durationMillis = 200),
-                                                targetOffsetY = { -it / 2 },
-                                            ),
-                                ) {
-                                    ExpenseCardWithDate(
-                                        expense = expense,
-                                        onCardClick = { viewModel.onEvent(ExpenseListUiEvent.ExpenseClicked(expense)) },
-                                        sharedTransitionScope = sharedTransitionScope,
-                                        animatedContentScope = animatedContentScope,
+                                val monthYear = entry.key
+                                val expensesInMonth = entry.value
+                                item(key = "header_future_$monthYear") {
+                                    MonthSeparator(
+                                        month = monthYear,
+                                        isCollapsed = collapsedMonths.contains(monthYear),
+                                        onToggleCollapsed = {
+                                            viewModel.onEvent(ExpenseListUiEvent.MonthToggleCollapsed(monthYear))
+                                        },
                                     )
                                 }
+
+                                // Animated visibility for future expenses
+                                items(
+                                    items = expensesInMonth,
+                                    key = { expense: Expense -> "expense_future_${expense.date}_${expense.name}_${expense.price}" },
+                                ) { expense: Expense ->
+                                    AnimatedVisibility(
+                                        visible = !collapsedMonths.contains(monthYear),
+                                        enter =
+                                            fadeIn(
+                                                animationSpec = tween(durationMillis = 300),
+                                            ) +
+                                                slideInVertically(
+                                                    animationSpec = tween(durationMillis = 300),
+                                                    initialOffsetY = { -it / 2 },
+                                                ),
+                                        exit =
+                                            fadeOut(
+                                                animationSpec = tween(durationMillis = 200),
+                                            ) +
+                                                slideOutVertically(
+                                                    animationSpec = tween(durationMillis = 200),
+                                                    targetOffsetY = { -it / 2 },
+                                                ),
+                                    ) {
+                                        ExpenseCardWithDate(
+                                            expense = expense,
+                                            onCardClick = { viewModel.onEvent(ExpenseListUiEvent.ExpenseClicked(expense)) },
+                                            sharedTransitionScope = sharedTransitionScope,
+                                            animatedContentScope = animatedContentScope,
+                                        )
+                                    }
+                                }
                             }
-                        }
                         } // End of if (showUpcoming)
 
                         // Display current/past expenses with month separators (BELOW upcoming expenses)

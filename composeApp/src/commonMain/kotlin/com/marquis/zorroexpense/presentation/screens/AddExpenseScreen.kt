@@ -72,7 +72,6 @@ import com.marquis.zorroexpense.presentation.state.AddExpenseUiEvent
 import com.marquis.zorroexpense.presentation.state.AddExpenseUiState
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
@@ -330,9 +329,10 @@ fun AddExpenseScreen(
 
                         // Date Selection Field
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showDatePickerBottomSheet = true }
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showDatePickerBottomSheet = true },
                         ) {
                             OutlinedTextField(
                                 value = formatDateForDisplay(selectedDate),
@@ -354,14 +354,15 @@ fun AddExpenseScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 readOnly = true,
                                 enabled = false,
-                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
+                                colors =
+                                    androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
                             )
                         }
                     }
@@ -478,9 +479,10 @@ fun AddExpenseScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        ),
                     shape = RoundedCornerShape(16.dp),
                 ) {
                     RecurringExpenseSection(

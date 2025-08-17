@@ -74,6 +74,7 @@ private data class FirestoreResponse(
     val documents: List<FirestoreDocument>? = null,
 )
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class FirestoreService actual constructor() {
     private val httpClient =
         HttpClient {

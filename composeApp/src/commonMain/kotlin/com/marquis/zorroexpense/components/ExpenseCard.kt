@@ -57,15 +57,18 @@ import kotlinx.datetime.toLocalDateTime
  * Utility function to check if an expense date is in the future
  */
 @OptIn(kotlin.time.ExperimentalTime::class)
-private fun isFutureExpense(expenseDate: String): Boolean {
-    return try {
-        val today = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+private fun isFutureExpense(expenseDate: String): Boolean =
+    try {
+        val today =
+            kotlin.time.Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
         val expenseLocalDate = LocalDate.parse(expenseDate.substringBefore("T")) // Handle both ISO format and date-only
         expenseLocalDate > today
     } catch (e: Exception) {
         false // If parsing fails, treat as not future
     }
-}
 
 /**
  * Wrapper component that displays date on the left and expense card on the right
@@ -87,7 +90,7 @@ fun ExpenseCardWithDate(
     modifier: Modifier = Modifier,
 ) {
     val isFuture = isFutureExpense(expense.date)
-    
+
     Row(
         modifier =
             modifier
@@ -98,7 +101,7 @@ fun ExpenseCardWithDate(
         // Date display on the left
         ExpenseDateDisplay(
             date = expense.date,
-            isFuture = isFuture
+            isFuture = isFuture,
         )
 
         // Expense card
@@ -135,7 +138,7 @@ fun ExpenseCard(
     modifier: Modifier = Modifier,
 ) {
     val shouldGrayOut = isScheduled || isFuture
-    
+
     Card(
         modifier =
             modifier
@@ -163,7 +166,7 @@ fun ExpenseCard(
                 Surface(
                     shape = RoundedCornerShape(bottomEnd = 8.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
-                    modifier = Modifier.align(Alignment.TopStart)
+                    modifier = Modifier.align(Alignment.TopStart),
                 ) {
                     Text(
                         text = "Not counted yet",
@@ -174,35 +177,35 @@ fun ExpenseCard(
                     )
                 }
             }
-            
+
             Row(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-            // Category icon on the left with shared element transition
-            if (expense.category.icon.isNotEmpty()) {
-                val categoryModifier =
-                    if (sharedTransitionScope != null && animatedContentScope != null) {
-                        with(sharedTransitionScope) {
-                            Modifier.sharedElement(
-                                sharedContentState =
-                                    rememberSharedContentState(
-                                        key = "category-${expense.category.name}-${expense.name}-${expense.date}",
-                                    ),
-                                animatedVisibilityScope = animatedContentScope,
-                            )
+                // Category icon on the left with shared element transition
+                if (expense.category.icon.isNotEmpty()) {
+                    val categoryModifier =
+                        if (sharedTransitionScope != null && animatedContentScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedElement(
+                                    sharedContentState =
+                                        rememberSharedContentState(
+                                            key = "category-${expense.category.name}-${expense.name}-${expense.date}",
+                                        ),
+                                    animatedVisibilityScope = animatedContentScope,
+                                )
+                            }
+                        } else {
+                            Modifier
                         }
-                    } else {
-                        Modifier
-                    }
 
-                CategoryIconCircle(
-                    category = expense.category,
-                    size = 40.dp,
-                    modifier = categoryModifier,
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
+                    CategoryIconCircle(
+                        category = expense.category,
+                        size = 40.dp,
+                        modifier = categoryModifier,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
 
                 // Content column
                 ExpenseCardContent(
@@ -286,18 +289,20 @@ private fun ExpenseDateDisplay(
     modifier: Modifier = Modifier,
 ) {
     val formattedDate = formatDateToMonthDay(date)
-    
-    val monthColor = if (isFuture) {
-        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-    } else {
-        MaterialTheme.colorScheme.primary
-    }
-    
-    val dayColor = if (isFuture) {
-        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+
+    val monthColor =
+        if (isFuture) {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        } else {
+            MaterialTheme.colorScheme.primary
+        }
+
+    val dayColor =
+        if (isFuture) {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
 
     Column(
         modifier = modifier,
@@ -415,7 +420,7 @@ fun ExpensePriceChip(
         // Status badges (excluding "Not counted yet" which is now at top left)
         if (isScheduled || isFromRecurring) {
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             // "Scheduled" badge for scheduled expenses
             if (isScheduled) {
                 Surface(
@@ -431,7 +436,7 @@ fun ExpensePriceChip(
                     )
                 }
             }
-            
+
             // "Recurring" badge for expenses from recurring patterns
             if (isFromRecurring) {
                 if (isScheduled) {
@@ -444,7 +449,7 @@ fun ExpensePriceChip(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
                         Text(
                             text = "🔄",

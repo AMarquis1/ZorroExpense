@@ -148,4 +148,10 @@ ktlint {
         exclude("**/generated/**")
         exclude("**/build/**")
     }
+
+    // Set max line length to 200
+    additionalEditorconfig =
+        mapOf(
+            "max_line_length" to "200",
+        )
 }

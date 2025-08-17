@@ -6,14 +6,14 @@ end_of_line = lf
 indent_style = space
 indent_size = 4
 insert_final_newline = true
-max_line_length = 140
+max_line_length = 200
 trim_trailing_whitespace = true
 
 # Disable function naming rule for Compose functions
 ktlint_function-naming = disabled
 
-# Allow long lines in certain cases
-ktlint_max-line-length = disabled
+# Set max line length to 200
+ktlint_max-line-length = 200
 
 # Disable generated file checks
 [**/build/**]

@@ -127,38 +127,40 @@ class AddExpenseViewModel(
 
             try {
                 // Generate all expense dates based on recurrence settings
-                val expenseDates = if (currentFormState.isRecurring && currentFormState.recurrenceLimit != null) {
-                    generateAllRecurringDates(
-                        startDate = currentFormState.selectedDate,
-                        recurrenceType = currentFormState.recurrenceType,
-                        recurrenceDay = currentFormState.recurrenceDay,
-                        recurrenceLimit = currentFormState.recurrenceLimit
-                    )
-                } else {
-                    listOf(currentFormState.selectedDate)
-                }
+                val expenseDates =
+                    if (currentFormState.isRecurring && currentFormState.recurrenceLimit != null) {
+                        generateAllRecurringDates(
+                            startDate = currentFormState.selectedDate,
+                            recurrenceType = currentFormState.recurrenceType,
+                            recurrenceDay = currentFormState.recurrenceDay,
+                            recurrenceLimit = currentFormState.recurrenceLimit,
+                        )
+                    } else {
+                        listOf(currentFormState.selectedDate)
+                    }
 
                 // Create expense objects for each date (without recurrence metadata)
-                val expenses = expenseDates.map { date ->
-                    Expense(
-                        name = currentFormState.expenseName.trim(),
-                        description = currentFormState.expenseDescription.trim(),
-                        price = currentFormState.expensePrice.toDouble(),
-                        date = date,
-                        category = currentFormState.selectedCategory ?: Category(),
-                        paidBy = currentFormState.selectedPaidByUser ?: User(),
-                        splitWith = currentFormState.selectedSplitWithUsers,
-                        isFromRecurring = currentFormState.isRecurring && expenseDates.size > 1, // Mark as from recurring if multiple dates
-                        // Remove recurrence metadata - each expense is standalone
-                        isRecurring = false,
-                        recurrenceType = RecurrenceType.NONE,
-                        recurrenceDay = null,
-                        nextOccurrenceDate = null,
-                        isScheduled = false,
-                        recurrenceLimit = null,
-                        recurrenceCount = 0,
-                    )
-                }
+                val expenses =
+                    expenseDates.map { date ->
+                        Expense(
+                            name = currentFormState.expenseName.trim(),
+                            description = currentFormState.expenseDescription.trim(),
+                            price = currentFormState.expensePrice.toDouble(),
+                            date = date,
+                            category = currentFormState.selectedCategory ?: Category(),
+                            paidBy = currentFormState.selectedPaidByUser ?: User(),
+                            splitWith = currentFormState.selectedSplitWithUsers,
+                            isFromRecurring = currentFormState.isRecurring && expenseDates.size > 1,
+                            // Remove recurrence metadata - each expense is standalone
+                            isRecurring = false,
+                            recurrenceType = RecurrenceType.NONE,
+                            recurrenceDay = null,
+                            nextOccurrenceDate = null,
+                            isScheduled = false,
+                            recurrenceLimit = null,
+                            recurrenceCount = 0,
+                        )
+                    }
 
                 // Save all expenses
                 var savedCount = 0
@@ -167,9 +169,10 @@ class AddExpenseViewModel(
                         .onSuccess {
                             savedCount++
                         }.onFailure { exception ->
-                            _uiState.value = AddExpenseUiState.Error(
-                                message = "Failed to save expense ${savedCount + 1} of ${expenses.size}: ${exception.message ?: "Unknown error"}"
-                            )
+                            _uiState.value =
+                                AddExpenseUiState.Error(
+                                    message = "Failed to save expense ${savedCount + 1} of ${expenses.size}: ${exception.message ?: "Unknown error"}",
+                                )
                             return@launch
                         }
                 }
@@ -179,7 +182,6 @@ class AddExpenseViewModel(
                     _uiState.value = AddExpenseUiState.Success
                     resetForm()
                 }
-
             } catch (e: Exception) {
                 _uiState.value =
                     AddExpenseUiState.Error(
@@ -628,37 +630,39 @@ class AddExpenseViewModel(
         recurrenceLimit: Int,
     ): List<String> {
         if (recurrenceType == RecurrenceType.NONE || recurrenceLimit <= 0) return emptyList()
-        
+
         return try {
             val date = LocalDate.parse(startDate)
             val allDates = mutableListOf<String>()
             var currentDate = date
-            
+
             // Add the initial date as the first occurrence
             allDates.add(currentDate.toString())
-            
+
             // Generate remaining occurrences
             repeat(recurrenceLimit - 1) {
-                currentDate = when (recurrenceType) {
-                    RecurrenceType.DAILY -> currentDate.plus(1, DateTimeUnit.DAY)
-                    RecurrenceType.WEEKLY -> currentDate.plus(1, DateTimeUnit.WEEK)
-                    RecurrenceType.MONTHLY -> {
-                        val nextMonth = currentDate.plus(1, DateTimeUnit.MONTH)
-                        val dayToUse = recurrenceDay?.coerceAtMost(
-                            getDaysInMonth(nextMonth.year, nextMonth.month.number),
-                        ) ?: currentDate.day
-                        try {
-                            LocalDate(nextMonth.year, nextMonth.month, dayToUse)
-                        } catch (_: Exception) {
-                            nextMonth
+                currentDate =
+                    when (recurrenceType) {
+                        RecurrenceType.DAILY -> currentDate.plus(1, DateTimeUnit.DAY)
+                        RecurrenceType.WEEKLY -> currentDate.plus(1, DateTimeUnit.WEEK)
+                        RecurrenceType.MONTHLY -> {
+                            val nextMonth = currentDate.plus(1, DateTimeUnit.MONTH)
+                            val dayToUse =
+                                recurrenceDay?.coerceAtMost(
+                                    getDaysInMonth(nextMonth.year, nextMonth.month.number),
+                                ) ?: currentDate.day
+                            try {
+                                LocalDate(nextMonth.year, nextMonth.month, dayToUse)
+                            } catch (_: Exception) {
+                                nextMonth
+                            }
                         }
+                        RecurrenceType.YEARLY -> currentDate.plus(1, DateTimeUnit.YEAR)
+                        RecurrenceType.NONE -> currentDate // This shouldn't happen but added for completeness
                     }
-                    RecurrenceType.YEARLY -> currentDate.plus(1, DateTimeUnit.YEAR)
-                    RecurrenceType.NONE -> currentDate // This shouldn't happen but added for completeness
-                }
                 allDates.add(currentDate.toString())
             }
-            
+
             allDates
         } catch (e: Exception) {
             emptyList()

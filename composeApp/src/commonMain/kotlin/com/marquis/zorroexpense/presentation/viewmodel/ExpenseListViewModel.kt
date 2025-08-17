@@ -42,15 +42,18 @@ class ExpenseListViewModel(
      * Utility function to check if an expense date is in the future
      */
     @OptIn(kotlin.time.ExperimentalTime::class)
-    private fun isFutureExpense(expenseDate: String): Boolean {
-        return try {
-            val today = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    private fun isFutureExpense(expenseDate: String): Boolean =
+        try {
+            val today =
+                kotlin.time.Clock.System
+                    .now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date
             val expenseLocalDate = LocalDate.parse(expenseDate.substringBefore("T")) // Handle both ISO format and date-only
             expenseLocalDate > today
         } catch (e: Exception) {
             false // If parsing fails, treat as not future
         }
-    }
 
     /**
      * Calculate debts only for current/past expenses (not future ones)
@@ -176,7 +179,7 @@ class ExpenseListViewModel(
                     }
 
                 val debtSummaries = calculateDebtsFromExpenses(finalExpenses)
-                
+
                 val newState =
                     ExpenseListUiState.Success(
                         expenses = finalExpenses,

@@ -30,7 +30,6 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
-import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -116,11 +115,16 @@ fun DatePickerBottomSheet(
  * Format date string to a user-friendly format
  * Input: "2025-01-15" -> Output: "January 15, 2025"
  */
-fun formatDateForDisplay(dateString: String) : String {
+fun formatDateForDisplay(dateString: String): String {
     val date = LocalDate.parse(dateString)
-    val customFormat = LocalDate.Format {
-        monthName(MonthNames.ENGLISH_FULL); char(' '); day(); chars(", "); year()
-    }
+    val customFormat =
+        LocalDate.Format {
+            monthName(MonthNames.ENGLISH_FULL)
+            char(' ')
+            day()
+            chars(", ")
+            year()
+        }
 
     return date.format(customFormat)
 }
