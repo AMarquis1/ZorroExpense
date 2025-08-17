@@ -1,6 +1,7 @@
 package com.marquis.zorroexpense.presentation.state
 
 import com.marquis.zorroexpense.domain.model.Category
+import com.marquis.zorroexpense.domain.model.DebtSummary
 import com.marquis.zorroexpense.domain.model.Expense
 
 sealed class ExpenseListUiState {
@@ -19,6 +20,7 @@ sealed class ExpenseListUiState {
         val hasInitiallyLoaded: Boolean = false,
         val pendingDeletions: Set<String> = emptySet(), // Set of expense documentIds pending deletion
         val showUpcomingExpenses: Boolean = true, // Whether to show upcoming/future expenses
+        val debtSummaries: List<DebtSummary> = emptyList(), // Debt settlements between users
     ) : ExpenseListUiState()
 
     data class Error(

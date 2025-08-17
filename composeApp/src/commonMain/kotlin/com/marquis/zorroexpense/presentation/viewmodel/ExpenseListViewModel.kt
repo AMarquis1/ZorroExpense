@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
@@ -16,12 +17,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class ExpenseListViewModel(
     private val getExpensesUseCase: GetExpensesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val refreshExpensesUseCase: RefreshExpensesUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
+    private val calculateDebtsUseCase: CalculateDebtsUseCase,
     private var onExpenseClick: (Expense) -> Unit = {},
     private var onAddExpenseClick: () -> Unit = {},
 ) : ViewModel() {
@@ -32,6 +37,28 @@ class ExpenseListViewModel(
     val availableCategories: StateFlow<List<Category>> = _availableCategories.asStateFlow()
 
     private var hasLoadedOnce = false
+
+    /**
+     * Utility function to check if an expense date is in the future
+     */
+    @OptIn(kotlin.time.ExperimentalTime::class)
+    private fun isFutureExpense(expenseDate: String): Boolean {
+        return try {
+            val today = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val expenseLocalDate = LocalDate.parse(expenseDate.substringBefore("T")) // Handle both ISO format and date-only
+            expenseLocalDate > today
+        } catch (e: Exception) {
+            false // If parsing fails, treat as not future
+        }
+    }
+
+    /**
+     * Calculate debts only for current/past expenses (not future ones)
+     */
+    private fun calculateDebtsFromExpenses(expenses: List<Expense>): List<com.marquis.zorroexpense.domain.model.DebtSummary> {
+        val currentExpenses = expenses.filter { !isFutureExpense(it.date) }
+        return calculateDebtsUseCase(currentExpenses)
+    }
 
     init {
         // Check if we already have data loaded, if not load from cache or fetch
@@ -148,6 +175,8 @@ class ExpenseListViewModel(
                         expenses
                     }
 
+                val debtSummaries = calculateDebtsFromExpenses(finalExpenses)
+                
                 val newState =
                     ExpenseListUiState.Success(
                         expenses = finalExpenses,
@@ -162,6 +191,7 @@ class ExpenseListViewModel(
                         hasInitiallyLoaded = true,
                         pendingDeletions = preservedPendingDeletions,
                         showUpcomingExpenses = existingState.showUpcomingExpenses,
+                        debtSummaries = debtSummaries,
                     )
 
                 // Apply filtering with current filters
