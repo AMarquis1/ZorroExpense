@@ -86,6 +86,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import com.marquis.zorroexpense.presentation.components.CustomDeleteSnackbar
+import com.marquis.zorroexpense.presentation.components.DebtSummaryBar
 import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
@@ -546,6 +547,15 @@ fun ExpenseListScreen(
                                 bottom = 72.dp,
                             ),
                     ) {
+                        // Debt summary bar - first item if there are debts to show
+                        if (currentState is ExpenseListUiState.Success && currentState.debtSummaries.isNotEmpty()) {
+                            item {
+                                DebtSummaryBar(
+                                    debtSummaries = currentState.debtSummaries
+                                )
+                            }
+                        }
+                        
                         // Category filter row
                         item {
                             CategoryFilterRow(
@@ -595,7 +605,16 @@ fun ExpenseListScreen(
                                     },
                             ),
                     ) {
-                        // Category filter row - always first item
+                        // Debt summary bar - first item if there are debts to show
+                        if (currentState is ExpenseListUiState.Success && currentState.debtSummaries.isNotEmpty()) {
+                            item {
+                                DebtSummaryBar(
+                                    debtSummaries = currentState.debtSummaries
+                                )
+                            }
+                        }
+                        
+                        // Category filter row - always after debt summary
                         item {
                             CategoryFilterRow(
                                 categories = availableCategories,
