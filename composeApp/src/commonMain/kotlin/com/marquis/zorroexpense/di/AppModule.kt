@@ -14,6 +14,7 @@ import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.repository.CategoryRepository
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
+import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
@@ -105,6 +106,10 @@ object AppModule {
         DeleteExpenseUseCase(expenseRepository)
     }
 
+    private val calculateDebtsUseCase: CalculateDebtsUseCase by lazy {
+        CalculateDebtsUseCase()
+    }
+
     // =================
     // Presentation Layer
     // =================
@@ -126,6 +131,7 @@ object AppModule {
                 getCategoriesUseCase = getCategoriesUseCase,
                 refreshExpensesUseCase = refreshExpensesUseCase,
                 deleteExpenseUseCase = deleteExpenseUseCase,
+                calculateDebtsUseCase = calculateDebtsUseCase,
                 onExpenseClick = onExpenseClick,
                 onAddExpenseClick = onAddExpenseClick,
             ).also { expenseListViewModel = it }
