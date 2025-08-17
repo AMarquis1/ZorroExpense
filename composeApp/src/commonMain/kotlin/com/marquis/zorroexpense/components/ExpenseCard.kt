@@ -66,6 +66,7 @@ fun ExpenseCardWithDate(
     onCardClick: (() -> Unit)? = null,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
+    isScheduled: Boolean = false, // For future recurring expenses
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -84,6 +85,7 @@ fun ExpenseCardWithDate(
             onCardClick = onCardClick,
             sharedTransitionScope = sharedTransitionScope,
             animatedContentScope = animatedContentScope,
+            isScheduled = isScheduled,
         )
     }
 }
@@ -105,19 +107,29 @@ fun ExpenseCard(
     onCardClick: (() -> Unit)? = null,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
+    isScheduled: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, bottom = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                .padding(start = 16.dp, bottom = 8.dp)
+                .let { if (isScheduled) it.graphicsLayer(alpha = 0.6f) else it },
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isScheduled) 2.dp else 4.dp,
+            ),
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor =
+                    if (isScheduled) {
+                        MaterialTheme.colorScheme.surfaceContainerLow
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
             ),
-        onClick = { onCardClick?.invoke() },
+        onClick = { if (!isScheduled) onCardClick?.invoke() },
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -151,6 +163,7 @@ fun ExpenseCard(
             // Content column
             ExpenseCardContent(
                 expense = expense,
+                isScheduled = isScheduled,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
                 modifier = Modifier.weight(1f),
@@ -166,6 +179,7 @@ fun ExpenseCard(
 @Composable
 private fun ExpenseCardContent(
     expense: Expense,
+    isScheduled: Boolean = false,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
     modifier: Modifier = Modifier,
@@ -197,6 +211,7 @@ private fun ExpenseCardContent(
                 ExpensePriceChip(
                     price = expense.price,
                     categoryColor = expense.category.color,
+                    isScheduled = isScheduled,
                 )
 
                 // Split users avatars with buyer emphasized
@@ -294,6 +309,7 @@ private fun SplitUsersRow(
 fun ExpensePriceChip(
     price: Double,
     categoryColor: String = "",
+    isScheduled: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor =
@@ -311,22 +327,43 @@ fun ExpensePriceChip(
             MaterialTheme.colorScheme.onPrimaryContainer
         }
 
-    Surface(
+    Column(
+        horizontalAlignment = Alignment.End,
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = backgroundColor,
     ) {
-        Text(
-            text = "$${formatPrice(price)}",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
-            textAlign = TextAlign.Center,
-            modifier =
-                Modifier
-                    .widthIn(min = 72.dp) // Minimum width to accommodate 5-digit prices
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
-        )
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = backgroundColor,
+        ) {
+            Text(
+                text = "$${formatPrice(price)}",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = textColor,
+                textAlign = TextAlign.Center,
+                modifier =
+                    Modifier
+                        .widthIn(min = 72.dp) // Minimum width to accommodate 5-digit prices
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+            )
+        }
+
+        // Scheduled badge
+        if (isScheduled) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Text(
+                    text = "Scheduled",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                )
+            }
+        }
     }
 }
 
