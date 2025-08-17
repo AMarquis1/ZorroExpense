@@ -4,11 +4,15 @@ import com.marquis.zorroexpense.domain.model.Expense
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Timestamp
 import dev.gitlive.firebase.firestore.firestore
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlin.time.ExperimentalTime
 
 /**
  * Android-specific implementation to convert Expense domain model to AndroidExpenseDto
  */
+@OptIn(ExperimentalTime::class)
 actual fun Expense.toDto(): ExpenseDto {
     val firestore = Firebase.firestore
 
@@ -19,15 +23,16 @@ actual fun Expense.toDto(): ExpenseDto {
         price = this.price,
         date =
             try {
-                // Parse the date string to create Firestore Timestamp
+                // Parse the date string (YYYY-MM-DD format) to create Firestore Timestamp
                 if (this.date.isNotBlank()) {
-                    val instant = Instant.parse(this.date)
-                    Timestamp(instant.epochSeconds, instant.nanosecondsOfSecond.toInt())
+                    val localDate = LocalDate.parse(this.date)
+                    val instant = localDate.atStartOfDayIn(TimeZone.currentSystemDefault())
+                    Timestamp(instant.epochSeconds, instant.nanosecondsOfSecond)
                 } else {
                     // Use current timestamp if date is empty
                     Timestamp.now()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Fallback to current timestamp if parsing fails
                 Timestamp.now()
             },

@@ -2,8 +2,8 @@ package com.marquis.zorroexpense.domain.cache
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
 import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 /**
  * Generic cache manager for domain entities
@@ -50,6 +50,7 @@ class InMemoryCacheManager<K, V>(
             }
         }
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun put(
         key: K,
         value: V,
@@ -63,7 +64,10 @@ class InMemoryCacheManager<K, V>(
         cache[key] =
             CacheEntry(
                 value = value,
-                timestamp = Clock.System.now().toEpochMilliseconds(),
+                timestamp =
+                    kotlin.time.Clock.System
+                        .now()
+                        .toEpochMilliseconds(),
             )
     }
 
@@ -84,10 +88,14 @@ class InMemoryCacheManager<K, V>(
             isEntryValid(entry)
         }
 
+    @OptIn(ExperimentalTime::class)
     private fun isEntryValid(entry: CacheEntry<V>): Boolean {
         if (strategy.ttl == Duration.ZERO) return false
 
-        val currentTime = Clock.System.now().toEpochMilliseconds()
+        val currentTime =
+            kotlin.time.Clock.System
+                .now()
+                .toEpochMilliseconds()
         return (currentTime - entry.timestamp) < strategy.ttl.inWholeMilliseconds
     }
 }
