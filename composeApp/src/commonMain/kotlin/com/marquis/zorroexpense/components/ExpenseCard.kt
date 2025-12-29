@@ -48,6 +48,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.eygraber.compose.placeholder.PlaceholderHighlight
+import com.eygraber.compose.placeholder.material3.placeholder
+import com.eygraber.compose.placeholder.material3.shimmer
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import kotlinx.datetime.LocalDate
@@ -734,3 +737,247 @@ private fun getCategoryIcon(iconName: String): ImageVector =
         "Pets" -> Icons.Outlined.Pets
         else -> Icons.Outlined.Home // Default fallback
     }
+
+/**
+ * Skeleton placeholder component that mimics the ExpenseCardWithDate layout
+ * Displays shimmer animation while data is loading
+ */
+@Composable
+fun ExpenseCardSkeleton(modifier: Modifier = Modifier) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Date skeleton (mimics ExpenseDateDisplay)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // Month placeholder
+            Box(
+                modifier =
+                    Modifier
+                        .width(28.dp)
+                        .height(12.dp)
+                        .placeholder(
+                            visible = true,
+                            highlight = PlaceholderHighlight.shimmer(),
+                            shape = RoundedCornerShape(4.dp),
+                        ),
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            // Day placeholder
+            Box(
+                modifier =
+                    Modifier
+                        .width(24.dp)
+                        .height(24.dp)
+                        .placeholder(
+                            visible = true,
+                            highlight = PlaceholderHighlight.shimmer(),
+                            shape = RoundedCornerShape(4.dp),
+                        ),
+            )
+        }
+
+        // Card skeleton
+        Card(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, bottom = 8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Category icon circle skeleton
+                Box(
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .placeholder(
+                                visible = true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                shape = CircleShape,
+                            ),
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Content column skeleton
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // Expense name placeholder
+                        Box(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(24.dp)
+                                    .placeholder(
+                                        visible = true,
+                                        highlight = PlaceholderHighlight.shimmer(),
+                                        shape = RoundedCornerShape(4.dp),
+                                    ),
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Price and split users column skeleton
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                        ) {
+                            // Price chip placeholder
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .width(72.dp)
+                                        .height(28.dp)
+                                        .placeholder(
+                                            visible = true,
+                                            highlight = PlaceholderHighlight.shimmer(),
+                                            shape = RoundedCornerShape(16.dp),
+                                        ),
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Split users avatars placeholder
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                // Buyer avatar (larger)
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(32.dp)
+                                            .placeholder(
+                                                visible = true,
+                                                highlight = PlaceholderHighlight.shimmer(),
+                                                shape = CircleShape,
+                                            ),
+                                )
+                                // Arrow placeholder
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(20.dp)
+                                            .placeholder(
+                                                visible = true,
+                                                highlight = PlaceholderHighlight.shimmer(),
+                                                shape = CircleShape,
+                                            ),
+                                )
+                                // Other user avatar
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(20.dp)
+                                            .placeholder(
+                                                visible = true,
+                                                highlight = PlaceholderHighlight.shimmer(),
+                                                shape = CircleShape,
+                                            ),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Loading state component that shows multiple skeleton placeholders
+ * @param itemCount Number of skeleton items to display
+ */
+@Composable
+fun ExpenseListLoadingState(
+    itemCount: Int = 5,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        repeat(itemCount) {
+            ExpenseCardSkeleton()
+        }
+    }
+}
+
+/**
+ * Skeleton placeholder for CategoryFilterRow with shimmer effect
+ * Mimics the segmented button row for categories
+ */
+@Composable
+fun CategoryFilterRowSkeleton(modifier: Modifier = Modifier) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // Show 3 category button skeletons
+        repeat(3) {
+            Box(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .height(20.dp)
+                        .placeholder(
+                            visible = true,
+                            highlight = PlaceholderHighlight.shimmer(),
+                            shape = RoundedCornerShape(20.dp),
+                        ),
+            )
+        }
+    }
+}
+
+/**
+ * Skeleton placeholder for MonthSeparator with shimmer effect
+ */
+@Composable
+fun MonthSeparatorSkeleton(modifier: Modifier = Modifier) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Month text placeholder
+        Box(
+            modifier =
+                Modifier
+                    .width(120.dp)
+                    .height(20.dp)
+                    .placeholder(
+                        visible = true,
+                        highlight = PlaceholderHighlight.shimmer(),
+                        shape = RoundedCornerShape(4.dp),
+                    ),
+        )
+
+        // Arrow indicator placeholder
+        Box(
+            modifier =
+                Modifier
+                    .size(20.dp)
+                    .placeholder(
+                        visible = true,
+                        highlight = PlaceholderHighlight.shimmer(),
+                        shape = RoundedCornerShape(4.dp),
+                    ),
+        )
+    }
+}

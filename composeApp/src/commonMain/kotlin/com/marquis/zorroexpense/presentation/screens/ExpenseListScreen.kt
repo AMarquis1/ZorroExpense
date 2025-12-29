@@ -73,16 +73,20 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.components.CategoryFilterRow
+import com.marquis.zorroexpense.components.CategoryFilterRowSkeleton
 import com.marquis.zorroexpense.components.EmptyState
 import com.marquis.zorroexpense.components.ErrorState
+import com.marquis.zorroexpense.components.ExpenseCardSkeleton
 import com.marquis.zorroexpense.components.ExpenseCardWithDate
 import com.marquis.zorroexpense.components.MonthSeparator
+import com.marquis.zorroexpense.components.MonthSeparatorSkeleton
 import com.marquis.zorroexpense.components.getMonthYear
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.platform.pullToRefreshBox
 import com.marquis.zorroexpense.presentation.components.CustomDeleteSnackbar
 import com.marquis.zorroexpense.presentation.components.DebtSummaryBar
+import com.marquis.zorroexpense.presentation.components.DebtSummaryBarSkeleton
 import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
@@ -540,6 +544,38 @@ fun ExpenseListScreen(
                         title = "Error loading expenses",
                         message = errorMessage,
                     )
+                }
+
+                isLoading -> {
+                    // Show shimmer skeleton placeholders while loading
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding =
+                            PaddingValues(
+                                top = 8.dp,
+                                bottom = 72.dp,
+                            ),
+                    ) {
+                        // Debt summary skeleton
+                        item {
+                            DebtSummaryBarSkeleton()
+                        }
+
+                        // Category filter skeleton
+                        item {
+                            CategoryFilterRowSkeleton()
+                        }
+
+                        // Month separator skeleton
+                        item {
+                            MonthSeparatorSkeleton()
+                        }
+
+                        // Expense card skeletons
+                        items(5) {
+                            ExpenseCardSkeleton()
+                        }
+                    }
                 }
 
                 filteredExpenses.isEmpty() && !isLoading -> {

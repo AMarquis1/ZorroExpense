@@ -97,6 +97,7 @@ kotlin {
             implementation(libs.bundles.coil)
             implementation(libs.material.icons)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.placeholder)
         }
 
         commonTest.dependencies {

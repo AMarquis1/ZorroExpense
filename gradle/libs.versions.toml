@@ -21,6 +21,7 @@ compose-material3 = "1.4.0"
 android-material = "1.14.0-alpha08"
 material-icons = "1.7.3"
 ktlint = "14.0.1"
+placeholder = "1.0.12"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -46,7 +47,8 @@ firebase-common-ktx = { module = "dev.gitlive:firebase-common", version.ref = "f
 firebase-firestore-ktx = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-ktx" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
 android-material = { module = "com.google.android.material:material", version.ref = "android-material" }
-material-icons = {module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons" }
+material-icons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons" }
+placeholder = { module = "com.eygraber:compose-placeholder-material3", version.ref = "placeholder" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

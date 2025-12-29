@@ -1,14 +1,20 @@
 package com.marquis.zorroexpense.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement.spacedBy
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,6 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.eygraber.compose.placeholder.PlaceholderHighlight
+import com.eygraber.compose.placeholder.material3.placeholder
+import com.eygraber.compose.placeholder.material3.shimmer
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.DebtSummary
 import com.marquis.zorroexpense.domain.model.User
@@ -191,5 +200,160 @@ private fun DebtSummaryBarPreview() {
 
     MaterialTheme {
         DebtSummaryBar(debtSummaries = complexDebtScenario)
+    }
+}
+
+/**
+ * Skeleton placeholder for DebtSummaryBar with shimmer effect
+ */
+@Composable
+fun DebtSummaryBarSkeleton(modifier: Modifier = Modifier) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp,
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
+            // Title skeleton
+            Box(
+                modifier =
+                    Modifier
+                        .width(100.dp)
+                        .height(14.dp)
+                        .placeholder(
+                            visible = true,
+                            highlight = PlaceholderHighlight.shimmer(),
+                            shape = RoundedCornerShape(4.dp),
+                        ),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Debt items skeleton row
+            Row(
+                horizontalArrangement = spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                repeat(2) {
+                    DebtSummaryItemSkeleton()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Skeleton for individual debt summary item
+ */
+@Composable
+private fun DebtSummaryItemSkeleton(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.width(180.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 6.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // From user column
+            Column(
+                verticalArrangement = spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .placeholder(
+                                visible = true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                shape = CircleShape,
+                            ),
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .width(48.dp)
+                            .height(14.dp)
+                            .placeholder(
+                                visible = true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                shape = RoundedCornerShape(4.dp),
+                            ),
+                )
+            }
+
+            // Middle "owes" and amount column
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f),
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .width(32.dp)
+                            .height(12.dp)
+                            .placeholder(
+                                visible = true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                shape = RoundedCornerShape(4.dp),
+                            ),
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier =
+                        Modifier
+                            .width(56.dp)
+                            .height(24.dp)
+                            .placeholder(
+                                visible = true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                shape = RoundedCornerShape(4.dp),
+                            ),
+                )
+            }
+
+            // To user column
+            Column(
+                verticalArrangement = spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .placeholder(
+                                visible = true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                shape = CircleShape,
+                            ),
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .width(48.dp)
+                            .height(14.dp)
+                            .placeholder(
+                                visible = true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                shape = RoundedCornerShape(4.dp),
+                            ),
+                )
+            }
+        }
     }
 }
