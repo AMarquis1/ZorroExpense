@@ -115,13 +115,18 @@ fun App() {
                     }
 
                     composable<AppDestinations.AddExpense> {
-                        val viewModel = AppModule.provideAddExpenseViewModel()
+                        val addExpenseViewModel = AppModule.provideAddExpenseViewModel()
                         AddExpenseScreen(
-                            viewModel = viewModel,
+                            viewModel = addExpenseViewModel,
                             onBackClick = {
                                 navController.popBackStack()
                             },
-                            onExpenseSaved = {
+                            onExpenseSaved = { savedExpenses ->
+                                // Add saved expenses to list immediately (no network refresh needed)
+                                if (savedExpenses.isNotEmpty()) {
+                                    val listViewModel = AppModule.provideExpenseListViewModel()
+                                    listViewModel.addExpensesLocally(savedExpenses)
+                                }
                                 navController.popBackStack()
                             },
                         )

@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.DebtSummary
@@ -91,7 +92,7 @@ private fun DebtSummaryItem(
         }
 
     Surface(
-        modifier = modifier.widthIn(min = 220.dp),
+        modifier = modifier.widthIn(min = 240.dp),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 6.dp,
@@ -135,6 +136,8 @@ private fun DebtSummaryItem(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 

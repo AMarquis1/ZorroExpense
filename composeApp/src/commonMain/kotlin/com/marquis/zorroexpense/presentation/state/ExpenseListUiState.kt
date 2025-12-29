@@ -19,7 +19,7 @@ sealed class ExpenseListUiState {
         val isRefreshing: Boolean = false,
         val hasInitiallyLoaded: Boolean = false,
         val pendingDeletions: Set<String> = emptySet(), // Set of expense documentIds pending deletion
-        val showUpcomingExpenses: Boolean = true, // Whether to show upcoming/future expenses
+        val showUpcomingExpenses: Boolean = false, // Whether to show upcoming/future expenses (collapsed by default)
         val debtSummaries: List<DebtSummary> = emptyList(), // Debt settlements between users
     ) : ExpenseListUiState()
 

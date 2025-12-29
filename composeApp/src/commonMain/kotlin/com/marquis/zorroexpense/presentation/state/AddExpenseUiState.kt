@@ -13,7 +13,9 @@ sealed class AddExpenseUiState {
 
     object Loading : AddExpenseUiState()
 
-    object Success : AddExpenseUiState()
+    data class Success(
+        val savedExpenses: List<com.marquis.zorroexpense.domain.model.Expense>,
+    ) : AddExpenseUiState()
 
     data class Error(
         val message: String,

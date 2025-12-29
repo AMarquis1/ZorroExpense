@@ -57,6 +57,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.components.CategoryIconCircle
+import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.DatePickerBottomSheet
 import com.marquis.zorroexpense.presentation.components.bottomsheets.PaidBySelectionBottomSheet
@@ -78,7 +79,7 @@ import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 fun AddExpenseScreen(
     viewModel: AddExpenseViewModel,
     onBackClick: () -> Unit,
-    onExpenseSaved: () -> Unit = {},
+    onExpenseSaved: (List<Expense>) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
@@ -105,9 +106,9 @@ fun AddExpenseScreen(
 
     // Handle UI state changes
     LaunchedEffect(uiState) {
-        when (uiState) {
+        when (val state = uiState) {
             is AddExpenseUiState.Success -> {
-                onExpenseSaved()
+                onExpenseSaved(state.savedExpenses)
             }
             is AddExpenseUiState.Error -> {
                 // Error message will be shown in the UI

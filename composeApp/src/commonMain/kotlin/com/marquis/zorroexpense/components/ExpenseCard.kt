@@ -88,7 +88,7 @@ fun ExpenseCardWithDate(
     onCardClick: (() -> Unit)? = null,
     sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope? = null,
-    isScheduled: Boolean = false, // For future recurring expenses
+    isScheduled: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val isFuture = isFutureExpense(expense.date)
@@ -100,13 +100,11 @@ fun ExpenseCardWithDate(
                 .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Date display on the left
         ExpenseDateDisplay(
             date = expense.date,
             isFuture = isFuture,
         )
 
-        // Expense card
         ExpenseCard(
             expense = expense,
             onCardClick = onCardClick,
@@ -163,7 +161,6 @@ fun ExpenseCard(
         onClick = { onCardClick?.invoke() },
     ) {
         Box {
-            // Top left indicator for future or recurring expenses
             if (isFuture) {
                 Surface(
                     shape = RoundedCornerShape(bottomEnd = 8.dp),
@@ -210,7 +207,6 @@ fun ExpenseCard(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Category icon on the left with shared element transition
                 if (expense.category.icon.isNotEmpty()) {
                     val categoryModifier =
                         if (sharedTransitionScope != null && animatedContentScope != null) {

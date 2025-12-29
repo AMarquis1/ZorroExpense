@@ -164,25 +164,27 @@ class AddExpenseViewModel(
                         )
                     }
 
-                // Save all expenses
-                var savedCount = 0
-                for (expense in expenses) {
+                // Save all expenses and track saved ones with temp documentIds
+                val savedExpenses = mutableListOf<Expense>()
+                for ((index, expense) in expenses.withIndex()) {
                     addExpenseUseCase(expense)
                         .onSuccess {
-                            savedCount++
+                            // Add with a temporary documentId for local display
+                            val tempDocId = "temp_${System.currentTimeMillis()}_$index"
+                            savedExpenses.add(expense.copy(documentId = tempDocId))
                         }.onFailure { exception ->
                             _uiState.value =
                                 AddExpenseUiState.Error(
-                                    message = "Failed to save expense ${savedCount + 1} of ${expenses.size}: ${exception.message ?: "Unknown error"}",
+                                    message = "Failed to save expense ${savedExpenses.size + 1} of ${expenses.size}: ${exception.message ?: "Unknown error"}",
                                 )
                             return@launch
                         }
                 }
 
                 // All expenses saved successfully
-                if (savedCount == expenses.size) {
-                    _uiState.value = AddExpenseUiState.Success
-                    resetForm()
+                if (savedExpenses.size == expenses.size) {
+                    _uiState.value = AddExpenseUiState.Success(savedExpenses)
+                    // Note: Don't call resetForm() here - let the screen handle navigation first
                 }
             } catch (e: Exception) {
                 _uiState.value =

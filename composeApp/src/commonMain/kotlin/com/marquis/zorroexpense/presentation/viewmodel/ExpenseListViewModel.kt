@@ -486,4 +486,30 @@ class ExpenseListViewModel(
             }
         }
     }
+
+    /**
+     * Add expenses locally without network call.
+     * Used for instant UI update after adding new expenses.
+     */
+    fun addExpensesLocally(newExpenses: List<Expense>) {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListUiState.Success) {
+            val updatedExpenses = currentState.expenses + newExpenses
+            val debtSummaries = calculateDebtsFromExpenses(updatedExpenses)
+
+            _uiState.update {
+                currentState.copy(
+                    expenses = updatedExpenses,
+                    filteredExpenses = filterExpenses(
+                        expenses = updatedExpenses,
+                        searchQuery = currentState.searchQuery,
+                        selectedCategories = currentState.selectedCategories,
+                        sortOption = currentState.sortOption,
+                        pendingDeletions = currentState.pendingDeletions,
+                    ),
+                    debtSummaries = debtSummaries,
+                )
+            }
+        }
+    }
 }

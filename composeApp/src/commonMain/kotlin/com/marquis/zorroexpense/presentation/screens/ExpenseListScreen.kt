@@ -54,7 +54,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -211,16 +210,9 @@ fun ExpenseListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
 
-    // Refresh data when screen comes back into view (e.g., after delete)
-    LaunchedEffect(Unit) {
-        viewModel.onEvent(ExpenseListUiEvent.RefreshExpenses)
-    }
-
-    // Snackbar state
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    // Show snackbar when expense is deleted
     LaunchedEffect(deletedExpenseName) {
         deletedExpenseName?.let { name ->
             coroutineScope.launch {
@@ -260,28 +252,34 @@ fun ExpenseListScreen(
             filteredExpenses.partition { expense -> !isFutureExpense(expense.date) }
         }
 
-    val groupedCurrentExpenses by remember(currentExpenses) {
-        derivedStateOf {
-            currentExpenses
-                .groupBy { expense -> getMonthYear(expense.date) }
-                .toList()
-                .sortedByDescending { (monthYear, _) -> monthYear }
-                .toMap()
-        }
+    val groupedCurrentExpenses = remember(currentExpenses) {
+        currentExpenses
+            .groupBy { expense -> getMonthYear(expense.date) }
+            .toList()
+            .sortedByDescending { (_, expenses) ->
+                // Sort by the most recent date in each month group
+                expenses.maxOfOrNull { it.date } ?: ""
+            }
+            .map { (monthYear, expenses) ->
+                // Sort expenses within each month by date descending (most recent first)
+                monthYear to expenses.sortedByDescending { it.date }
+            }
+            .toMap()
     }
 
-    val groupedFutureExpenses by remember(futureExpenses) {
-        derivedStateOf {
-            futureExpenses
-                .groupBy { expense -> getMonthYear(expense.date) }
-                .toList()
-                .sortedBy { (monthYear, _) -> monthYear } // Future expenses sorted ascending
-                .toMap()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.onEvent(ExpenseListUiEvent.LoadExpenses)
+    val groupedFutureExpenses = remember(futureExpenses) {
+        futureExpenses
+            .groupBy { expense -> getMonthYear(expense.date) }
+            .toList()
+            .sortedBy { (_, expenses) ->
+                // Sort by the earliest date in each month group (ascending for future)
+                expenses.minOfOrNull { it.date } ?: ""
+            }
+            .map { (monthYear, expenses) ->
+                // Sort expenses within each month by date ascending (soonest first)
+                monthYear to expenses.sortedBy { it.date }
+            }
+            .toMap()
     }
 
     LaunchedEffect(isSearchExpanded) {
@@ -673,7 +671,7 @@ fun ExpenseListScreen(
                                 // Animated visibility for future expenses
                                 items(
                                     items = expensesInMonth,
-                                    key = { expense: Expense -> "expense_future_${expense.date}_${expense.name}_${expense.price}" },
+                                    key = { expense: Expense -> "expense_future_${expense.documentId}" },
                                 ) { expense: Expense ->
                                     AnimatedVisibility(
                                         visible = !collapsedMonths.contains(monthYear),
@@ -722,7 +720,7 @@ fun ExpenseListScreen(
                             // Animated visibility for current expenses
                             items(
                                 items = expensesInMonth,
-                                key = { expense: Expense -> "expense_current_${expense.date}_${expense.name}_${expense.price}" },
+                                key = { expense: Expense -> "expense_current_${expense.documentId}" },
                             ) { expense: Expense ->
                                 AnimatedVisibility(
                                     visible = !collapsedMonths.contains(monthYear),
