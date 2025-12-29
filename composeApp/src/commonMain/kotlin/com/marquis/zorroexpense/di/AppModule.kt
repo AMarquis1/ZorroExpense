@@ -145,7 +145,13 @@ object AppModule {
         return viewModel
     }
 
-    fun provideAddExpenseViewModel(): AddExpenseViewModel = AddExpenseViewModel(addExpenseUseCase, getCategoriesUseCase)
+    fun provideAddExpenseViewModel(expenseToEdit: Expense? = null): AddExpenseViewModel =
+        AddExpenseViewModel(
+            addExpenseUseCase = addExpenseUseCase,
+            updateExpenseUseCase = updateExpenseUseCase,
+            getCategoriesUseCase = getCategoriesUseCase,
+            expenseToEdit = expenseToEdit,
+        )
 
     fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel = ExpenseDetailViewModel(expense)
 

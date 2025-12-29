@@ -20,6 +20,7 @@ sealed class AppDestinations {
         val expenseDescription: String,
         val expensePrice: Double,
         val expenseDate: String,
+        val categoryDocumentId: String,
         val categoryName: String,
         val categoryIcon: String,
         val categoryColor: String,
@@ -46,4 +47,27 @@ sealed class AppDestinations {
         val userId: String,
         val amount: Double,
     )
+
+    @Serializable
+    data class EditExpense(
+        val expenseId: String,
+        val expenseName: String,
+        val expenseDescription: String,
+        val expensePrice: Double,
+        val expenseDate: String,
+        val categoryDocumentId: String,
+        val categoryName: String,
+        val categoryIcon: String,
+        val categoryColor: String,
+        val paidByUserId: String,
+        val splitDetailsJson: String,
+    ) : AppDestinations() {
+
+        val splitDetails: List<SplitDetailNavigation>
+            get() = try {
+                Json.decodeFromString<List<SplitDetailNavigation>>(splitDetailsJson)
+            } catch (e: Exception) {
+                emptyList()
+            }
+    }
 }

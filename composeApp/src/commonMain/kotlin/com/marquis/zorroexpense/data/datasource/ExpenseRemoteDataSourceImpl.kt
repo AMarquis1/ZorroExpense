@@ -53,8 +53,7 @@ class ExpenseRemoteDataSourceImpl(
             } else {
                 // Convert domain expense to DTO and update in Firestore
                 val expenseDto = expense.toDto()
-                // Note: For update we would need expense ID, this is a simplified implementation
-                Result.failure(NotImplementedError("Update requires expense ID - to be implemented with proper ID handling"))
+                firestoreService.updateExpense(expense.documentId, expenseDto)
             }
         } catch (e: Exception) {
             Result.failure(e)

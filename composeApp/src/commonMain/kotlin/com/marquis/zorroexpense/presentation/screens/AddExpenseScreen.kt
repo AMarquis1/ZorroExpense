@@ -150,7 +150,7 @@ fun AddExpenseScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Ajouter une dépense",
+                        text = if (viewModel.isEditMode) "Edit Expense" else "Add Expense",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                     )
@@ -496,36 +496,38 @@ fun AddExpenseScreen(
                     }
                 }
 
-                // Recurring Expense Section
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors =
-                        CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                        ),
-                    shape = RoundedCornerShape(16.dp),
-                ) {
-                    RecurringExpenseSection(
-                        isRecurring = isRecurring,
-                        recurrenceType = recurrenceType,
-                        recurrenceDay = recurrenceDay,
-                        recurrenceLimit = recurrenceLimit,
-                        onRecurringToggled = { viewModel.onEvent(AddExpenseUiEvent.RecurringToggled(it)) },
-                        onRecurrenceTypeClick = { showRecurrenceTypeBottomSheet = true },
-                        onRecurrenceLimitChanged = { viewModel.onEvent(AddExpenseUiEvent.RecurrenceLimitChanged(it)) },
-                        modifier = Modifier.padding(16.dp),
-                    )
-                }
-
-                if (isRecurring && futureOccurrences.isNotEmpty()) {
-                    RecurringExpensePreview(
-                        futureOccurrences = futureOccurrences,
-                        expenseAmount = expensePrice,
-                        expenseName = expenseName.ifBlank { "Recurring Expense" },
-                        recurrenceLimit = recurrenceLimit,
+                // Recurring Expense Section - only show for new expenses, not when editing
+                if (!viewModel.isEditMode) {
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                    )
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                            ),
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        RecurringExpenseSection(
+                            isRecurring = isRecurring,
+                            recurrenceType = recurrenceType,
+                            recurrenceDay = recurrenceDay,
+                            recurrenceLimit = recurrenceLimit,
+                            onRecurringToggled = { viewModel.onEvent(AddExpenseUiEvent.RecurringToggled(it)) },
+                            onRecurrenceTypeClick = { showRecurrenceTypeBottomSheet = true },
+                            onRecurrenceLimitChanged = { viewModel.onEvent(AddExpenseUiEvent.RecurrenceLimitChanged(it)) },
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
+
+                    if (isRecurring && futureOccurrences.isNotEmpty()) {
+                        RecurringExpensePreview(
+                            futureOccurrences = futureOccurrences,
+                            expenseAmount = expensePrice,
+                            expenseName = expenseName.ifBlank { "Recurring Expense" },
+                            recurrenceLimit = recurrenceLimit,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
 
                 Row(
@@ -557,7 +559,13 @@ fun AddExpenseScreen(
                             contentDescription = "Save",
                             modifier = Modifier.padding(end = 8.dp),
                         )
-                        Text(if (isLoading) "Saving..." else "Save Expense")
+                        Text(
+                            when {
+                                isLoading -> "Saving..."
+                                viewModel.isEditMode -> "Update Expense"
+                                else -> "Save Expense"
+                            }
+                        )
                     }
                 }
 

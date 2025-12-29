@@ -46,6 +46,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -212,6 +213,8 @@ fun ExpenseListScreen(
     onUndoDelete: () -> Unit = {},
     onConfirmDelete: () -> Unit = {},
     onDeleteFlowComplete: () -> Unit = {},
+    updatedExpenseName: String? = null,
+    onUpdateFlowComplete: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
@@ -250,6 +253,17 @@ fun ExpenseListScreen(
             kotlinx.coroutines.delay(DeleteConstants.AUTO_DELETE_DELAY_MS)
             // This will trigger the Dismissed result above
             snackbarHostState.currentSnackbarData?.dismiss()
+        }
+    }
+
+    // Handle update snackbar - simple notification without undo
+    LaunchedEffect(updatedExpenseName) {
+        if (updatedExpenseName != null) {
+            snackbarHostState.showSnackbar(
+                message = "\"$updatedExpenseName\" has been updated",
+                duration = SnackbarDuration.Short,
+            )
+            onUpdateFlowComplete()
         }
     }
 

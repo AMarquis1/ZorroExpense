@@ -45,6 +45,7 @@ fun App() {
             val navController = rememberNavController()
             var deletedExpenseName by remember { mutableStateOf<String?>(null) }
             var deletedExpenseId by remember { mutableStateOf<String?>(null) }
+            var updatedExpenseName by remember { mutableStateOf<String?>(null) }
 
             // Bind browser navigation for WASM back/forward button support
             BindBrowserNavigation(navController)
@@ -66,6 +67,7 @@ fun App() {
                                             expenseDescription = expense.description,
                                             expensePrice = expense.price,
                                             expenseDate = expense.date,
+                                            categoryDocumentId = expense.category.documentId,
                                             categoryName = expense.category.name,
                                             categoryIcon = expense.category.icon,
                                             categoryColor = expense.category.color,
@@ -107,6 +109,11 @@ fun App() {
                                 deletedExpenseName = null
                                 deletedExpenseId = null
                             },
+                            updatedExpenseName = updatedExpenseName,
+                            onUpdateFlowComplete = {
+                                // Clear update state after snackbar is shown
+                                updatedExpenseName = null
+                            },
                         )
                     }
 
@@ -139,6 +146,7 @@ fun App() {
                                 date = expenseDetail.expenseDate,
                                 category =
                                     Category(
+                                        documentId = expenseDetail.categoryDocumentId,
                                         name = expenseDetail.categoryName,
                                         icon = expenseDetail.categoryIcon,
                                         color = expenseDetail.categoryColor,
@@ -171,8 +179,80 @@ fun App() {
                                 // Navigate back to show snackbar
                                 navController.popBackStack()
                             },
+                            onEditExpense = { expenseToEdit ->
+                                navController.navigate(
+                                    AppDestinations.EditExpense(
+                                        expenseId = expenseToEdit.documentId,
+                                        expenseName = expenseToEdit.name,
+                                        expenseDescription = expenseToEdit.description,
+                                        expensePrice = expenseToEdit.price,
+                                        expenseDate = expenseToEdit.date,
+                                        categoryDocumentId = expenseToEdit.category.documentId,
+                                        categoryName = expenseToEdit.category.name,
+                                        categoryIcon = expenseToEdit.category.icon,
+                                        categoryColor = expenseToEdit.category.color,
+                                        paidByUserId = expenseToEdit.paidBy.userId,
+                                        splitDetailsJson = AppDestinations.ExpenseDetail.createSplitDetailsJson(
+                                            expenseToEdit.splitDetails.map { splitDetail ->
+                                                AppDestinations.SplitDetailNavigation(
+                                                    userId = splitDetail.user.userId,
+                                                    amount = splitDetail.amount
+                                                )
+                                            }
+                                        ),
+                                    )
+                                )
+                            },
                             sharedTransitionScope = this@SharedTransitionLayout,
                             animatedContentScope = this,
+                        )
+                    }
+
+                    composable<AppDestinations.EditExpense> { backStackEntry ->
+                        val editExpense = backStackEntry.toRoute<AppDestinations.EditExpense>()
+                        val expense =
+                            Expense(
+                                documentId = editExpense.expenseId,
+                                name = editExpense.expenseName,
+                                description = editExpense.expenseDescription,
+                                price = editExpense.expensePrice,
+                                date = editExpense.expenseDate,
+                                category =
+                                    Category(
+                                        documentId = editExpense.categoryDocumentId,
+                                        name = editExpense.categoryName,
+                                        icon = editExpense.categoryIcon,
+                                        color = editExpense.categoryColor,
+                                    ),
+                                paidBy = MockExpenseData.usersMap[editExpense.paidByUserId] ?: User(),
+                                splitDetails = editExpense.splitDetails.mapNotNull { splitDetailNav ->
+                                    val user = MockExpenseData.usersMap[splitDetailNav.userId]
+                                    if (user != null) {
+                                        com.marquis.zorroexpense.domain.model.SplitDetail(user = user, amount = splitDetailNav.amount)
+                                    } else {
+                                        null
+                                    }
+                                },
+                            )
+
+                        val editViewModel = AppModule.provideAddExpenseViewModel(expenseToEdit = expense)
+                        AddExpenseScreen(
+                            viewModel = editViewModel,
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            onExpenseSaved = { savedExpenses ->
+                                // Update the expense in the list and show snackbar
+                                if (savedExpenses.isNotEmpty()) {
+                                    val savedExpense = savedExpenses.first()
+                                    val listViewModel = AppModule.provideExpenseListViewModel()
+                                    listViewModel.updateExpenseLocally(savedExpense)
+                                    // Set the name to trigger snackbar on ExpenseListScreen
+                                    updatedExpenseName = savedExpense.name
+                                }
+                                // Navigate back to ExpenseList (pop both EditExpense and ExpenseDetail)
+                                navController.popBackStack(AppDestinations.ExpenseList, inclusive = false)
+                            },
                         )
                     }
                 }

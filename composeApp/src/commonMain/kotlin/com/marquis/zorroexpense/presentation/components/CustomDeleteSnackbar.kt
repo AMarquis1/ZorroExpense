@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
-import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 
 @Composable
 internal fun CustomDeleteSnackbar(snackbarData: SnackbarData) {
@@ -64,13 +63,14 @@ internal fun CustomDeleteSnackbar(snackbarData: SnackbarData) {
                 modifier = Modifier.weight(1f),
             )
 
-            // UNDO button - performAction() triggers SnackbarResult.ActionPerformed
-            TextButton(onClick = { snackbarData.performAction() }) {
-                Text(
-                    text = snackbarData.visuals.actionLabel ?: DeleteConstants.UNDO_BUTTON_TEXT,
-                    color = MaterialTheme.colorScheme.inversePrimary,
-                    style = MaterialTheme.typography.labelLarge,
-                )
+            snackbarData.visuals.actionLabel?.let { actionLabel ->
+                TextButton(onClick = { snackbarData.performAction() }) {
+                    Text(
+                        text = actionLabel,
+                        color = MaterialTheme.colorScheme.inversePrimary,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
             }
         }
     }

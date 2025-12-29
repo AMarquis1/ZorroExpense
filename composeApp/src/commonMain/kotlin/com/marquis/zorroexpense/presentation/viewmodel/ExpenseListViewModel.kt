@@ -520,4 +520,36 @@ class ExpenseListViewModel(
             }
         }
     }
+
+    /**
+     * Update an existing expense in the local list after editing.
+     * Used for instant UI update after editing an expense.
+     */
+    fun updateExpenseLocally(updatedExpense: Expense) {
+        _uiState.update { state ->
+            if (state is ExpenseListUiState.Success) {
+                val updatedExpenses = state.expenses.map { expense ->
+                    if (expense.documentId == updatedExpense.documentId) {
+                        updatedExpense
+                    } else {
+                        expense
+                    }
+                }
+                val debtSummaries = calculateDebtsFromExpenses(updatedExpenses)
+                state.copy(
+                    expenses = updatedExpenses,
+                    filteredExpenses = filterExpenses(
+                        expenses = updatedExpenses,
+                        searchQuery = state.searchQuery,
+                        selectedCategories = state.selectedCategories,
+                        sortOption = state.sortOption,
+                        pendingDeletions = state.pendingDeletions,
+                    ),
+                    debtSummaries = debtSummaries,
+                )
+            } else {
+                state
+            }
+        }
+    }
 }

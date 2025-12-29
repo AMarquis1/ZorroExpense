@@ -10,6 +10,7 @@ import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
+import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.state.AddExpenseFormState
 import com.marquis.zorroexpense.presentation.state.AddExpenseUiEvent
 import com.marquis.zorroexpense.presentation.state.AddExpenseUiState
@@ -25,7 +26,9 @@ import kotlinx.datetime.plus
 
 class AddExpenseViewModel(
     private val addExpenseUseCase: AddExpenseUseCase,
+    private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val expenseToEdit: Expense? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AddExpenseUiState>(AddExpenseUiState.Idle)
     val uiState: StateFlow<AddExpenseUiState> = _uiState.asStateFlow()
@@ -36,8 +39,59 @@ class AddExpenseViewModel(
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories: StateFlow<List<Category>> = _categories.asStateFlow()
 
+    /** Whether the ViewModel is in edit mode (editing existing expense) or add mode (creating new) */
+    val isEditMode: Boolean = expenseToEdit != null
+
+    /** The document ID of the expense being edited, if in edit mode */
+    private val editExpenseDocumentId: String? = expenseToEdit?.documentId
+
     init {
         loadCategories()
+        expenseToEdit?.let { initializeFormForEdit(it) }
+    }
+
+    /**
+     * Initialize the form with values from an existing expense for editing
+     */
+    private fun initializeFormForEdit(expense: Expense) {
+        // Build split maps from existing split details
+        val percentageSplits = mutableMapOf<String, Float>()
+        val numberSplits = mutableMapOf<String, Float>()
+
+        val totalPrice = expense.price
+        expense.splitDetails.forEach { splitDetail ->
+            val userId = splitDetail.user.userId
+            numberSplits[userId] = splitDetail.amount.toFloat()
+            if (totalPrice > 0) {
+                percentageSplits[userId] = ((splitDetail.amount / totalPrice) * 100).toFloat()
+            }
+        }
+
+        _formState.update {
+            AddExpenseFormState(
+                expenseName = expense.name,
+                expenseDescription = expense.description,
+                expensePrice = expense.price.toString(),
+                selectedCategory = expense.category,
+                selectedPaidByUser = expense.paidBy,
+                selectedSplitWithUsers = expense.splitDetails.map { it.user },
+                selectedDate = expense.date,
+                percentageSplits = percentageSplits,
+                numberSplits = numberSplits,
+                splitMethod = SplitMethod.NUMBER, // Default to number since we have actual amounts
+                isNameValid = true,
+                isPriceValid = true,
+                isCategoryValid = true,
+                isPaidByValid = true,
+                isFormValid = true,
+                // Don't copy recurring settings - those are for new expenses only
+                isRecurring = false,
+                recurrenceType = RecurrenceType.NONE,
+                recurrenceDay = null,
+                recurrenceLimit = null,
+                futureOccurrences = emptyList(),
+            )
+        }
     }
 
     fun onEvent(event: AddExpenseUiEvent) {
@@ -91,22 +145,24 @@ class AddExpenseViewModel(
                         price.toDoubleOrNull() != null &&
                         price.toDoubleOrNull()!! > 0
 
+                // Recalculate splits when price changes
+                val (updatedPercentageSplits, updatedNumberSplits) =
+                    calculateEqualSplits(
+                        currentState.selectedSplitWithUsers,
+                        price,
+                    )
+
+                // Create state with new price AND new splits before validating
                 val updatedState =
                     currentState.copy(
                         expensePrice = price,
                         isPriceValid = isPriceValid,
+                        percentageSplits = updatedPercentageSplits,
+                        numberSplits = updatedNumberSplits,
                     )
 
-                // Recalculate splits when price changes
-                val (updatedPercentageSplits, updatedNumberSplits) =
-                    calculateEqualSplits(
-                        updatedState.selectedSplitWithUsers,
-                        price,
-                    )
-
+                // Validate with the fully updated state (including new splits)
                 updatedState.copy(
-                    percentageSplits = updatedPercentageSplits,
-                    numberSplits = updatedNumberSplits,
                     isFormValid = validateForm(updatedState),
                 )
             }
@@ -114,6 +170,69 @@ class AddExpenseViewModel(
     }
 
     private fun saveExpense() {
+        if (isEditMode) {
+            updateExpense()
+        } else {
+            addNewExpense()
+        }
+    }
+
+    /**
+     * Update an existing expense (edit mode)
+     */
+    private fun updateExpense() {
+        val currentFormState = _formState.value
+
+        if (!currentFormState.isFormValid) {
+            _uiState.value = AddExpenseUiState.Error("Please fill in all required fields correctly")
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = AddExpenseUiState.Loading
+
+            try {
+                val splitDetails = createSplitDetails(currentFormState)
+                val updatedExpense = Expense(
+                    documentId = editExpenseDocumentId ?: "",
+                    name = currentFormState.expenseName.trim(),
+                    description = currentFormState.expenseDescription.trim(),
+                    price = currentFormState.expensePrice.toDouble(),
+                    date = currentFormState.selectedDate,
+                    category = requireNotNull(currentFormState.selectedCategory) { "Category must be selected" },
+                    paidBy = requireNotNull(currentFormState.selectedPaidByUser) { "Paid by user must be selected" },
+                    splitDetails = splitDetails,
+                    isFromRecurring = false,
+                    isRecurring = false,
+                    recurrenceType = RecurrenceType.NONE,
+                    recurrenceDay = null,
+                    nextOccurrenceDate = null,
+                    isScheduled = false,
+                    recurrenceLimit = null,
+                    recurrenceCount = 0,
+                )
+
+                updateExpenseUseCase(updatedExpense)
+                    .onSuccess {
+                        _uiState.value = AddExpenseUiState.Success(listOf(updatedExpense))
+                    }
+                    .onFailure { exception ->
+                        _uiState.value = AddExpenseUiState.Error(
+                            message = "Failed to update expense: ${exception.message ?: "Unknown error"}"
+                        )
+                    }
+            } catch (e: Exception) {
+                _uiState.value = AddExpenseUiState.Error(
+                    message = e.message ?: "An unexpected error occurred"
+                )
+            }
+        }
+    }
+
+    /**
+     * Add a new expense (add mode)
+     */
+    private fun addNewExpense() {
         val currentFormState = _formState.value
 
         if (!currentFormState.isFormValid) {

@@ -65,6 +65,7 @@ fun ExpenseDetailScreen(
     expense: Expense,
     onBackClick: () -> Unit,
     onExpenseDeleted: (expenseName: String) -> Unit = {},
+    onEditExpense: (Expense) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
@@ -96,9 +97,7 @@ fun ExpenseDetailScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = {
-                            // TODO: Implement edit functionality
-                        },
+                        onClick = { onEditExpense(expense) },
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
