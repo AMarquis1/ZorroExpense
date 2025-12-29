@@ -22,9 +22,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
 class AddExpenseViewModel(
     private val addExpenseUseCase: AddExpenseUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,

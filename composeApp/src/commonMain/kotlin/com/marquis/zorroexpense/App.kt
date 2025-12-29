@@ -28,6 +28,7 @@ import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.navigation.AppDestinations
+import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
@@ -45,6 +46,9 @@ fun App() {
             val navController = rememberNavController()
             var deletedExpenseName by remember { mutableStateOf<String?>(null) }
             var deletedExpenseId by remember { mutableStateOf<String?>(null) }
+
+            // Bind browser navigation for WASM back/forward button support
+            BindBrowserNavigation(navController)
 
             SharedTransitionLayout {
                 NavHost(

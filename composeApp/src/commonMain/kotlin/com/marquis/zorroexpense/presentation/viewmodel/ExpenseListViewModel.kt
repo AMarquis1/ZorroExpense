@@ -41,7 +41,6 @@ class ExpenseListViewModel(
     /**
      * Utility function to check if an expense date is in the future
      */
-    @OptIn(kotlin.time.ExperimentalTime::class)
     private fun isFutureExpense(expenseDate: String): Boolean =
         try {
             val today =
@@ -115,12 +114,13 @@ class ExpenseListViewModel(
         viewModelScope.launch {
             val currentState = _uiState.value
 
-            // For initial load, show loading state
-            // For refresh, keep existing data visible and set isRefreshing = true
-            if (!isRefresh) {
-                _uiState.value = ExpenseListUiState.Loading
-            } else if (currentState is ExpenseListUiState.Success) {
+            // For initial load (no existing data), show loading state
+            // For refresh OR reload with existing data, keep UI state visible and set isRefreshing = true
+            // This prevents flickering of collapsed/expanded months during navigation
+            if (currentState is ExpenseListUiState.Success) {
                 _uiState.value = currentState.copy(isRefreshing = true)
+            } else if (!isRefresh) {
+                _uiState.value = ExpenseListUiState.Loading
             }
 
             // Load both expenses and categories
@@ -140,9 +140,10 @@ class ExpenseListViewModel(
                 // Update available categories for the UI
                 _availableCategories.value = categories
 
-                // Preserve existing UI state if refreshing, otherwise use defaults
+                // Preserve existing UI state (especially collapsedMonths) from previous state
+                // This ensures user's collapsed/expanded preferences survive reloads
                 val existingState =
-                    if (isRefresh && currentState is ExpenseListUiState.Success) {
+                    if (currentState is ExpenseListUiState.Success) {
                         currentState
                     } else {
                         ExpenseListUiState.Success()
@@ -155,9 +156,10 @@ class ExpenseListViewModel(
                         categories.toSet() // Use all categories for initial load
                     }
 
-                // Preserve pending deletions when refreshing
+                // Preserve pending deletions when we have existing state
+                // This ensures items being deleted stay hidden during any reload
                 val preservedPendingDeletions =
-                    if (isRefresh && currentState is ExpenseListUiState.Success) {
+                    if (currentState is ExpenseListUiState.Success) {
                         currentState.pendingDeletions
                     } else {
                         emptySet()

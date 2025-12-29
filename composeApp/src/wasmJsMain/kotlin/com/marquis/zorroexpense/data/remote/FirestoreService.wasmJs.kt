@@ -83,6 +83,8 @@ actual class FirestoreService actual constructor() {
                     Json {
                         ignoreUnknownKeys = true
                         isLenient = true
+                        coerceInputValues = true // Handle null values gracefully (Ktor 3.3.3+)
+                        explicitNulls = false // Don't serialize null values
                     },
                 )
             }

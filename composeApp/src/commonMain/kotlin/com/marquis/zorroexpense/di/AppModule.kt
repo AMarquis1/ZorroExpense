@@ -139,8 +139,8 @@ object AppModule {
         // Update callbacks for navigation
         viewModel.updateCallbacks(onExpenseClick, onAddExpenseClick)
 
-        // Ensure data is loaded (uses cache-first strategy)
-        viewModel.ensureDataLoaded()
+        // Note: Data loading is handled by ViewModel's init block
+        // No need to call ensureDataLoaded() here - it causes unnecessary refreshes on navigation
 
         return viewModel
     }

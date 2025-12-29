@@ -15,6 +15,11 @@ plugins {
 }
 
 kotlin {
+    // Enable Kotlin 2.3.0 unused return value checker to catch silently dropped Results
+    compilerOptions {
+        freeCompilerArgs.add("-Xwarn-unused-return-value")
+    }
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -86,8 +91,6 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-
-            implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.jetbrains.compose.navigation)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.bundles.ktor)
