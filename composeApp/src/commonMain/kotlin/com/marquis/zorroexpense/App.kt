@@ -29,7 +29,6 @@ import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.platform.BindBrowserNavigation
-import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
@@ -92,26 +91,23 @@ fun App() {
                             animatedContentScope = this,
                             deletedExpenseName = deletedExpenseName,
                             onUndoDelete = {
+                                // User clicked UNDO - restore the expense
                                 deletedExpenseId?.let { expenseId ->
                                     viewModel.onEvent(ExpenseListUiEvent.UndoDeleteExpense(expenseId))
-                                    deletedExpenseName = null
-                                    deletedExpenseId = null
                                 }
                             },
-                        )
-
-                        // Auto-dismiss after delay - confirm the actual deletion
-                        // This will be cancelled when deletedExpenseName/Id becomes null (undo case)
-                        LaunchedEffect(deletedExpenseId) {
-                            deletedExpenseId?.let { expenseId ->
-                                kotlinx.coroutines.delay(DeleteConstants.AUTO_DELETE_DELAY_MS)
-                                if (deletedExpenseId == expenseId) {
+                            onConfirmDelete = {
+                                // Timer expired or snackbar dismissed - confirm deletion
+                                deletedExpenseId?.let { expenseId ->
                                     viewModel.onEvent(ExpenseListUiEvent.ConfirmDeleteExpense(expenseId))
-                                    deletedExpenseName = null
-                                    deletedExpenseId = null
                                 }
-                            }
-                        }
+                            },
+                            onDeleteFlowComplete = {
+                                // Clear delete state after flow completes (undo or confirm)
+                                deletedExpenseName = null
+                                deletedExpenseId = null
+                            },
+                        )
                     }
 
                     composable<AppDestinations.AddExpense> {

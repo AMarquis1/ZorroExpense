@@ -48,6 +48,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -57,7 +58,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -210,21 +210,46 @@ fun ExpenseListScreen(
     animatedContentScope: AnimatedContentScope,
     deletedExpenseName: String? = null,
     onUndoDelete: () -> Unit = {},
+    onConfirmDelete: () -> Unit = {},
+    onDeleteFlowComplete: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
 
+    // Handle delete snackbar with integrated timer
+    // This LaunchedEffect manages both the snackbar display AND the auto-delete timer
     LaunchedEffect(deletedExpenseName) {
-        deletedExpenseName?.let { name ->
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "Expense \"$name\" has been deleted",
-                    duration = DeleteConstants.SNACKBAR_DURATION,
-                )
+        if (deletedExpenseName != null) {
+            // Show snackbar and wait for result
+            val result = snackbarHostState.showSnackbar(
+                message = "Expense \"$deletedExpenseName\" has been deleted",
+                actionLabel = DeleteConstants.UNDO_BUTTON_TEXT,
+                duration = DeleteConstants.SNACKBAR_DURATION,
+            )
+
+            when (result) {
+                SnackbarResult.ActionPerformed -> {
+                    // User clicked UNDO
+                    onUndoDelete()
+                    onDeleteFlowComplete()
+                }
+                SnackbarResult.Dismissed -> {
+                    // Snackbar was dismissed (by timeout or swipe) - confirm delete
+                    onConfirmDelete()
+                    onDeleteFlowComplete()
+                }
             }
+        }
+    }
+
+    // Auto-dismiss snackbar after delay (since we're using Indefinite duration)
+    LaunchedEffect(deletedExpenseName) {
+        if (deletedExpenseName != null) {
+            kotlinx.coroutines.delay(DeleteConstants.AUTO_DELETE_DELAY_MS)
+            // This will trigger the Dismissed result above
+            snackbarHostState.currentSnackbarData?.dismiss()
         }
     }
 
@@ -319,13 +344,7 @@ fun ExpenseListScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { snackbarData ->
-                CustomDeleteSnackbar(
-                    snackbarData = snackbarData,
-                    onUndo = {
-                        onUndoDelete()
-                        snackbarData.dismiss()
-                    },
-                )
+                CustomDeleteSnackbar(snackbarData = snackbarData)
             }
         },
         topBar = {

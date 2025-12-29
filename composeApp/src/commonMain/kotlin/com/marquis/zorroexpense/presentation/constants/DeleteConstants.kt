@@ -7,14 +7,16 @@ import androidx.compose.material3.SnackbarDuration
  */
 object DeleteConstants {
     /**
-     * Duration for delete confirmation snackbar
+     * Duration for delete confirmation snackbar.
+     * Using Indefinite so the snackbar stays visible during the undo window.
+     * The snackbar will be programmatically dismissed after auto-delete completes.
      */
-    val SNACKBAR_DURATION = SnackbarDuration.Short
+    val SNACKBAR_DURATION = SnackbarDuration.Indefinite
 
     /**
-     * Auto-delete delay in milliseconds (5 seconds for more responsive UX)
+     * Auto-delete delay in milliseconds (3 seconds for more responsive UX)
      */
-    const val AUTO_DELETE_DELAY_MS = 5000L
+    const val AUTO_DELETE_DELAY_MS = 3000L
 
     /**
      * Delete confirmation dialog text

@@ -22,10 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 
 @Composable
-internal fun CustomDeleteSnackbar(
-    snackbarData: SnackbarData,
-    onUndo: () -> Unit = {},
-) {
+internal fun CustomDeleteSnackbar(snackbarData: SnackbarData) {
     val scale by animateFloatAsState(
         targetValue = 1f,
         animationSpec =
@@ -67,10 +64,10 @@ internal fun CustomDeleteSnackbar(
                 modifier = Modifier.weight(1f),
             )
 
-            // UNDO button
-            TextButton(onClick = onUndo) {
+            // UNDO button - performAction() triggers SnackbarResult.ActionPerformed
+            TextButton(onClick = { snackbarData.performAction() }) {
                 Text(
-                    text = DeleteConstants.UNDO_BUTTON_TEXT,
+                    text = snackbarData.visuals.actionLabel ?: DeleteConstants.UNDO_BUTTON_TEXT,
                     color = MaterialTheme.colorScheme.inversePrimary,
                     style = MaterialTheme.typography.labelLarge,
                 )
