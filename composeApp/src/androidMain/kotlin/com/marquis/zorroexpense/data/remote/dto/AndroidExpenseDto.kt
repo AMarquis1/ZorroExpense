@@ -16,6 +16,8 @@ data class SplitDetailDto(
 @Serializable
 data class AndroidExpenseDto(
     override val documentId: String = "",
+    @SerialName("listId")
+    override val listId: DocumentReference,
     @SerialName("description")
     override val description: String = "",
     @SerialName("name")

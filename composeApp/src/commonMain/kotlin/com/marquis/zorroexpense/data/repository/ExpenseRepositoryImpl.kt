@@ -31,13 +31,13 @@ class ExpenseRepositoryImpl(
     /**
      * Optimized cache-first strategy with parallel operations
      */
-    override suspend fun getExpenses(): Result<List<Expense>> {
+    override suspend fun getExpenses(userId: String): Result<List<Expense>> {
         return try {
             supervisorScope {
                 // Start cache lookup immediately
                 val cacheDeferred =
                     async {
-                        localDataSource.getExpenses()
+                        localDataSource.getExpenses(userId)
                     }
 
                 val cacheResult = cacheDeferred.await()
@@ -48,7 +48,7 @@ class ExpenseRepositoryImpl(
                 }
 
                 // Cache miss - fetch from remote with fallback strategy
-                fetchWithCacheFallback()
+                fetchWithCacheFallback(userId)
             }
         } catch (e: Exception) {
             Result.failure(e.toExpenseError())
@@ -58,10 +58,10 @@ class ExpenseRepositoryImpl(
     /**
      * Force refresh with optimized error handling
      */
-    override suspend fun refreshExpenses(): Result<List<Expense>> =
+    override suspend fun refreshExpenses(userId: String): Result<List<Expense>> =
         try {
             supervisorScope {
-                val remoteResult = remoteDataSource.getExpenses()
+                val remoteResult = remoteDataSource.getExpenses(userId)
 
                 if (remoteResult.isSuccess) {
                     val expenses = remoteResult.getOrThrow()
@@ -89,18 +89,18 @@ class ExpenseRepositoryImpl(
     /**
      * Optimized add with cache synchronization
      */
-    override suspend fun addExpense(expense: Expense): Result<Unit> =
+    override suspend fun addExpense(userId: String, expense: Expense): Result<Unit> =
         repositoryMutex.withLock {
             try {
                 supervisorScope {
                     // Add to remote first
-                    val remoteResult = remoteDataSource.addExpense(expense)
+                    val remoteResult = remoteDataSource.addExpense(userId, expense)
 
                     if (remoteResult.isSuccess) {
                         // Update cache asynchronously
                         async {
                             runCatching {
-                                localDataSource.addExpense(expense)
+                                localDataSource.addExpense(userId, expense)
                             }
                         }
                         Result.success(Unit)
@@ -119,17 +119,17 @@ class ExpenseRepositoryImpl(
     /**
      * Optimized update with cache synchronization
      */
-    override suspend fun updateExpense(expense: Expense): Result<Unit> =
+    override suspend fun updateExpense(userId: String, expense: Expense): Result<Unit> =
         repositoryMutex.withLock {
             try {
                 supervisorScope {
-                    val remoteResult = remoteDataSource.updateExpense(expense)
+                    val remoteResult = remoteDataSource.updateExpense(userId, expense)
 
                     if (remoteResult.isSuccess) {
                         // Update cache asynchronously
                         async {
                             runCatching {
-                                localDataSource.updateExpense(expense)
+                                localDataSource.updateExpense(userId, expense)
                             }
                         }
                         Result.success(Unit)
@@ -148,17 +148,17 @@ class ExpenseRepositoryImpl(
     /**
      * Optimized delete with cache synchronization
      */
-    override suspend fun deleteExpense(expenseId: String): Result<Unit> =
+    override suspend fun deleteExpense(userId: String, expenseId: String): Result<Unit> =
         repositoryMutex.withLock {
             try {
                 supervisorScope {
-                    val remoteResult = remoteDataSource.deleteExpense(expenseId)
+                    val remoteResult = remoteDataSource.deleteExpense(userId, expenseId)
 
                     if (remoteResult.isSuccess) {
                         // Update cache asynchronously
                         async {
                             runCatching {
-                                localDataSource.deleteExpense(expenseId)
+                                localDataSource.deleteExpense(userId, expenseId)
                             }
                         }
                         Result.success(Unit)
@@ -191,12 +191,102 @@ class ExpenseRepositoryImpl(
     }
 
     /**
+     * Get expenses for a specific expense list
+     */
+    override suspend fun getExpensesByListId(listId: String): Result<List<Expense>> {
+        return try {
+            supervisorScope {
+                val remoteResult = remoteDataSource.getExpensesByListId(listId)
+                if (remoteResult.isSuccess) {
+                    Result.success(remoteResult.getOrThrow())
+                } else {
+                    val error =
+                        remoteResult.exceptionOrNull()?.toExpenseError()
+                            ?: ExpenseError.NetworkError("Failed to fetch expenses for list")
+                    Result.failure(error)
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e.toExpenseError())
+        }
+    }
+
+    /**
+     * Add expense to a list
+     */
+    suspend fun addExpenseToList(listId: String, expense: Expense): Result<String> =
+        repositoryMutex.withLock {
+            try {
+                supervisorScope {
+                    val remoteResult = remoteDataSource.addExpenseToList(listId, expense)
+
+                    if (remoteResult.isSuccess) {
+                        Result.success(remoteResult.getOrThrow())
+                    } else {
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.UnknownError("Failed to add expense to list")
+                        Result.failure(error)
+                    }
+                }
+            } catch (e: Exception) {
+                Result.failure(e.toExpenseError())
+            }
+        }
+
+    /**
+     * Update expense in a list
+     */
+    suspend fun updateExpenseInList(listId: String, expense: Expense): Result<Unit> =
+        repositoryMutex.withLock {
+            try {
+                supervisorScope {
+                    val remoteResult = remoteDataSource.updateExpenseInList(listId, expense)
+
+                    if (remoteResult.isSuccess) {
+                        Result.success(Unit)
+                    } else {
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.UnknownError("Failed to update expense in list")
+                        Result.failure(error)
+                    }
+                }
+            } catch (e: Exception) {
+                Result.failure(e.toExpenseError())
+            }
+        }
+
+    /**
+     * Delete expense from a list
+     */
+    suspend fun deleteExpenseFromList(listId: String, expenseId: String): Result<Unit> =
+        repositoryMutex.withLock {
+            try {
+                supervisorScope {
+                    val remoteResult = remoteDataSource.deleteExpenseFromList(listId, expenseId)
+
+                    if (remoteResult.isSuccess) {
+                        Result.success(Unit)
+                    } else {
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.UnknownError("Failed to delete expense from list")
+                        Result.failure(error)
+                    }
+                }
+            } catch (e: Exception) {
+                Result.failure(e.toExpenseError())
+            }
+        }
+
+    /**
      * Private helper for fetch with cache fallback strategy
      */
-    private suspend fun fetchWithCacheFallback(): Result<List<Expense>> =
+    private suspend fun fetchWithCacheFallback(userId: String): Result<List<Expense>> =
         supervisorScope {
             try {
-                val remoteResult = remoteDataSource.getExpenses()
+                val remoteResult = remoteDataSource.getExpenses(userId)
 
                 if (remoteResult.isSuccess) {
                     val expenses = remoteResult.getOrThrow()
@@ -211,7 +301,7 @@ class ExpenseRepositoryImpl(
                     Result.success(expenses)
                 } else {
                     // Remote failed - try cache fallback
-                    val cacheResult = localDataSource.getExpenses()
+                    val cacheResult = localDataSource.getExpenses(userId)
                     if (cacheResult.isSuccess && cacheResult.getOrNull()?.isNotEmpty() == true) {
                         cacheResult
                     } else {
@@ -224,7 +314,7 @@ class ExpenseRepositoryImpl(
                 }
             } catch (e: Exception) {
                 // Final fallback to cache
-                val cacheResult = localDataSource.getExpenses()
+                val cacheResult = localDataSource.getExpenses(userId)
                 if (cacheResult.isSuccess && cacheResult.getOrNull()?.isNotEmpty() == true) {
                     cacheResult
                 } else {

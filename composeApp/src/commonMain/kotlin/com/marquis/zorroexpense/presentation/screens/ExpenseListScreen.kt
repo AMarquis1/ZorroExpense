@@ -302,12 +302,10 @@ fun ExpenseListScreen(
             .sortedByDescending { (_, expenses) ->
                 // Sort by the most recent date in each month group
                 expenses.maxOfOrNull { it.date } ?: ""
-            }
-            .map { (monthYear, expenses) ->
+            }.associate { (monthYear, expenses) ->
                 // Sort expenses within each month by date descending (most recent first)
                 monthYear to expenses.sortedByDescending { it.date }
             }
-            .toMap()
     }
 
     val groupedFutureExpenses = remember(futureExpenses) {
@@ -317,12 +315,10 @@ fun ExpenseListScreen(
             .sortedBy { (_, expenses) ->
                 // Sort by the earliest date in each month group (ascending for future)
                 expenses.minOfOrNull { it.date } ?: ""
-            }
-            .map { (monthYear, expenses) ->
+            }.associate { (monthYear, expenses) ->
                 // Sort expenses within each month by date ascending (soonest first)
                 monthYear to expenses.sortedBy { it.date }
             }
-            .toMap()
     }
 
     LaunchedEffect(isSearchExpanded) {

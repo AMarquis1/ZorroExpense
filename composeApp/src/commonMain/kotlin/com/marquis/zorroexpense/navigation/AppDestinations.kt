@@ -14,13 +14,20 @@ sealed class AppDestinations {
     data object SignUp : AppDestinations()
 
     @Serializable
-    data object ExpenseList : AppDestinations()
+    data object ExpenseLists : AppDestinations()
 
     @Serializable
-    data object AddExpense : AppDestinations()
+    data object CreateExpenseList : AppDestinations()
+
+    @Serializable
+    data class ExpenseList(val listId: String) : AppDestinations()
+
+    @Serializable
+    data class AddExpense(val listId: String) : AppDestinations()
 
     @Serializable
     data class ExpenseDetail(
+        val listId: String,
         val expenseId: String,
         val expenseName: String,
         val expenseDescription: String,
@@ -56,6 +63,7 @@ sealed class AppDestinations {
 
     @Serializable
     data class EditExpense(
+        val listId: String,
         val expenseId: String,
         val expenseName: String,
         val expenseDescription: String,

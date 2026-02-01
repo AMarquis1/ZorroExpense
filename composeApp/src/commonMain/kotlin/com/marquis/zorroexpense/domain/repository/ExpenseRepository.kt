@@ -11,31 +11,36 @@ interface ExpenseRepository {
      * Get expenses with automatic cache handling
      * Uses cache-first strategy with fallback to network
      */
-    suspend fun getExpenses(): Result<List<Expense>>
+    suspend fun getExpenses(userId: String): Result<List<Expense>>
 
     /**
      * Force refresh expenses, bypassing cache
      * Always fetches from remote data source
      */
-    suspend fun refreshExpenses(): Result<List<Expense>>
+    suspend fun refreshExpenses(userId: String): Result<List<Expense>>
 
     /**
      * Add a new expense
      * Invalidates relevant cache entries
      */
-    suspend fun addExpense(expense: Expense): Result<Unit>
+    suspend fun addExpense(userId: String, expense: Expense): Result<Unit>
 
     /**
      * Update an existing expense
      * Invalidates relevant cache entries
      */
-    suspend fun updateExpense(expense: Expense): Result<Unit>
+    suspend fun updateExpense(userId: String, expense: Expense): Result<Unit>
 
     /**
      * Delete an expense by ID
      * Invalidates relevant cache entries
      */
-    suspend fun deleteExpense(expenseId: String): Result<Unit>
+    suspend fun deleteExpense(userId: String, expenseId: String): Result<Unit>
+
+    /**
+     * Get expenses for a specific expense list
+     */
+    suspend fun getExpensesByListId(listId: String): Result<List<Expense>>
 
     /**
      * Clear all cached data

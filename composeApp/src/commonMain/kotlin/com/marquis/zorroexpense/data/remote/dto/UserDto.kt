@@ -10,4 +10,6 @@ data class UserDto(
     val name: String = "",
     @SerialName("profileImage")
     val profileImage: String = "",
+    @SerialName("ExpenseListReferences")
+    val expenseListReferences: List<String> = emptyList(),
 )

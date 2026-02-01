@@ -26,6 +26,8 @@ import kotlinx.datetime.number
 import kotlinx.datetime.plus
 
 class AddExpenseViewModel(
+    private val userId: String,
+    private val listId: String,
     private val addExpenseUseCase: AddExpenseUseCase,
     private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
@@ -213,7 +215,7 @@ class AddExpenseViewModel(
                     recurrenceCount = 0,
                 )
 
-                updateExpenseUseCase(updatedExpense)
+                updateExpenseUseCase(userId, updatedExpense)
                     .onSuccess {
                         _uiState.value = AddExpenseUiState.Success(listOf(updatedExpense))
                     }
@@ -273,6 +275,7 @@ class AddExpenseViewModel(
                             paidBy = requireNotNull(currentFormState.selectedPaidByUser) { "Paid by user must be selected" },
                             splitDetails = splitDetails,
                             isFromRecurring = currentFormState.isRecurring && expenseDates.size > 1,
+                            listId = this@AddExpenseViewModel.listId,
                             // Remove recurrence metadata - each expense is standalone
                             isRecurring = false,
                             recurrenceType = RecurrenceType.NONE,
@@ -287,7 +290,7 @@ class AddExpenseViewModel(
                 // Save all expenses and track saved ones with temp documentIds
                 val savedExpenses = mutableListOf<Expense>()
                 for ((index, expense) in expenses.withIndex()) {
-                    addExpenseUseCase(expense)
+                    addExpenseUseCase(userId, expense)
                         .onSuccess {
                             // Add with a temporary documentId for local display
                             val tempDocId = "temp_${Clock.System.now().toEpochMilliseconds()}_$index"

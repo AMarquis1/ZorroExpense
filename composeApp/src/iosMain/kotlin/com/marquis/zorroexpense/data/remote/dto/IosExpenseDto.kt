@@ -16,6 +16,8 @@ data class IosSplitDetailDto(
 @Serializable
 data class IosExpenseDto(
     override val documentId: String = "",
+    @SerialName("listId")
+    override val listId: String = "",
     @SerialName("description")
     override val description: String = "",
     @SerialName("name")

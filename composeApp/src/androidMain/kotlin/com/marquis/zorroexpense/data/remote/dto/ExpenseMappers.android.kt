@@ -22,6 +22,7 @@ actual fun Expense.toDto(): ExpenseDto {
         description = this.description,
         price = this.price,
         isFromRecurring = this.isFromRecurring,
+        listId = firestore.collection("ExpenseLists").document(this.listId),
         date =
             try {
                 // Parse the date string (YYYY-MM-DD format) to create Firestore Timestamp
