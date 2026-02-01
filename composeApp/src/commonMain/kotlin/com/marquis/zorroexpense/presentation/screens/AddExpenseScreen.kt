@@ -141,9 +141,9 @@ fun AddExpenseScreen(
     val datePickerBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val recurrenceTypeBottomSheetState = rememberModalBottomSheetState()
 
-    // Get categories from ViewModel instead of MockData
+    // Get categories and users from ViewModel instead of MockData
     val availableCategories by viewModel.categories.collectAsState()
-    val availableUsers = listOf(MockExpenseData.userSarah, MockExpenseData.userAlex)
+    val availableUsers by viewModel.availableUsers.collectAsState()
 
     Scaffold(
         topBar = {

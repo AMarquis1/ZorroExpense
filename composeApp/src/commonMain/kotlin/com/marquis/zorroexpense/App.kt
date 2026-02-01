@@ -247,6 +247,7 @@ fun App() {
 
                         val addExpenseRoute = backStackEntry.toRoute<AppDestinations.AddExpense>()
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+
                         val addExpenseViewModel = AppModule.provideAddExpenseViewModel(userId = userId, listId = addExpenseRoute.listId)
                         AddExpenseScreen(
                             viewModel = addExpenseViewModel,
@@ -391,6 +392,7 @@ fun App() {
                             )
 
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+
                         val editViewModel = AppModule.provideAddExpenseViewModel(userId = userId, listId = editExpense.listId, expenseToEdit = expense)
                         AddExpenseScreen(
                             viewModel = editViewModel,

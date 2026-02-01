@@ -82,7 +82,7 @@ class CreateExpenseListViewModel(
             val result = createExpenseListUseCase(
                 userId = userId,
                 name = name,
-                categories = _selectedCategories.value.toList()
+                categoryIds = _selectedCategories.value.toList()
             )
 
             result.onSuccess { listId ->

@@ -9,19 +9,6 @@ import com.marquis.zorroexpense.domain.model.UserProfile
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 expect class FirestoreService() {
-    suspend fun getExpenses(userId: String): Result<List<ExpenseDto>>
-
-    suspend fun addExpense(userId: String, expense: ExpenseDto): Result<Unit>
-
-    suspend fun updateExpense(
-        userId: String,
-        expenseId: String,
-        expense: ExpenseDto,
-    ): Result<Unit>
-
-    suspend fun deleteExpense(userId: String, expenseId: String): Result<Unit>
-
-    suspend fun getUsers(): Result<List<UserDto>>
 
     suspend fun getCategories(): Result<List<CategoryDto>>
 

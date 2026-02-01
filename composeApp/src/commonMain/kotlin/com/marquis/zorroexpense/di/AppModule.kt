@@ -11,6 +11,7 @@ import com.marquis.zorroexpense.data.repository.AuthRepositoryImpl
 import com.marquis.zorroexpense.data.repository.CategoryRepositoryImpl
 import com.marquis.zorroexpense.data.repository.ExpenseListRepositoryImpl
 import com.marquis.zorroexpense.data.repository.ExpenseRepositoryImpl
+import com.marquis.zorroexpense.data.repository.UserRepositoryImpl
 import com.marquis.zorroexpense.domain.cache.CacheManager
 import com.marquis.zorroexpense.domain.cache.InMemoryCacheManager
 import com.marquis.zorroexpense.domain.model.Expense
@@ -18,6 +19,7 @@ import com.marquis.zorroexpense.domain.repository.AuthRepository
 import com.marquis.zorroexpense.domain.repository.CategoryRepository
 import com.marquis.zorroexpense.domain.repository.ExpenseListRepository
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
+import com.marquis.zorroexpense.domain.repository.UserRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.CreateExpenseListUseCase
@@ -26,6 +28,7 @@ import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
 import com.marquis.zorroexpense.domain.usecase.JoinExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.LoginUseCase
@@ -107,6 +110,10 @@ object AppModule {
         ExpenseListRepositoryImpl(firestoreService)
     }
 
+    private val userRepository: UserRepository by lazy {
+        UserRepositoryImpl(firestoreService)
+    }
+
     // =================
     // Use Case Layer
     // =================
@@ -149,6 +156,10 @@ object AppModule {
         GetCategoriesUseCase(categoryRepository)
     }
 
+    private val getUsersUseCase: GetUsersUseCase by lazy {
+        GetUsersUseCase(userRepository)
+    }
+
     private val addExpenseUseCase: AddExpenseUseCase by lazy {
         AddExpenseUseCase(expenseRepository)
     }
@@ -171,7 +182,7 @@ object AppModule {
     }
 
     private val createExpenseListUseCase: CreateExpenseListUseCase by lazy {
-        CreateExpenseListUseCase(expenseListRepository)
+        CreateExpenseListUseCase(expenseListRepository, firestoreService)
     }
 
     private val joinExpenseListUseCase: JoinExpenseListUseCase by lazy {
@@ -241,10 +252,8 @@ object AppModule {
             ExpenseListViewModel(
                 userId = userId,
                 listId = listId,
-                getExpensesUseCase = getExpensesUseCase,
                 getExpensesByListIdUseCase = getExpensesByListIdUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
-                refreshExpensesUseCase = refreshExpensesUseCase,
                 deleteExpenseUseCase = deleteExpenseUseCase,
                 calculateDebtsUseCase = calculateDebtsUseCase,
                 onExpenseClick = onExpenseClick,
@@ -267,6 +276,8 @@ object AppModule {
             addExpenseUseCase = addExpenseUseCase,
             updateExpenseUseCase = updateExpenseUseCase,
             getCategoriesUseCase = getCategoriesUseCase,
+            getUsersUseCase = getUsersUseCase,
+            expenseListRepository = expenseListRepository,
             expenseToEdit = expenseToEdit,
         )
 

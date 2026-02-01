@@ -1,6 +1,7 @@
 package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.AndroidExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.AndroidExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
@@ -14,88 +15,6 @@ import dev.gitlive.firebase.firestore.firestore
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class FirestoreService {
     private val firestore = Firebase.firestore
-
-    actual suspend fun getExpenses(userId: String): Result<List<ExpenseDto>> =
-        try {
-            val snapshot = firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .get()
-            val expenses =
-                snapshot.documents.map { document ->
-                    document.data<AndroidExpenseDto>().copy(documentId = document.id)
-                }
-
-            Result.success(expenses)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun addExpense(userId: String, expense: ExpenseDto): Result<Unit> =
-        try {
-            // Cast to AndroidExpenseDto for platform-specific implementation
-            val androidExpenseDto = expense as AndroidExpenseDto
-
-            // Add the expense to Firestore
-            firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .add(androidExpenseDto)
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun updateExpense(
-        userId: String,
-        expenseId: String,
-        expense: ExpenseDto,
-    ): Result<Unit> =
-        try {
-            val androidExpenseDto = expense as AndroidExpenseDto
-
-            firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .document(expenseId)
-                .set(androidExpenseDto)
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun deleteExpense(userId: String, expenseId: String): Result<Unit> =
-        try {
-            firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .document(expenseId)
-                .delete()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun getUsers(): Result<List<UserDto>> =
-        try {
-            val snapshot = firestore.collection("Users").get()
-            val users =
-                snapshot.documents.map { document ->
-                    val userData = document.data<UserDto>()
-                    userData.copy(documentId = document.id) // Set the document ID
-                }
-
-            Result.success(users)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
 
     actual suspend fun getCategories(): Result<List<CategoryDto>> =
         try {
@@ -163,14 +82,10 @@ actual class FirestoreService {
 
             val lists = mutableListOf<ExpenseListDto>()
             for (reference in expenseListReferences) {
-                val expensePath = reference.path.substringAfterLast("/")
                 try {
-                    val listSnapshot = firestore
-                        .collection("ExpenseLists")
-                        .document(expensePath)
-                        .get()
+                    val listSnapshot = firestore.document(reference.path).get()
                     if (listSnapshot.exists) {
-                        val listDto = listSnapshot.data<ExpenseListDto>()
+                        val listDto = listSnapshot.data<AndroidExpenseListDto>()
                         lists.add(listDto)
                     }
                 } catch (_: Exception) {
@@ -189,7 +104,7 @@ actual class FirestoreService {
                 .collection("ExpenseLists")
                 .document(listId)
                 .get()
-            val list = if (snapshot.exists) snapshot.data<ExpenseListDto>() else null
+            val list = if (snapshot.exists) snapshot.data<AndroidExpenseListDto>() else null
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -197,9 +112,10 @@ actual class FirestoreService {
 
     actual suspend fun createExpenseList(list: ExpenseListDto): Result<String> =
         try {
+            val androidExpenseListDto = list as AndroidExpenseListDto
             val docRef = firestore
                 .collection("ExpenseLists")
-                .add(list)
+                .add(androidExpenseListDto)
 
             // Update the document to set the listId to the auto-generated document ID
             firestore
@@ -214,10 +130,11 @@ actual class FirestoreService {
 
     actual suspend fun updateExpenseList(listId: String, list: ExpenseListDto): Result<Unit> =
         try {
+            val androidExpenseListDto = list as AndroidExpenseListDto
             firestore
                 .collection("ExpenseLists")
                 .document(listId)
-                .set(list)
+                .set(androidExpenseListDto)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -241,7 +158,7 @@ actual class FirestoreService {
                 .where { "shareCode" equalTo shareCode }
                 .get()
             val list = if (snapshot.documents.isNotEmpty()) {
-                snapshot.documents.first().data<ExpenseListDto>()
+                snapshot.documents.first().data<AndroidExpenseListDto>()
             } else {
                 null
             }
@@ -256,8 +173,9 @@ actual class FirestoreService {
                 .collection("ExpenseLists")
                 .document(listId)
                 .get()
-            val list = listSnapshot.data<ExpenseListDto>()
-            val updatedMembers = (list.members + userId).distinct()
+            val list = listSnapshot.data<AndroidExpenseListDto>()
+            val userRef = firestore.collection("Users").document(userId)
+            val updatedMembers = (list.memberRefs + userRef).distinctBy { it.path }
             firestore
                 .collection("ExpenseLists")
                 .document(listId)
@@ -273,8 +191,10 @@ actual class FirestoreService {
                 .collection("ExpenseLists")
                 .document(listId)
                 .get()
-            val list = listSnapshot.data<ExpenseListDto>()
-            val updatedMembers = list.members.filter { it != userId }
+            val list = listSnapshot.data<AndroidExpenseListDto>()
+            val updatedMembers = list.memberRefs.filter { ref ->
+                !ref.path.endsWith(userId)
+            }
             firestore
                 .collection("ExpenseLists")
                 .document(listId)
@@ -331,8 +251,9 @@ actual class FirestoreService {
     actual suspend fun getExpensesByListId(listId: String): Result<List<ExpenseDto>> =
         try {
             val snapshot = firestore
+                .collection("ExpenseLists")
+                .document(listId)
                 .collection("Expenses")
-                .where { "listId" equalTo listId }
                 .get()
             val expenses = snapshot.documents.map { document ->
                 document.data<AndroidExpenseDto>().copy(documentId = document.id)
@@ -345,7 +266,10 @@ actual class FirestoreService {
     actual suspend fun addExpenseToList(listId: String, expense: ExpenseDto): Result<String> =
         try {
             val androidExpenseDto = expense as AndroidExpenseDto
+            val expensePath = androidExpenseDto.listId.path.substringAfterLast("/")
             val docRef = firestore
+                .collection("ExpenseLists")
+                .document(expensePath)
                 .collection("Expenses")
                 .add(androidExpenseDto)
             Result.success(docRef.id)
@@ -357,6 +281,8 @@ actual class FirestoreService {
         try {
             val androidExpenseDto = expense as AndroidExpenseDto
             firestore
+                .collection("ExpenseLists")
+                .document(listId)
                 .collection("Expenses")
                 .document(expenseId)
                 .set(androidExpenseDto)

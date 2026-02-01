@@ -8,8 +8,6 @@ import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
-import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
-import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
@@ -25,10 +23,8 @@ import kotlinx.datetime.toLocalDateTime
 class ExpenseListViewModel(
     private val userId: String,
     private val listId: String,
-    private val getExpensesUseCase: GetExpensesUseCase,
     private val getExpensesByListIdUseCase: GetExpensesByListIdUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val refreshExpensesUseCase: RefreshExpensesUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
     private val calculateDebtsUseCase: CalculateDebtsUseCase,
     private var onExpenseClick: (Expense) -> Unit = {},
@@ -128,22 +124,8 @@ class ExpenseListViewModel(
             }
 
             // Load both expenses and categories
-            // Use refreshExpensesUseCase for force refresh, otherwise use cached version
-            // Load expenses by listId if specified, otherwise load all user expenses
-            val expensesResult =
-                if (isRefresh) {
-                    if (listId.isNotEmpty()) {
-                        getExpensesByListIdUseCase(listId)
-                    } else {
-                        refreshExpensesUseCase(userId)
-                    }
-                } else {
-                    if (listId.isNotEmpty()) {
-                        getExpensesByListIdUseCase(listId)
-                    } else {
-                        getExpensesUseCase(userId)
-                    }
-                }
+            // Always load by listId since it's required
+            val expensesResult = getExpensesByListIdUseCase(listId)
             val categoriesResult = getCategoriesUseCase()
 
             if (expensesResult.isSuccess && categoriesResult.isSuccess) {
@@ -447,7 +429,7 @@ class ExpenseListViewModel(
 
     private fun confirmDeleteExpense(expenseId: String) {
         viewModelScope.launch {
-            deleteExpenseUseCase(userId, expenseId).fold(
+            deleteExpenseUseCase(listId, expenseId).fold(
                 onSuccess = {
                     // Remove from pending deletions and expenses list
                     // Use the current state from the update block to avoid race conditions

@@ -2,14 +2,17 @@ package com.marquis.zorroexpense.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marquis.zorroexpense.data.remote.dto.getReferencePaths
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.model.RecurrenceType
 import com.marquis.zorroexpense.domain.model.SplitDetail
 import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
+import com.marquis.zorroexpense.domain.repository.ExpenseListRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.state.AddExpenseFormState
 import com.marquis.zorroexpense.presentation.state.AddExpenseUiEvent
@@ -31,6 +34,8 @@ class AddExpenseViewModel(
     private val addExpenseUseCase: AddExpenseUseCase,
     private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val getUsersUseCase: GetUsersUseCase,
+    private val expenseListRepository: ExpenseListRepository,
     private val expenseToEdit: Expense? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AddExpenseUiState>(AddExpenseUiState.Idle)
@@ -42,6 +47,9 @@ class AddExpenseViewModel(
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories: StateFlow<List<Category>> = _categories.asStateFlow()
 
+    private val _availableUsers = MutableStateFlow<List<User>>(emptyList())
+    val availableUsers: StateFlow<List<User>> = _availableUsers.asStateFlow()
+
     /** Whether the ViewModel is in edit mode (editing existing expense) or add mode (creating new) */
     val isEditMode: Boolean = expenseToEdit != null
 
@@ -50,7 +58,32 @@ class AddExpenseViewModel(
 
     init {
         loadCategories()
+        loadAvailableUsers()
         expenseToEdit?.let { initializeFormForEdit(it) }
+    }
+
+    private fun loadAvailableUsers() {
+        // Load list members from repository, then fetch real users
+        viewModelScope.launch {
+            expenseListRepository
+                .getExpenseListById(listId)
+                .onSuccess { list ->
+                    list?.let { expenseList ->
+                        getUsersUseCase(expenseList.members)
+                            .onSuccess { users ->
+                                _availableUsers.value = users
+                            }
+                            .onFailure {
+                                // Silently fail - keep empty users list
+                                _availableUsers.value = emptyList()
+                            }
+                    }
+                }
+                .onFailure {
+                    // Silently fail if list not found
+                    _availableUsers.value = emptyList()
+                }
+        }
     }
 
     /**
@@ -196,12 +229,25 @@ class AddExpenseViewModel(
 
             try {
                 val splitDetails = createSplitDetails(currentFormState)
+                // Preserve original time when date is changed, or use original date if time was included
+                val dateString = if (currentFormState.selectedDate.contains("T")) {
+                    currentFormState.selectedDate
+                } else if (expenseToEdit?.date?.contains("T") == true) {
+                    // Extract time from original expense and combine with new date
+                    val originalTime = expenseToEdit.date.substringAfter("T")
+                    "${currentFormState.selectedDate}T$originalTime"
+                } else {
+                    // Use current time as fallback
+                    val currentTime = Clock.System.now().toString().substringAfter("T")
+                    "${currentFormState.selectedDate}T$currentTime"
+                }
+
                 val updatedExpense = Expense(
                     documentId = editExpenseDocumentId ?: "",
                     name = currentFormState.expenseName.trim(),
                     description = currentFormState.expenseDescription.trim(),
                     price = currentFormState.expensePrice.toDouble(),
-                    date = currentFormState.selectedDate,
+                    date = dateString,
                     category = requireNotNull(currentFormState.selectedCategory) { "Category must be selected" },
                     paidBy = requireNotNull(currentFormState.selectedPaidByUser) { "Paid by user must be selected" },
                     splitDetails = splitDetails,
@@ -215,7 +261,7 @@ class AddExpenseViewModel(
                     recurrenceCount = 0,
                 )
 
-                updateExpenseUseCase(userId, updatedExpense)
+                updateExpenseUseCase(listId, updatedExpense)
                     .onSuccess {
                         _uiState.value = AddExpenseUiState.Success(listOf(updatedExpense))
                     }
@@ -266,11 +312,13 @@ class AddExpenseViewModel(
                 // Create expense objects for each date (without recurrence metadata)
                 val expenses =
                     expenseDates.map { date ->
+                        // Use current time for new expenses (includes time component)
+                        val dateTimeString = "$date ${Clock.System.now().toString().substringAfter("T")}"
                         Expense(
                             name = currentFormState.expenseName.trim(),
                             description = currentFormState.expenseDescription.trim(),
                             price = currentFormState.expensePrice.toDouble(),
-                            date = date,
+                            date = dateTimeString,
                             category = requireNotNull(currentFormState.selectedCategory) { "Category must be selected" },
                             paidBy = requireNotNull(currentFormState.selectedPaidByUser) { "Paid by user must be selected" },
                             splitDetails = splitDetails,
@@ -290,11 +338,10 @@ class AddExpenseViewModel(
                 // Save all expenses and track saved ones with temp documentIds
                 val savedExpenses = mutableListOf<Expense>()
                 for ((index, expense) in expenses.withIndex()) {
-                    addExpenseUseCase(userId, expense)
-                        .onSuccess {
-                            // Add with a temporary documentId for local display
-                            val tempDocId = "temp_${Clock.System.now().toEpochMilliseconds()}_$index"
-                            savedExpenses.add(expense.copy(documentId = tempDocId))
+                    addExpenseUseCase(listId, expense)
+                        .onSuccess { expenseId ->
+                            // Use the returned documentId from Firestore
+                            savedExpenses.add(expense.copy(documentId = expenseId))
                         }.onFailure { exception ->
                             _uiState.value =
                                 AddExpenseUiState.Error(

@@ -4,6 +4,7 @@ import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.IosExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.IosExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.UserProfileDto
 import com.marquis.zorroexpense.data.remote.dto.toDto
@@ -28,36 +29,6 @@ actual class FirestoreService {
                 // Settings might already be configured, that's okay
                 println("FirestoreService iOS: Settings already configured or error: ${e.message}")
             }
-        }
-
-    actual suspend fun getExpenses(userId: String): Result<List<ExpenseDto>> =
-        try {
-            val snapshot = firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .get()
-            val expenses =
-                snapshot.documents.map { document ->
-                    document.data<IosExpenseDto>().copy(documentId = document.id)
-                }
-
-            Result.success(expenses)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun getUsers(): Result<List<UserDto>> =
-        try {
-            val snapshot = firestore.collection("Users").get()
-            val users =
-                snapshot.documents.map { document ->
-                    document.data<UserDto>()
-                }
-
-            Result.success(users)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
 
     actual suspend fun getCategories(): Result<List<CategoryDto>> =
@@ -105,56 +76,6 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun addExpense(userId: String, expense: ExpenseDto): Result<Unit> =
-        try {
-            // Cast to IosExpenseDto for platform-specific implementation
-            val iosExpenseDto = expense as IosExpenseDto
-
-            firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .add(iosExpenseDto)
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun updateExpense(
-        userId: String,
-        expenseId: String,
-        expense: ExpenseDto,
-    ): Result<Unit> =
-        try {
-            val iosExpenseDto = expense as IosExpenseDto
-
-            firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .document(expenseId)
-                .set(iosExpenseDto)
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun deleteExpense(userId: String, expenseId: String): Result<Unit> =
-        try {
-            firestore
-                .collection("Users")
-                .document(userId)
-                .collection("Expenses")
-                .document(expenseId)
-                .delete()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
     actual suspend fun createUserProfile(userId: String, profile: UserProfile): Result<Unit> =
         try {
             val profileDto = profile.toDto()
@@ -188,7 +109,7 @@ actual class FirestoreService {
                     .document(listId)
                     .get()
                 if (listSnapshot.exists) {
-                    val listDto = listSnapshot.data<ExpenseListDto>()
+                    val listDto = listSnapshot.data<IosExpenseListDto>()
                     lists.add(listDto)
                 }
             }
@@ -204,7 +125,7 @@ actual class FirestoreService {
                 .collection("ExpenseLists")
                 .document(listId)
                 .get()
-            val list = if (snapshot.exists) snapshot.data<ExpenseListDto>() else null
+            val list = if (snapshot.exists) snapshot.data<IosExpenseListDto>() else null
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -212,9 +133,10 @@ actual class FirestoreService {
 
     actual suspend fun createExpenseList(list: ExpenseListDto): Result<String> =
         try {
+            val iosExpenseListDto = list as IosExpenseListDto
             val docRef = firestore
                 .collection("ExpenseLists")
-                .add(list)
+                .add(iosExpenseListDto)
 
             // Update the document to set the listId to the auto-generated document ID
             firestore
@@ -229,10 +151,11 @@ actual class FirestoreService {
 
     actual suspend fun updateExpenseList(listId: String, list: ExpenseListDto): Result<Unit> =
         try {
+            val iosExpenseListDto = list as IosExpenseListDto
             firestore
                 .collection("ExpenseLists")
                 .document(listId)
-                .set(list)
+                .set(iosExpenseListDto)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -256,7 +179,7 @@ actual class FirestoreService {
                 .where { "shareCode" equalTo shareCode }
                 .get()
             val list = if (snapshot.documents.isNotEmpty()) {
-                snapshot.documents.first().data<ExpenseListDto>()
+                snapshot.documents.first().data<IosExpenseListDto>()
             } else {
                 null
             }
@@ -271,8 +194,9 @@ actual class FirestoreService {
                 .collection("ExpenseLists")
                 .document(listId)
                 .get()
-            val list = listSnapshot.data<ExpenseListDto>()
-            val updatedMembers = (list.members + userId).distinct()
+            val list = listSnapshot.data<IosExpenseListDto>()
+            val userRef = firestore.collection("Users").document(userId)
+            val updatedMembers = (list.memberRefs + userRef).distinctBy { it.path }
             firestore
                 .collection("ExpenseLists")
                 .document(listId)
@@ -288,8 +212,10 @@ actual class FirestoreService {
                 .collection("ExpenseLists")
                 .document(listId)
                 .get()
-            val list = listSnapshot.data<ExpenseListDto>()
-            val updatedMembers = list.members.filter { it != userId }
+            val list = listSnapshot.data<IosExpenseListDto>()
+            val updatedMembers = list.memberRefs.filter { ref ->
+                !ref.path.endsWith(userId)
+            }
             firestore
                 .collection("ExpenseLists")
                 .document(listId)

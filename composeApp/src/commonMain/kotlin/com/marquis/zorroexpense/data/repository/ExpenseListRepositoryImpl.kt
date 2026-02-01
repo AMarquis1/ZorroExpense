@@ -18,7 +18,7 @@ class ExpenseListRepositoryImpl(
         mutex.withLock {
             firestoreService.getUserExpenseLists(userId)
                 .mapCatching { dtos ->
-                    dtos.map { it.toDomain() }
+                    dtos.map { it.toDomain(firestoreService) }
                         .also { lists ->
                             cachedLists = cachedLists + (userId to lists)
                         }
@@ -27,7 +27,7 @@ class ExpenseListRepositoryImpl(
 
     override suspend fun getExpenseListById(listId: String): Result<ExpenseList?> =
         firestoreService.getExpenseListById(listId)
-            .mapCatching { it?.toDomain() }
+            .mapCatching { it?.toDomain(firestoreService) }
 
     override suspend fun createExpenseList(list: ExpenseList): Result<String> =
         mutex.withLock {
@@ -64,7 +64,7 @@ class ExpenseListRepositoryImpl(
                     // Clear cache
                     cachedLists = emptyMap()
                 }
-                .mapCatching { it.toDomain() }
+                .mapCatching { it.toDomain(firestoreService) }
         }
 
     override suspend fun removeMemberFromList(listId: String, userId: String): Result<Unit> =
@@ -79,13 +79,4 @@ class ExpenseListRepositoryImpl(
 
 }
 
-fun ExpenseList.toDto(): ExpenseListDto = ExpenseListDto(
-    listId = listId,
-    name = name,
-    createdBy = createdBy,
-    members = members,
-    shareCode = shareCode,
-    createdAt = createdAt,
-    isArchived = isArchived,
-    categories = categories
-)
+expect fun ExpenseList.toDto(): ExpenseListDto

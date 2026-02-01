@@ -5,5 +5,5 @@ import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 class DeleteExpenseUseCase(
     private val expenseRepository: ExpenseRepository,
 ) {
-    suspend operator fun invoke(userId: String, expenseId: String): Result<Unit> = expenseRepository.deleteExpense(userId, expenseId)
+    suspend operator fun invoke(listId: String, expenseId: String): Result<Unit> = expenseRepository.deleteExpenseFromList(listId, expenseId)
 }

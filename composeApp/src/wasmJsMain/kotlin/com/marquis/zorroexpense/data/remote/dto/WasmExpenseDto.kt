@@ -13,6 +13,9 @@ data class WasmSplitDetailDto(
 
 @Serializable
 data class WasmExpenseDto(
+    override val documentId: String = "",
+    @SerialName("listId")
+    val listIdStr: String = "",
     @SerialName("description")
     override val description: String = "",
     @SerialName("name")
@@ -29,8 +32,8 @@ data class WasmExpenseDto(
     val splitDetailsDto: List<WasmSplitDetailDto> = emptyList(),
     @SerialName("isFromRecurring")
     override val isFromRecurring: Boolean = false,
-    override val documentId: String,
 ) : ExpenseDto {
+    override val listId: Any get() = listIdStr
     override val category: Any? get() = categoryId
     override val paidBy: Any? get() = paidById
     override val splitDetails: List<Any> get() = splitDetailsDto

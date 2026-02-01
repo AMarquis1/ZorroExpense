@@ -32,3 +32,6 @@ actual fun List<Any>.getSplitDetailData(): List<Pair<String, Double>> = this.map
         }
     }
 }
+
+actual fun List<Any>.getCategoryPaths(): List<String> =
+    filterIsInstance<DocumentReference>().map { ref -> ref.path }

@@ -2,8 +2,11 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.WasmExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.WasmExpenseListDto
+import com.marquis.zorroexpense.domain.model.UserProfile
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.cache.HttpCache
@@ -103,59 +106,59 @@ actual class FirestoreService actual constructor() {
     private val projectId = "ZorroExpense" // Update this with actual project ID
     private val baseUrl = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents"
 
-    actual suspend fun getExpenses(): Result<List<ExpenseDto>> =
-        try {
-            val response =
-                httpClient.get("$baseUrl/expense") {
-                    headers {
-                        append(HttpHeaders.Accept, "application/json")
-                    }
-                }
-
-            if (response.status == HttpStatusCode.OK) {
-                val firestoreResponse: FirestoreResponse = response.body()
-                val expenses =
-                    firestoreResponse.documents?.mapNotNull { document ->
-                        try {
-                            val expenseDto =
-                                WasmExpenseDto(
-                                    description = document.fields.description?.stringValue ?: "",
-                                    name = document.fields.name?.stringValue ?: "",
-                                    price = document.fields.price?.doubleValue ?: 0.0,
-                                    date = document.fields.date?.timestampValue ?: "",
-                                    categoryId =
-                                        document.fields.category
-                                            ?.mapValue
-                                            ?.fields
-                                            ?.get("name")
-                                            ?.stringValue ?: "",
-                                    paidById = document.fields.paidBy?.stringValue ?: "",
-                                    splitWithIds =
-                                        document.fields.splitWith
-                                            ?.arrayValue
-                                            ?.values
-                                            ?.map { it.stringValue } ?: emptyList(),
-                                    documentId = "", // Document ID not available in simplified WASM implementation
-                                )
-                            expenseDto
-                        } catch (e: Exception) {
-                            println("Error parsing document: ${e.message}")
-                            null
-                        }
-                    } ?: emptyList()
-
-                Result.success(expenses)
-            } else {
-                Result.failure(Exception("HTTP Error: ${response.status}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    actual suspend fun getUsers(): Result<List<UserDto>> {
-        // TODO: Implement full WASM support for users
-        return Result.success(emptyList())
-    }
+//    actual suspend fun getExpenses(): Result<List<ExpenseDto>> =
+//        try {
+//            val response =
+//                httpClient.get("$baseUrl/expense") {
+//                    headers {
+//                        append(HttpHeaders.Accept, "application/json")
+//                    }
+//                }
+//
+//            if (response.status == HttpStatusCode.OK) {
+//                val firestoreResponse: FirestoreResponse = response.body()
+//                val expenses =
+//                    firestoreResponse.documents?.mapNotNull { document ->
+//                        try {
+//                            val expenseDto =
+//                                WasmExpenseDto(
+//                                    description = document.fields.description?.stringValue ?: "",
+//                                    name = document.fields.name?.stringValue ?: "",
+//                                    price = document.fields.price?.doubleValue ?: 0.0,
+//                                    date = document.fields.date?.timestampValue ?: "",
+//                                    categoryId =
+//                                        document.fields.category
+//                                            ?.mapValue
+//                                            ?.fields
+//                                            ?.get("name")
+//                                            ?.stringValue ?: "",
+//                                    paidById = document.fields.paidBy?.stringValue ?: "",
+//                                    splitWithIds =
+//                                        document.fields.splitWith
+//                                            ?.arrayValue
+//                                            ?.values
+//                                            ?.map { it.stringValue } ?: emptyList(),
+//                                    documentId = "", // Document ID not available in simplified WASM implementation
+//                                )
+//                            expenseDto
+//                        } catch (e: Exception) {
+//                            println("Error parsing document: ${e.message}")
+//                            null
+//                        }
+//                    } ?: emptyList()
+//
+//                Result.success(expenses)
+//            } else {
+//                Result.failure(Exception("HTTP Error: ${response.status}"))
+//            }
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//
+//    actual suspend fun getUsers(): Result<List<UserDto>> {
+//        // TODO: Implement full WASM support for users
+//        return Result.success(emptyList())
+//    }
 
     actual suspend fun getCategories(): Result<List<CategoryDto>> {
         // TODO: Implement full WASM support for categories
@@ -184,6 +187,79 @@ actual class FirestoreService actual constructor() {
     }
 
     actual suspend fun deleteExpense(expenseId: String): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun createUserProfile(userId: String, profile: UserProfile): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseListDto>> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun getExpenseListById(listId: String): Result<ExpenseListDto?> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun createExpenseList(list: ExpenseListDto): Result<String> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun updateExpenseList(listId: String, list: ExpenseListDto): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun deleteExpenseList(listId: String): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun getExpenseListByShareCode(shareCode: String): Result<ExpenseListDto?> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun addUserToExpenseListMembers(listId: String, userId: String): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun removeUserFromExpenseListMembers(
+        listId: String,
+        userId: String
+    ): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun addExpenseListReferenceForUser(
+        userId: String,
+        listId: String
+    ): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun removeExpenseListReferenceForUser(
+        userId: String,
+        listId: String
+    ): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun getExpensesByListId(listId: String): Result<List<ExpenseDto>> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun addExpenseToList(listId: String, expense: ExpenseDto): Result<String> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun updateExpenseInList(
+        listId: String,
+        expenseId: String,
+        expense: ExpenseDto
+    ): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun deleteExpenseFromList(listId: String, expenseId: String): Result<Unit> {
         TODO("Not yet implemented")
     }
 }

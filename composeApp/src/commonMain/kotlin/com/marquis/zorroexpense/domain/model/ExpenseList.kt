@@ -13,5 +13,5 @@ data class ExpenseList(
     val shareCode: String = "",
     val createdAt: String = "",
     val isArchived: Boolean = false,
-    val categories: List<String> = emptyList() // Category IDs from the global Categories collection
+    val categories: List<Category> = emptyList()
 )

@@ -6,5 +6,5 @@ import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 class AddExpenseUseCase(
     private val expenseRepository: ExpenseRepository,
 ) {
-    suspend operator fun invoke(userId: String, expense: Expense): Result<Unit> = expenseRepository.addExpense(userId, expense)
+    suspend operator fun invoke(listId: String, expense: Expense): Result<String> = expenseRepository.addExpenseToList(listId, expense)
 }
