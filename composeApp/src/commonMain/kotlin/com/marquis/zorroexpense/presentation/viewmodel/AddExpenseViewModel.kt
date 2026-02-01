@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
@@ -289,7 +290,7 @@ class AddExpenseViewModel(
                     addExpenseUseCase(expense)
                         .onSuccess {
                             // Add with a temporary documentId for local display
-                            val tempDocId = "temp_${System.currentTimeMillis()}_$index"
+                            val tempDocId = "temp_${Clock.System.now().toEpochMilliseconds()}_$index"
                             savedExpenses.add(expense.copy(documentId = tempDocId))
                         }.onFailure { exception ->
                             _uiState.value =
