@@ -3,6 +3,8 @@ package com.marquis.zorroexpense.data.remote
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
+import com.marquis.zorroexpense.data.remote.dto.UserProfileDto
+import com.marquis.zorroexpense.domain.model.UserProfile
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 expect class FirestoreService() {
@@ -24,4 +26,6 @@ expect class FirestoreService() {
     suspend fun getUserById(userId: String): Result<UserDto?>
 
     suspend fun getCategoryById(categoryId: String): Result<CategoryDto?>
+
+    suspend fun createUserProfile(userId: String, profile: UserProfile): Result<Unit>
 }

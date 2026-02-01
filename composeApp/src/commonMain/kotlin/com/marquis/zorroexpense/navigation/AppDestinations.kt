@@ -8,6 +8,12 @@ import kotlinx.serialization.json.Json
 @Serializable
 sealed class AppDestinations {
     @Serializable
+    data object Login : AppDestinations()
+
+    @Serializable
+    data object SignUp : AppDestinations()
+
+    @Serializable
     data object ExpenseList : AppDestinations()
 
     @Serializable

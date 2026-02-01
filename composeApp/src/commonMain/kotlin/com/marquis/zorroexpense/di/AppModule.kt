@@ -5,22 +5,31 @@ import com.marquis.zorroexpense.data.datasource.ExpenseLocalDataSource
 import com.marquis.zorroexpense.data.datasource.ExpenseLocalDataSourceImpl
 import com.marquis.zorroexpense.data.datasource.ExpenseRemoteDataSource
 import com.marquis.zorroexpense.data.datasource.ExpenseRemoteDataSourceImpl
+import com.marquis.zorroexpense.data.remote.AuthService
 import com.marquis.zorroexpense.data.remote.FirestoreService
+import com.marquis.zorroexpense.data.repository.AuthRepositoryImpl
 import com.marquis.zorroexpense.data.repository.CategoryRepositoryImpl
 import com.marquis.zorroexpense.data.repository.ExpenseRepositoryImpl
 import com.marquis.zorroexpense.domain.cache.CacheManager
 import com.marquis.zorroexpense.domain.cache.InMemoryCacheManager
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.repository.AuthRepository
 import com.marquis.zorroexpense.domain.repository.CategoryRepository
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
+import com.marquis.zorroexpense.domain.usecase.LoginUseCase
+import com.marquis.zorroexpense.domain.usecase.LogoutUseCase
+import com.marquis.zorroexpense.domain.usecase.ObserveAuthStateUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
+import com.marquis.zorroexpense.domain.usecase.SignUpUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
 
@@ -38,6 +47,10 @@ object AppModule {
     // =================
     // Infrastructure Layer
     // =================
+
+    private val authService: AuthService by lazy {
+        AuthService.create()
+    }
 
     private val firestoreService: FirestoreService by lazy {
         FirestoreService()
@@ -67,6 +80,10 @@ object AppModule {
     // Repository Layer
     // =================
 
+    private val authRepository: AuthRepository by lazy {
+        AuthRepositoryImpl(authService, firestoreService)
+    }
+
     private val expenseRepository: ExpenseRepository by lazy {
         ExpenseRepositoryImpl(
             remoteDataSource = expenseRemoteDataSource,
@@ -82,6 +99,28 @@ object AppModule {
     // Use Case Layer
     // =================
 
+    // Auth Use Cases
+    private val loginUseCase: LoginUseCase by lazy {
+        LoginUseCase(authRepository)
+    }
+
+    private val signUpUseCase: SignUpUseCase by lazy {
+        SignUpUseCase(authRepository)
+    }
+
+    private val logoutUseCase: LogoutUseCase by lazy {
+        LogoutUseCase(authRepository)
+    }
+
+    private val getCurrentUserUseCase: GetCurrentUserUseCase by lazy {
+        GetCurrentUserUseCase(authRepository)
+    }
+
+    private val observeAuthStateUseCase: ObserveAuthStateUseCase by lazy {
+        ObserveAuthStateUseCase(authRepository)
+    }
+
+    // Expense Use Cases
     private val getExpensesUseCase: GetExpensesUseCase by lazy {
         GetExpensesUseCase(expenseRepository)
     }
@@ -113,6 +152,23 @@ object AppModule {
     // =================
     // Presentation Layer
     // =================
+
+    private var authViewModel: AuthViewModel? = null
+
+    /**
+     * Provide AuthViewModel as singleton for app-wide auth state
+     */
+    fun provideAuthViewModel(): AuthViewModel {
+        val viewModel = authViewModel ?: AuthViewModel(
+            loginUseCase = loginUseCase,
+            signUpUseCase = signUpUseCase,
+            logoutUseCase = logoutUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            observeAuthStateUseCase = observeAuthStateUseCase
+        ).also { authViewModel = it }
+
+        return viewModel
+    }
 
     private var expenseListViewModel: ExpenseListViewModel? = null
 
@@ -186,9 +242,19 @@ object AppModule {
     }
 
     /**
+     * Clear authenticated user data - useful for logout
+     */
+    fun clearAuthenticatedData() {
+        authViewModel = null
+        expenseListViewModel = null
+        clearAllCaches()
+    }
+
+    /**
      * Reset all singletons - useful for testing
      */
     fun resetForTesting() {
+        authViewModel = null
         expenseListViewModel = null
         clearAllCaches()
     }

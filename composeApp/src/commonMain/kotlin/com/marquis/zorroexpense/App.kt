@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +33,10 @@ import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
+import com.marquis.zorroexpense.presentation.screens.LoginScreen
+import com.marquis.zorroexpense.presentation.screens.SignUpScreen
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
+import com.marquis.zorroexpense.presentation.state.GlobalAuthState
 import com.marquis.zorroexpense.ui.theme.ZorroExpenseTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -43,6 +47,9 @@ fun App() {
     ZorroExpenseTheme {
         Box(modifier = Modifier.fillMaxSize()) {
             val navController = rememberNavController()
+            val authViewModel = AppModule.provideAuthViewModel()
+            val globalAuthState by authViewModel.globalAuthState.collectAsState()
+
             var deletedExpenseName by remember { mutableStateOf<String?>(null) }
             var deletedExpenseId by remember { mutableStateOf<String?>(null) }
             var updatedExpenseName by remember { mutableStateOf<String?>(null) }
@@ -50,13 +57,58 @@ fun App() {
             // Bind browser navigation for WASM back/forward button support
             BindBrowserNavigation(navController)
 
+            // Determine start destination based on auth state
+            val startDestination = when (globalAuthState) {
+                GlobalAuthState.Unauthenticated -> AppDestinations.Login
+                GlobalAuthState.Authenticating -> AppDestinations.Login
+                is GlobalAuthState.Authenticated -> AppDestinations.ExpenseList
+            }
+
             SharedTransitionLayout {
                 NavHost(
                     navController = navController,
-                    startDestination = AppDestinations.ExpenseList,
+                    startDestination = startDestination,
                     modifier = Modifier.fillMaxSize(),
                 ) {
+                    composable<AppDestinations.Login> {
+                        LoginScreen(
+                            viewModel = authViewModel,
+                            onNavigateToSignUp = {
+                                navController.navigate(AppDestinations.SignUp)
+                            },
+                            onLoginSuccess = {
+                                // Navigate to ExpenseList and clear login/signup from back stack
+                                navController.navigate(AppDestinations.ExpenseList) {
+                                    popUpTo(AppDestinations.Login) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+                    composable<AppDestinations.SignUp> {
+                        SignUpScreen(
+                            viewModel = authViewModel,
+                            onNavigateToLogin = {
+                                navController.popBackStack()
+                            },
+                            onSignUpSuccess = {
+                                // Navigate to ExpenseList and clear login/signup from back stack
+                                navController.navigate(AppDestinations.ExpenseList) {
+                                    popUpTo(AppDestinations.Login) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
                     composable<AppDestinations.ExpenseList> {
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
                         val viewModel =
                             AppModule.provideExpenseListViewModel(
                                 onExpenseClick = { expense ->
@@ -118,6 +170,15 @@ fun App() {
                     }
 
                     composable<AppDestinations.AddExpense> {
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
                         val addExpenseViewModel = AppModule.provideAddExpenseViewModel()
                         AddExpenseScreen(
                             viewModel = addExpenseViewModel,
@@ -136,6 +197,15 @@ fun App() {
                     }
 
                     composable<AppDestinations.ExpenseDetail> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
                         val expenseDetail = backStackEntry.toRoute<AppDestinations.ExpenseDetail>()
                         val expense =
                             Expense(
@@ -209,6 +279,15 @@ fun App() {
                     }
 
                     composable<AppDestinations.EditExpense> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
                         val editExpense = backStackEntry.toRoute<AppDestinations.EditExpense>()
                         val expense =
                             Expense(

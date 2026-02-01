@@ -45,6 +45,7 @@ kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime",
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-common-ktx = { module = "dev.gitlive:firebase-common", version.ref = "firebase-ktx" }
 firebase-firestore-ktx = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-ktx" }
+firebase-auth-ktx = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-ktx" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
 android-material = { module = "com.google.android.material:material", version.ref = "android-material" }
 material-icons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons" }

@@ -4,6 +4,9 @@ import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.IosExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
+import com.marquis.zorroexpense.data.remote.dto.UserProfileDto
+import com.marquis.zorroexpense.data.remote.dto.toDto
+import com.marquis.zorroexpense.domain.model.UserProfile
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 import dev.gitlive.firebase.firestore.firestoreSettings
@@ -128,6 +131,15 @@ actual class FirestoreService {
         try {
             firestore.collection("Expense").document(expenseId).delete()
 
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun createUserProfile(userId: String, profile: UserProfile): Result<Unit> =
+        try {
+            val profileDto = profile.toDto()
+            firestore.collection("Users").document(userId).set(profileDto)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
