@@ -39,7 +39,14 @@ class CreateExpenseListUseCase(
                 categories = categories,
             )
 
-        return expenseListRepository.createExpenseList(expenseList)
+        val result = expenseListRepository.createExpenseList(expenseList)
+
+        // Add ExpenseListReference for the creator
+        result.onSuccess { listId ->
+            firestoreService.addExpenseListReferenceForUser(userId, listId)
+        }
+
+        return result
     }
 
     private fun generateShareCode(): String {

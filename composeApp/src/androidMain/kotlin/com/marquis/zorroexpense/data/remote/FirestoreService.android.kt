@@ -235,20 +235,20 @@ actual class FirestoreService {
 
             @Suppress("UNCHECKED_CAST")
             val currentReferences =
-                (userSnapshot.get("ExpenseListReferences") as? MutableList<Any>)
+                (userSnapshot.get("ExpenseListReferences") as? List<DocumentReference>)
                     ?.toMutableList() ?: mutableListOf()
 
-            // Add the reference if not already present
             val newReference = firestore.collection("ExpenseLists").document(listId)
-            val alreadyExists =
-                currentReferences.any {
-                    it.toString().substringAfterLast("/") == listId
-                }
-            if (!alreadyExists) {
-                currentReferences.add(newReference)
+            val alreadyExists = currentReferences.any { ref ->
+                ref.path.endsWith(listId)
             }
 
-            userDoc.update("ExpenseListReferences" to currentReferences)
+            if (!alreadyExists) {
+                currentReferences.add(newReference)
+                @Suppress("DEPRECATION")
+                userDoc.update("ExpenseListReferences" to currentReferences)
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -264,15 +264,18 @@ actual class FirestoreService {
 
             @Suppress("UNCHECKED_CAST")
             val currentReferences =
-                (userSnapshot.get("ExpenseListReferences") as? MutableList<Any>)
+                (userSnapshot.get("ExpenseListReferences") as? List<DocumentReference>)
                     ?.toMutableList() ?: mutableListOf()
 
-            // Remove the reference with matching listId
-            currentReferences.removeAll { reference ->
-                reference.toString().substringAfterLast("/") == listId
+            val removed = currentReferences.removeAll { ref ->
+                ref.path.endsWith(listId)
             }
 
-            userDoc.update("ExpenseListReferences" to currentReferences)
+            if (removed) {
+                @Suppress("DEPRECATION")
+                userDoc.update("ExpenseListReferences" to currentReferences)
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
