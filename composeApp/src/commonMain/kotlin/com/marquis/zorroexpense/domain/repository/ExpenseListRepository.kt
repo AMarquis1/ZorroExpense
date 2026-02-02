@@ -24,7 +24,10 @@ interface ExpenseListRepository {
     /**
      * Update an expense list
      */
-    suspend fun updateExpenseList(listId: String, list: ExpenseList): Result<Unit>
+    suspend fun updateExpenseList(
+        listId: String,
+        list: ExpenseList,
+    ): Result<Unit>
 
     /**
      * Delete an expense list
@@ -34,10 +37,16 @@ interface ExpenseListRepository {
     /**
      * Join a list using share code
      */
-    suspend fun joinExpenseList(userId: String, shareCode: String): Result<ExpenseList>
+    suspend fun joinExpenseList(
+        userId: String,
+        shareCode: String,
+    ): Result<ExpenseList>
 
     /**
      * Remove a member from a list
      */
-    suspend fun removeMemberFromList(listId: String, userId: String): Result<Unit>
+    suspend fun removeMemberFromList(
+        listId: String,
+        userId: String,
+    ): Result<Unit>
 }

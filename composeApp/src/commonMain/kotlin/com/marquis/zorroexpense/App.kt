@@ -60,11 +60,12 @@ fun App() {
             BindBrowserNavigation(navController)
 
             // Determine start destination based on auth state
-            val startDestination = when (globalAuthState) {
-                GlobalAuthState.Unauthenticated -> AppDestinations.Login
-                GlobalAuthState.Authenticating -> AppDestinations.Login
-                is GlobalAuthState.Authenticated -> AppDestinations.ExpenseLists
-            }
+            val startDestination =
+                when (globalAuthState) {
+                    GlobalAuthState.Unauthenticated -> AppDestinations.Login
+                    GlobalAuthState.Authenticating -> AppDestinations.Login
+                    is GlobalAuthState.Authenticated -> AppDestinations.ExpenseLists
+                }
 
             SharedTransitionLayout {
                 NavHost(
@@ -83,7 +84,7 @@ fun App() {
                                 navController.navigate(AppDestinations.ExpenseLists) {
                                     popUpTo(AppDestinations.Login) { inclusive = true }
                                 }
-                            }
+                            },
                         )
                     }
 
@@ -98,7 +99,7 @@ fun App() {
                                 navController.navigate(AppDestinations.ExpenseLists) {
                                     popUpTo(AppDestinations.Login) { inclusive = true }
                                 }
-                            }
+                            },
                         )
                     }
 
@@ -113,12 +114,13 @@ fun App() {
                         }
 
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
-                        val viewModel = AppModule.provideExpenseListsViewModel(
-                            userId = userId,
-                            onListSelected = { listId, _ ->
-                                navController.navigate(AppDestinations.ExpenseList(listId = listId))
-                            }
-                        )
+                        val viewModel =
+                            AppModule.provideExpenseListsViewModel(
+                                userId = userId,
+                                onListSelected = { listId, _ ->
+                                    navController.navigate(AppDestinations.ExpenseList(listId = listId))
+                                },
+                            )
                         ExpenseListsScreen(
                             viewModel = viewModel,
                             onListSelected = { listId ->
@@ -126,7 +128,7 @@ fun App() {
                             },
                             onCreateNewList = {
                                 navController.navigate(AppDestinations.CreateExpenseList)
-                            }
+                            },
                         )
                     }
 
@@ -141,13 +143,14 @@ fun App() {
                         }
 
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
-                        val viewModel = AppModule.provideCreateExpenseListViewModel(
-                            userId = userId,
-                            onListCreated = { _, _ ->
-                                // Navigate back to ExpenseLists which will reload and show the new list
-                                navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
-                            }
-                        )
+                        val viewModel =
+                            AppModule.provideCreateExpenseListViewModel(
+                                userId = userId,
+                                onListCreated = { _, _ ->
+                                    // Navigate back to ExpenseLists which will reload and show the new list
+                                    navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                                },
+                            )
                         CreateExpenseListScreen(
                             viewModel = viewModel,
                             onBackClick = {
@@ -156,7 +159,7 @@ fun App() {
                             onListCreated = { _, _ ->
                                 // Navigate back to ExpenseLists which will reload and show the new list
                                 navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
-                            }
+                            },
                         )
                     }
 
@@ -190,14 +193,15 @@ fun App() {
                                             categoryIcon = expense.category.icon,
                                             categoryColor = expense.category.color,
                                             paidByUserId = expense.paidBy.userId,
-                                            splitDetailsJson = AppDestinations.ExpenseDetail.createSplitDetailsJson(
-                                                expense.splitDetails.map { splitDetail ->
-                                                    AppDestinations.SplitDetailNavigation(
-                                                        userId = splitDetail.user.userId,
-                                                        amount = splitDetail.amount
-                                                    )
-                                                }
-                                            ),
+                                            splitDetailsJson =
+                                                AppDestinations.ExpenseDetail.createSplitDetailsJson(
+                                                    expense.splitDetails.map { splitDetail ->
+                                                        AppDestinations.SplitDetailNavigation(
+                                                            userId = splitDetail.user.userId,
+                                                            amount = splitDetail.amount,
+                                                        )
+                                                    },
+                                                ),
                                         ),
                                     )
                                 },
@@ -257,10 +261,11 @@ fun App() {
                             onExpenseSaved = { savedExpenses ->
                                 // Add saved expenses to list immediately (no network refresh needed)
                                 if (savedExpenses.isNotEmpty()) {
-                                    val listViewModel = AppModule.provideExpenseListViewModel(
-                                        userId = userId,
-                                        listId = addExpenseRoute.listId
-                                    )
+                                    val listViewModel =
+                                        AppModule.provideExpenseListViewModel(
+                                            userId = userId,
+                                            listId = addExpenseRoute.listId,
+                                        )
                                     listViewModel.addExpensesLocally(savedExpenses)
                                 }
                                 navController.popBackStack()
@@ -294,14 +299,16 @@ fun App() {
                                         color = expenseDetail.categoryColor,
                                     ),
                                 paidBy = MockExpenseData.usersMap[expenseDetail.paidByUserId] ?: User(),
-                                splitDetails = expenseDetail.splitDetails.mapNotNull { splitDetailNav ->
-                                    val user = MockExpenseData.usersMap[splitDetailNav.userId]
-                                    if (user != null) {
-                                        com.marquis.zorroexpense.domain.model.SplitDetail(user = user, amount = splitDetailNav.amount)
-                                    } else {
-                                        null
-                                    }
-                                },
+                                splitDetails =
+                                    expenseDetail.splitDetails.mapNotNull { splitDetailNav ->
+                                        val user = MockExpenseData.usersMap[splitDetailNav.userId]
+                                        if (user != null) {
+                                            com.marquis.zorroexpense.domain.model
+                                                .SplitDetail(user = user, amount = splitDetailNav.amount)
+                                        } else {
+                                            null
+                                        }
+                                    },
                             )
 
                         ExpenseDetailScreen(
@@ -316,10 +323,11 @@ fun App() {
 
                                 // Use the singleton ViewModel instance
                                 val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
-                                val listViewModel = AppModule.provideExpenseListViewModel(
-                                    userId = userId,
-                                    listId = expenseDetail.listId
-                                )
+                                val listViewModel =
+                                    AppModule.provideExpenseListViewModel(
+                                        userId = userId,
+                                        listId = expenseDetail.listId,
+                                    )
                                 listViewModel.onEvent(ExpenseListUiEvent.PendingDeleteExpense(expense.documentId))
 
                                 // Navigate back to show snackbar
@@ -339,15 +347,16 @@ fun App() {
                                         categoryIcon = expenseToEdit.category.icon,
                                         categoryColor = expenseToEdit.category.color,
                                         paidByUserId = expenseToEdit.paidBy.userId,
-                                        splitDetailsJson = AppDestinations.ExpenseDetail.createSplitDetailsJson(
-                                            expenseToEdit.splitDetails.map { splitDetail ->
-                                                AppDestinations.SplitDetailNavigation(
-                                                    userId = splitDetail.user.userId,
-                                                    amount = splitDetail.amount
-                                                )
-                                            }
-                                        ),
-                                    )
+                                        splitDetailsJson =
+                                            AppDestinations.ExpenseDetail.createSplitDetailsJson(
+                                                expenseToEdit.splitDetails.map { splitDetail ->
+                                                    AppDestinations.SplitDetailNavigation(
+                                                        userId = splitDetail.user.userId,
+                                                        amount = splitDetail.amount,
+                                                    )
+                                                },
+                                            ),
+                                    ),
                                 )
                             },
                             sharedTransitionScope = this@SharedTransitionLayout,
@@ -381,14 +390,16 @@ fun App() {
                                         color = editExpense.categoryColor,
                                     ),
                                 paidBy = MockExpenseData.usersMap[editExpense.paidByUserId] ?: User(),
-                                splitDetails = editExpense.splitDetails.mapNotNull { splitDetailNav ->
-                                    val user = MockExpenseData.usersMap[splitDetailNav.userId]
-                                    if (user != null) {
-                                        com.marquis.zorroexpense.domain.model.SplitDetail(user = user, amount = splitDetailNav.amount)
-                                    } else {
-                                        null
-                                    }
-                                },
+                                splitDetails =
+                                    editExpense.splitDetails.mapNotNull { splitDetailNav ->
+                                        val user = MockExpenseData.usersMap[splitDetailNav.userId]
+                                        if (user != null) {
+                                            com.marquis.zorroexpense.domain.model
+                                                .SplitDetail(user = user, amount = splitDetailNav.amount)
+                                        } else {
+                                            null
+                                        }
+                                    },
                             )
 
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
@@ -403,10 +414,11 @@ fun App() {
                                 // Update the expense in the list and show snackbar
                                 if (savedExpenses.isNotEmpty()) {
                                     val savedExpense = savedExpenses.first()
-                                    val listViewModel = AppModule.provideExpenseListViewModel(
-                                        userId = userId,
-                                        listId = editExpense.listId
-                                    )
+                                    val listViewModel =
+                                        AppModule.provideExpenseListViewModel(
+                                            userId = userId,
+                                            listId = editExpense.listId,
+                                        )
                                     listViewModel.updateExpenseLocally(savedExpense)
                                     // Set the name to trigger snackbar on ExpenseListScreen
                                     updatedExpenseName = savedExpense.name

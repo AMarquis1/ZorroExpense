@@ -8,5 +8,5 @@ data class AuthUser(
     val userId: String,
     val email: String,
     val displayName: String? = null,
-    val isEmailVerified: Boolean = false
+    val isEmailVerified: Boolean = false,
 )

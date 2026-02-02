@@ -1,5 +1,6 @@
 package com.marquis.zorroexpense.data.remote.dto
 
+import com.marquis.zorroexpense.domain.model.User
 import dev.gitlive.firebase.firestore.DocumentReference
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -30,4 +31,11 @@ data class IosExpenseListDto(
 actual fun List<Any>.getMemberIds(): List<String> =
     filterIsInstance<DocumentReference>().map { ref ->
         ref.path
+    }
+
+actual fun List<Any>.getMemberUsers(): List<User> =
+    filterIsInstance<DocumentReference>().map { ref ->
+        // Extract user ID from the reference path (e.g., "users/userId")
+        val userId = ref.path.substringAfterLast("/")
+        User(userId = userId, name = "", profileImage = "")
     }

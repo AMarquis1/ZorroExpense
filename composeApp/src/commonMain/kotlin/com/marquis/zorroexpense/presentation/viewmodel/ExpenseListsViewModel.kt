@@ -3,7 +3,9 @@ package com.marquis.zorroexpense.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
+import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.JoinExpenseListUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiState
@@ -19,9 +21,9 @@ class ExpenseListsViewModel(
     private val userId: String,
     private val getUserExpenseListsUseCase: GetUserExpenseListsUseCase,
     private val joinExpenseListUseCase: JoinExpenseListUseCase,
+    private val getUsersUseCase: GetUsersUseCase,
     private val onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<ExpenseListsUiState>(ExpenseListsUiState.Loading)
     val uiState: StateFlow<ExpenseListsUiState> = _uiState.asStateFlow()
 
@@ -51,17 +53,50 @@ class ExpenseListsViewModel(
             val result = getUserExpenseListsUseCase.invoke(userId)
 
             result.onSuccess { lists ->
-                _uiState.value = if (lists.isEmpty()) {
-                    ExpenseListsUiState.Empty
+                val allUserIds = lists.flatMap { list -> list.members.map { "Users/${it.userId}" } }.distinct()
+
+                if (allUserIds.isNotEmpty()) {
+                    getUsersUseCase.invoke(allUserIds).onSuccess { users ->
+                        val userMap = users.associateBy { it.userId }
+
+                        val enrichedLists = lists.map { list ->
+                            val enrichedMembers = list.members.map { member ->
+                                userMap[member.userId]?.let {
+                                    member.copy(name = it.name, profileImage = it.profileImage)
+                                } ?: member
+                            }
+                            list.copy(members = enrichedMembers)
+                        }
+
+                        _uiState.value =
+                            if (enrichedLists.isEmpty()) {
+                                ExpenseListsUiState.Empty
+                            } else {
+                                ExpenseListsUiState.Success(enrichedLists)
+                            }
+                    }.onFailure {
+                        _uiState.value =
+                            if (lists.isEmpty()) {
+                                ExpenseListsUiState.Empty
+                            } else {
+                                ExpenseListsUiState.Success(lists)
+                            }
+                    }
                 } else {
-                    ExpenseListsUiState.Success(lists)
+                    _uiState.value =
+                        if (lists.isEmpty()) {
+                            ExpenseListsUiState.Empty
+                        } else {
+                            ExpenseListsUiState.Success(lists)
+                        }
                 }
             }
 
             result.onFailure { error ->
-                _uiState.value = ExpenseListsUiState.Error(
-                    error.message ?: "Failed to load expense lists"
-                )
+                _uiState.value =
+                    ExpenseListsUiState.Error(
+                        error.message ?: "Failed to load expense lists",
+                    )
             }
         }
     }
@@ -89,15 +124,17 @@ class ExpenseListsViewModel(
                 // Show error but keep current lists visible
                 val currentState = _uiState.value
                 if (currentState is ExpenseListsUiState.Success) {
-                    _uiState.value = ExpenseListsUiState.Error(
-                        error.message ?: "Failed to join list"
-                    )
+                    _uiState.value =
+                        ExpenseListsUiState.Error(
+                            error.message ?: "Failed to join list",
+                        )
                     // Reload lists after a moment
                     loadLists()
                 } else {
-                    _uiState.value = ExpenseListsUiState.Error(
-                        error.message ?: "Failed to join list"
-                    )
+                    _uiState.value =
+                        ExpenseListsUiState.Error(
+                            error.message ?: "Failed to join list",
+                        )
                 }
             }
         }

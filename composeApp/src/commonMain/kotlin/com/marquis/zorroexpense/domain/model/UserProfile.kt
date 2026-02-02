@@ -9,5 +9,5 @@ data class UserProfile(
     val email: String = "",
     val name: String = "",
     val profileImage: String? = null,
-    val createdAt: String = ""
+    val createdAt: String = "",
 )

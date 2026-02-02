@@ -14,12 +14,14 @@ import com.marquis.zorroexpense.domain.model.Expense
 class ExpenseRemoteDataSourceImpl(
     private val firestoreService: FirestoreService,
 ) : ExpenseRemoteDataSource {
-
     override suspend fun getExpensesByListId(listId: String): Result<List<Expense>> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - return expenses filtered by listId
-                MockExpenseData.getMockExpenses().getOrDefault(emptyList()).filter { it.listId == listId }
+                MockExpenseData
+                    .getMockExpenses()
+                    .getOrDefault(emptyList())
+                    .filter { it.listId == listId }
                     .let { Result.success(it) }
             } else {
                 firestoreService
@@ -34,7 +36,10 @@ class ExpenseRemoteDataSourceImpl(
             Result.failure(e)
         }
 
-    override suspend fun addExpenseToList(listId: String, expense: Expense): Result<String> =
+    override suspend fun addExpenseToList(
+        listId: String,
+        expense: Expense,
+    ): Result<String> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - return a generated ID
@@ -47,13 +52,15 @@ class ExpenseRemoteDataSourceImpl(
             Result.failure(e)
         }
 
-    override suspend fun updateExpenseInList(listId: String, expense: Expense): Result<Unit> =
+    override suspend fun updateExpenseInList(
+        listId: String,
+        expense: Expense,
+    ): Result<Unit> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - just return success
                 Result.success(Unit)
             } else {
-
                 val expenseDto = expense.copy(listId = listId).toDto()
                 firestoreService.updateExpenseInList(listId, expense.documentId, expenseDto)
             }
@@ -61,7 +68,10 @@ class ExpenseRemoteDataSourceImpl(
             Result.failure(e)
         }
 
-    override suspend fun deleteExpenseFromList(listId: String, expenseId: String): Result<Unit> =
+    override suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - just return success

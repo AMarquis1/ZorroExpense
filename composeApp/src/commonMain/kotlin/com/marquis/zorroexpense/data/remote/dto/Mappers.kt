@@ -67,18 +67,19 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
 }
 
 suspend fun ExpenseListDto.toDomain(firestoreService: FirestoreService): ExpenseList {
-    val resolvedCategories = categories.getCategoryPaths().mapNotNull { categoryPath ->
-        firestoreService.getCategoryById(categoryPath).getOrNull()?.toDomain()
-    }
+    val resolvedCategories =
+        categories.getCategoryPaths().mapNotNull { categoryPath ->
+            firestoreService.getCategoryById(categoryPath).getOrNull()?.toDomain()
+        }
 
     return ExpenseList(
         listId = listId,
         name = name,
         createdBy = createdBy,
-        members = members.getMemberIds(),
+        members = members.getMemberUsers(),
         shareCode = shareCode,
         createdAt = createdAt,
         isArchived = isArchived,
-        categories = resolvedCategories
+        categories = resolvedCategories,
     )
 }

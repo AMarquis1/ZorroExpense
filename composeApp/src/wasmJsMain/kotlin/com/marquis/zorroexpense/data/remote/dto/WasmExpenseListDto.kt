@@ -1,5 +1,6 @@
 package com.marquis.zorroexpense.data.remote.dto
 
+import com.marquis.zorroexpense.domain.model.User
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -26,5 +27,9 @@ data class WasmExpenseListDto(
     override val categories: List<Any> get() = categoryIds
 }
 
-actual fun List<Any>.getMemberIds(): List<String> =
-    filterIsInstance<String>()
+actual fun List<Any>.getMemberIds(): List<String> = filterIsInstance<String>()
+
+actual fun List<Any>.getMemberUsers(): List<User> =
+    filterIsInstance<String>().map { userId ->
+        User(userId = userId, name = "", profileImage = "")
+    }

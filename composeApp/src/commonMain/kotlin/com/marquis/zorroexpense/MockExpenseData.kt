@@ -52,10 +52,11 @@ object MockExpenseData {
                 date = "2024-01-01T09:00:00Z",
                 category = categoryLoyer,
                 paidBy = userSarah,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 625.00),
-                    SplitDetail(user = userAlex, amount = 625.00)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 625.00),
+                        SplitDetail(user = userAlex, amount = 625.00),
+                    ),
             ),
             Expense(
                 name = "Épicerie IGA",
@@ -64,10 +65,11 @@ object MockExpenseData {
                 date = "2024-01-15T14:30:00Z",
                 category = categoryEpicerie,
                 paidBy = userSarah,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 44.98),
-                    SplitDetail(user = userAlex, amount = 44.97)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 44.98),
+                        SplitDetail(user = userAlex, amount = 44.97),
+                    ),
             ),
             Expense(
                 name = "Épicerie Metro",
@@ -76,9 +78,10 @@ object MockExpenseData {
                 date = "2024-01-14T11:15:00Z",
                 category = categoryEpicerie,
                 paidBy = userAlex,
-                splitDetails = listOf(
-                    SplitDetail(user = userAlex, amount = 32.48)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userAlex, amount = 32.48),
+                    ),
             ),
             Expense(
                 name = "Loyer Février",
@@ -87,10 +90,11 @@ object MockExpenseData {
                 date = "2024-02-01T09:00:00Z",
                 category = categoryLoyer,
                 paidBy = userAlex,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 625.00),
-                    SplitDetail(user = userAlex, amount = 625.00)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 625.00),
+                        SplitDetail(user = userAlex, amount = 625.00),
+                    ),
             ),
             Expense(
                 name = "Épicerie Maxi",
@@ -99,10 +103,11 @@ object MockExpenseData {
                 date = "2024-01-13T16:45:00Z",
                 category = categoryEpicerie,
                 paidBy = userSarah,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 22.88),
-                    SplitDetail(user = userAlex, amount = 22.87)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 22.88),
+                        SplitDetail(user = userAlex, amount = 22.87),
+                    ),
             ),
             Expense(
                 name = "Épicerie Provigo avec un tres long nom",
@@ -111,10 +116,11 @@ object MockExpenseData {
                 date = "2024-02-12T10:20:00Z",
                 category = categoryEpicerie,
                 paidBy = userAlex,
-                splitDetails = listOf(
-                    SplitDetail(user = userAlex, amount = 34.00),
-                    SplitDetail(user = userSarah, amount = 33.99)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userAlex, amount = 34.00),
+                        SplitDetail(user = userSarah, amount = 33.99),
+                    ),
             ),
             Expense(
                 name = "Épicerie Costco",
@@ -123,10 +129,11 @@ object MockExpenseData {
                 date = "2024-01-11T13:30:00Z",
                 category = categoryEpicerie,
                 paidBy = userSarah,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 78.15),
-                    SplitDetail(user = userAlex, amount = 78.15)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 78.15),
+                        SplitDetail(user = userAlex, amount = 78.15),
+                    ),
             ),
             Expense(
                 name = "Loyer Mars",
@@ -135,10 +142,11 @@ object MockExpenseData {
                 date = "2024-03-01T09:00:00Z",
                 category = categoryLoyer,
                 paidBy = userSarah,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 625.00),
-                    SplitDetail(user = userAlex, amount = 625.00)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 625.00),
+                        SplitDetail(user = userAlex, amount = 625.00),
+                    ),
             ),
             Expense(
                 name = "Épicerie Loblaws",
@@ -147,10 +155,11 @@ object MockExpenseData {
                 date = "2024-01-07T17:20:00Z",
                 category = categoryEpicerie,
                 paidBy = userAlex,
-                splitDetails = listOf(
-                    SplitDetail(user = userAlex, amount = 39.25),
-                    SplitDetail(user = userSarah, amount = 39.25)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userAlex, amount = 39.25),
+                        SplitDetail(user = userSarah, amount = 39.25),
+                    ),
             ),
             Expense(
                 name = "Épicerie Jean Coutu",
@@ -159,9 +168,10 @@ object MockExpenseData {
                 date = "2024-01-06T14:10:00Z",
                 category = categoryEpicerie,
                 paidBy = userAlex,
-                splitDetails = listOf(
-                    SplitDetail(user = userAlex, amount = 23.99)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userAlex, amount = 23.99),
+                    ),
             ),
             Expense(
                 name = "Nourriture pour Zorro",
@@ -170,10 +180,11 @@ object MockExpenseData {
                 date = "2024-01-20T16:30:00Z",
                 category = categoryZorro,
                 paidBy = userSarah,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 87.25),
-                    SplitDetail(user = userAlex, amount = 87.25)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 87.25),
+                        SplitDetail(user = userAlex, amount = 87.25),
+                    ),
             ),
             // Future expenses for testing - showing custom split scenario like the user's example
             Expense(
@@ -183,10 +194,11 @@ object MockExpenseData {
                 date = "2025-05-01T09:00:00Z",
                 category = categoryLoyer,
                 paidBy = userSarah,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 3.00),
-                    SplitDetail(user = userAlex, amount = 12.00)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 3.00),
+                        SplitDetail(user = userAlex, amount = 12.00),
+                    ),
                 isFromRecurring = true,
             ),
             Expense(
@@ -196,10 +208,11 @@ object MockExpenseData {
                 date = "2025-02-15T14:30:00Z",
                 category = categoryEpicerie,
                 paidBy = userAlex,
-                splitDetails = listOf(
-                    SplitDetail(user = userSarah, amount = 47.75),
-                    SplitDetail(user = userAlex, amount = 47.75)
-                ),
+                splitDetails =
+                    listOf(
+                        SplitDetail(user = userSarah, amount = 47.75),
+                        SplitDetail(user = userAlex, amount = 47.75),
+                    ),
             ),
         )
 

@@ -16,65 +16,66 @@ actual class AuthService {
     private val firebaseAuth = Firebase.auth
 
     actual companion object {
-        actual fun create(): AuthService {
-            return AuthService()
-        }
+        actual fun create(): AuthService = AuthService()
     }
+
     actual suspend fun signUp(
         email: String,
         password: String,
-        displayName: String
-    ): Result<AuthUserDto> = try {
-        val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password)
+        displayName: String,
+    ): Result<AuthUserDto> =
+        try {
+            val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password)
 
-        // Update display name
-        authResult.user?.updateProfile(displayName = displayName)
+            // Update display name
+            authResult.user?.updateProfile(displayName = displayName)
 
-        val user = authResult.user ?: return Result.failure(AuthError.UnknownError)
-        Result.success(user.toAuthUserDto())
-    } catch (e: Exception) {
-        Result.failure(e.toAuthError())
-    }
+            val user = authResult.user ?: return Result.failure(AuthError.UnknownError)
+            Result.success(user.toAuthUserDto())
+        } catch (e: Exception) {
+            Result.failure(e.toAuthError())
+        }
 
     actual suspend fun signIn(
         email: String,
-        password: String
-    ): Result<AuthUserDto> = try {
-        val authResult = firebaseAuth.signInWithEmailAndPassword(email, password)
-        val user = authResult.user ?: return Result.failure(AuthError.UnknownError)
-        Result.success(user.toAuthUserDto())
-    } catch (e: Exception) {
-        Result.failure(e.toAuthError())
-    }
+        password: String,
+    ): Result<AuthUserDto> =
+        try {
+            val authResult = firebaseAuth.signInWithEmailAndPassword(email, password)
+            val user = authResult.user ?: return Result.failure(AuthError.UnknownError)
+            Result.success(user.toAuthUserDto())
+        } catch (e: Exception) {
+            Result.failure(e.toAuthError())
+        }
 
-    actual suspend fun signOut(): Result<Unit> = try {
-        firebaseAuth.signOut()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e.toAuthError())
-    }
+    actual suspend fun signOut(): Result<Unit> =
+        try {
+            firebaseAuth.signOut()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e.toAuthError())
+        }
 
-    actual suspend fun getCurrentUser(): Result<AuthUserDto?> = try {
-        val user = firebaseAuth.currentUser
-        Result.success(user?.toAuthUserDto())
-    } catch (e: Exception) {
-        Result.failure(e.toAuthError())
-    }
+    actual suspend fun getCurrentUser(): Result<AuthUserDto?> =
+        try {
+            val user = firebaseAuth.currentUser
+            Result.success(user?.toAuthUserDto())
+        } catch (e: Exception) {
+            Result.failure(e.toAuthError())
+        }
 
-    actual fun getAuthStateFlow(): Flow<AuthUserDto?> {
-        return firebaseAuth.authStateChanged.map { user ->
+    actual fun getAuthStateFlow(): Flow<AuthUserDto?> =
+        firebaseAuth.authStateChanged.map { user ->
             user?.toAuthUserDto()
         }
-    }
 
-    actual suspend fun isAuthenticated(): Boolean {
-        return firebaseAuth.currentUser != null
-    }
+    actual suspend fun isAuthenticated(): Boolean = firebaseAuth.currentUser != null
 
-    private fun FirebaseUser.toAuthUserDto(): AuthUserDto = AuthUserDto(
-        userId = uid,
-        email = email ?: "",
-        displayName = displayName,
-        isEmailVerified = isEmailVerified
-    )
+    private fun FirebaseUser.toAuthUserDto(): AuthUserDto =
+        AuthUserDto(
+            userId = uid,
+            email = email ?: "",
+            displayName = displayName,
+            isEmailVerified = isEmailVerified,
+        )
 }

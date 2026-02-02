@@ -28,8 +28,8 @@ import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
-import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
+import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.JoinExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.LoginUseCase
 import com.marquis.zorroexpense.domain.usecase.LogoutUseCase
@@ -107,7 +107,7 @@ object AppModule {
     }
 
     private val expenseListRepository: ExpenseListRepository by lazy {
-        ExpenseListRepositoryImpl(firestoreService)
+        ExpenseListRepositoryImpl(firestoreService, userRepository)
     }
 
     private val userRepository: UserRepository by lazy {
@@ -182,7 +182,7 @@ object AppModule {
     }
 
     private val createExpenseListUseCase: CreateExpenseListUseCase by lazy {
-        CreateExpenseListUseCase(expenseListRepository, firestoreService)
+        CreateExpenseListUseCase(expenseListRepository, firestoreService, getUsersUseCase)
     }
 
     private val joinExpenseListUseCase: JoinExpenseListUseCase by lazy {
@@ -199,13 +199,14 @@ object AppModule {
      * Provide AuthViewModel as singleton for app-wide auth state
      */
     fun provideAuthViewModel(): AuthViewModel {
-        val viewModel = authViewModel ?: AuthViewModel(
-            loginUseCase = loginUseCase,
-            signUpUseCase = signUpUseCase,
-            logoutUseCase = logoutUseCase,
-            getCurrentUserUseCase = getCurrentUserUseCase,
-            observeAuthStateUseCase = observeAuthStateUseCase
-        ).also { authViewModel = it }
+        val viewModel =
+            authViewModel ?: AuthViewModel(
+                loginUseCase = loginUseCase,
+                signUpUseCase = signUpUseCase,
+                logoutUseCase = logoutUseCase,
+                getCurrentUserUseCase = getCurrentUserUseCase,
+                observeAuthStateUseCase = observeAuthStateUseCase,
+            ).also { authViewModel = it }
 
         return viewModel
     }
@@ -221,6 +222,7 @@ object AppModule {
             userId = userId,
             getUserExpenseListsUseCase = getUserExpenseListsUseCase,
             joinExpenseListUseCase = joinExpenseListUseCase,
+            getUsersUseCase = getUsersUseCase,
             onListSelected = onListSelected,
         )
 
@@ -269,7 +271,11 @@ object AppModule {
         return viewModel
     }
 
-    fun provideAddExpenseViewModel(userId: String, listId: String, expenseToEdit: Expense? = null): AddExpenseViewModel =
+    fun provideAddExpenseViewModel(
+        userId: String,
+        listId: String,
+        expenseToEdit: Expense? = null,
+    ): AddExpenseViewModel =
         AddExpenseViewModel(
             userId = userId,
             listId = listId,

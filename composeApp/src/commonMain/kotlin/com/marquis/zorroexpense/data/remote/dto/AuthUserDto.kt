@@ -17,19 +17,21 @@ data class AuthUserDto(
     @SerialName("displayName")
     val displayName: String? = null,
     @SerialName("emailVerified")
-    val isEmailVerified: Boolean = false
+    val isEmailVerified: Boolean = false,
 )
 
-fun AuthUserDto.toDomain(): AuthUser = AuthUser(
-    userId = userId,
-    email = email,
-    displayName = displayName,
-    isEmailVerified = isEmailVerified
-)
+fun AuthUserDto.toDomain(): AuthUser =
+    AuthUser(
+        userId = userId,
+        email = email,
+        displayName = displayName,
+        isEmailVerified = isEmailVerified,
+    )
 
-fun AuthUser.toDto(): AuthUserDto = AuthUserDto(
-    userId = userId,
-    email = email,
-    displayName = displayName,
-    isEmailVerified = isEmailVerified
-)
+fun AuthUser.toDto(): AuthUserDto =
+    AuthUserDto(
+        userId = userId,
+        email = email,
+        displayName = displayName,
+        isEmailVerified = isEmailVerified,
+    )

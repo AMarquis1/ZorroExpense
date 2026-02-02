@@ -8,13 +8,15 @@ import dev.gitlive.firebase.firestore.firestore
 
 actual fun ExpenseList.toDto(): ExpenseListDto {
     val firestore = Firebase.firestore
-    val memberRefs = members.map { memberId ->
-        firestore.collection("Users").document(memberId)
-    }
+    val memberRefs =
+        members.map { member ->
+            firestore.collection("Users").document(member.userId)
+        }
 
-    val categoryRefs = categories.map { category ->
-        firestore.collection("Categories").document(category.documentId)
-    }
+    val categoryRefs =
+        categories.map { category ->
+            firestore.collection("Categories").document(category.documentId)
+        }
 
     return AndroidExpenseListDto(
         listId = listId,
@@ -24,6 +26,6 @@ actual fun ExpenseList.toDto(): ExpenseListDto {
         shareCode = shareCode,
         createdAt = createdAt,
         isArchived = isArchived,
-        categoriesRef = categoryRefs
+        categoriesRef = categoryRefs,
     )
 }

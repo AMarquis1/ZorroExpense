@@ -16,14 +16,16 @@ class UserRepositoryImpl(
 ) : UserRepository {
     override suspend fun getUserById(userId: String): Result<User?> =
         try {
-            val userIdOnly = userId.substringAfterLast("/")
+            // Normalize path: if it doesn't start with "Users/", add it
+            val normalizedPath = if (userId.startsWith("Users/")) userId else "Users/$userId"
+            val userIdOnly = normalizedPath.substringAfterLast("/")
             if (AppConfig.USE_MOCK_DATA) {
                 // Use mock data for development/testing
                 Result.success(MockExpenseData.usersMap[userIdOnly])
             } else {
                 // Use Firestore for production
                 firestoreService
-                    .getUserById(userId)
+                    .getUserById(normalizedPath)
                     .mapCatching { userDto ->
                         userDto?.toDomain(userIdOnly)
                     }
@@ -36,22 +38,26 @@ class UserRepositoryImpl(
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Use mock data for development/testing
-                val users = userIds.mapNotNull { userPath ->
-                    val userIdOnly = userPath.substringAfterLast("/")
-                    MockExpenseData.usersMap[userIdOnly]
-                }
+                val users =
+                    userIds.mapNotNull { userPath ->
+                        // Normalize path: if it doesn't start with "Users/", add it
+                        val normalizedPath = if (userPath.startsWith("Users/")) userPath else "Users/$userPath"
+                        val userIdOnly = normalizedPath.substringAfterLast("/")
+                        MockExpenseData.usersMap[userIdOnly]
+                    }
                 Result.success(users)
             } else {
                 // Use Firestore for production
                 val users = mutableListOf<User>()
                 for (userPath in userIds) {
-                    val userIdOnly = userPath.substringAfterLast("/")
+                    // Normalize path: if it doesn't start with "Users/", add it
+                    val normalizedPath = if (userPath.startsWith("Users/")) userPath else "Users/$userPath"
+                    val userIdOnly = normalizedPath.substringAfterLast("/")
                     firestoreService
-                        .getUserById(userPath)
+                        .getUserById(normalizedPath)
                         .onSuccess { userDto ->
                             userDto?.toDomain(userIdOnly)?.let { users.add(it) }
-                        }
-                        .onFailure { return Result.failure(it) }
+                        }.onFailure { return Result.failure(it) }
                 }
                 Result.success(users)
             }

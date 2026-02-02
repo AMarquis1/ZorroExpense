@@ -4,19 +4,13 @@ import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
-import com.marquis.zorroexpense.data.remote.dto.WasmExpenseDto
-import com.marquis.zorroexpense.data.remote.dto.WasmExpenseListDto
 import com.marquis.zorroexpense.domain.model.UserProfile
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
-import io.ktor.client.request.headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -175,22 +169,10 @@ actual class FirestoreService actual constructor() {
         return Result.success(null)
     }
 
-    actual suspend fun addExpense(expense: ExpenseDto): Result<Unit> {
-        TODO("Not yet implemented")
-    }
-
-    actual suspend fun updateExpense(
-        expenseId: String,
-        expense: ExpenseDto,
+    actual suspend fun createUserProfile(
+        userId: String,
+        profile: UserProfile,
     ): Result<Unit> {
-        TODO("Not yet implemented")
-    }
-
-    actual suspend fun deleteExpense(expenseId: String): Result<Unit> {
-        TODO("Not yet implemented")
-    }
-
-    actual suspend fun createUserProfile(userId: String, profile: UserProfile): Result<Unit> {
         TODO("Not yet implemented")
     }
 
@@ -206,7 +188,10 @@ actual class FirestoreService actual constructor() {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun updateExpenseList(listId: String, list: ExpenseListDto): Result<Unit> {
+    actual suspend fun updateExpenseList(
+        listId: String,
+        list: ExpenseListDto,
+    ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
@@ -218,27 +203,30 @@ actual class FirestoreService actual constructor() {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun addUserToExpenseListMembers(listId: String, userId: String): Result<Unit> {
+    actual suspend fun addUserToExpenseListMembers(
+        listId: String,
+        userId: String,
+    ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun removeUserFromExpenseListMembers(
         listId: String,
-        userId: String
+        userId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun addExpenseListReferenceForUser(
         userId: String,
-        listId: String
+        listId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun removeExpenseListReferenceForUser(
         userId: String,
-        listId: String
+        listId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
@@ -247,19 +235,25 @@ actual class FirestoreService actual constructor() {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun addExpenseToList(listId: String, expense: ExpenseDto): Result<String> {
+    actual suspend fun addExpenseToList(
+        listId: String,
+        expense: ExpenseDto,
+    ): Result<String> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun updateExpenseInList(
         listId: String,
         expenseId: String,
-        expense: ExpenseDto
+        expense: ExpenseDto,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun deleteExpenseFromList(listId: String, expenseId: String): Result<Unit> {
+    actual suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit> {
         TODO("Not yet implemented")
     }
 }

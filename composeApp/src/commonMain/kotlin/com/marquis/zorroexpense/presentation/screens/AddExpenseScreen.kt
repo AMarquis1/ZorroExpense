@@ -55,7 +55,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionBottomSheet
@@ -182,7 +181,7 @@ fun AddExpenseScreen(
                     .padding(paddingValues)
                     .clickable(
                         indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
+                        interactionSource = remember { MutableInteractionSource() },
                     ) {
                         focusManager.clearFocus()
                     },
@@ -285,9 +284,9 @@ fun AddExpenseScreen(
                                 modifier =
                                     Modifier
                                         .weight(0.55f)
-                                        .clickable { 
+                                        .clickable {
                                             focusManager.clearFocus()
-                                            showCategoryBottomSheet = true 
+                                            showCategoryBottomSheet = true
                                         },
                             ) {
                                 OutlinedTextField(
@@ -341,9 +340,9 @@ fun AddExpenseScreen(
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .clickable { 
+                                    .clickable {
                                         focusManager.clearFocus()
-                                        showDatePickerBottomSheet = true 
+                                        showDatePickerBottomSheet = true
                                     },
                         ) {
                             OutlinedTextField(
@@ -405,9 +404,9 @@ fun AddExpenseScreen(
                         UserSelectionSection(
                             title = "Paid By",
                             selectedUser = selectedPaidByUser,
-                            onAddClick = { 
+                            onAddClick = {
                                 focusManager.clearFocus()
-                                showPaidByBottomSheet = true 
+                                showPaidByBottomSheet = true
                             },
                             showError = selectedPaidByUser == null,
                             errorMessage = "Please select who paid",
@@ -421,9 +420,9 @@ fun AddExpenseScreen(
                             percentageSplits = percentageSplits,
                             numberSplits = numberSplits,
                             expenseAmount = expensePrice.toFloatOrNull() ?: 0f,
-                            onAddClick = { 
+                            onAddClick = {
                                 focusManager.clearFocus()
-                                showSplitWithBottomSheet = true 
+                                showSplitWithBottomSheet = true
                             },
                             onRemoveUser = { user ->
                                 viewModel.onEvent(AddExpenseUiEvent.RemoveUserFromSplit(user))
@@ -437,12 +436,11 @@ fun AddExpenseScreen(
                                 selectedUsers = selectedSplitWithUsers,
                                 percentageSplits = percentageSplits,
                                 numberSplits = numberSplits,
-                                onSplitMethodClick = { 
+                                onSplitMethodClick = {
                                     focusManager.clearFocus()
-                                    showSplitMethodBottomSheet = true 
+                                    showSplitMethodBottomSheet = true
                                 },
                             )
-
                         }
                     }
                 }
@@ -564,7 +562,7 @@ fun AddExpenseScreen(
                                 isLoading -> "Saving..."
                                 viewModel.isEditMode -> "Update Expense"
                                 else -> "Save Expense"
-                            }
+                            },
                         )
                     }
                 }

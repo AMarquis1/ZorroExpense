@@ -13,5 +13,5 @@ actual fun ExpenseList.toDto(): ExpenseListDto =
         shareCode = shareCode,
         createdAt = createdAt,
         isArchived = isArchived,
-        categoryIds = categories.map { it.documentId }
+        categoryIds = categories.map { it.documentId },
     )

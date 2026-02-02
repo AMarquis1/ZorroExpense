@@ -20,5 +20,7 @@ sealed class GlobalAuthState {
     /**
      * User is authenticated - show main app
      */
-    data class Authenticated(val user: AuthUser) : GlobalAuthState()
+    data class Authenticated(
+        val user: AuthUser,
+    ) : GlobalAuthState()
 }

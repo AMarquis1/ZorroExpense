@@ -14,7 +14,6 @@ import com.marquis.zorroexpense.presentation.state.GlobalAuthState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -26,9 +25,8 @@ class AuthViewModel(
     private val signUpUseCase: SignUpUseCase,
     private val logoutUseCase: LogoutUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val observeAuthStateUseCase: ObserveAuthStateUseCase
+    private val observeAuthStateUseCase: ObserveAuthStateUseCase,
 ) : ViewModel() {
-
     // Form state
     private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email.asStateFlow()
@@ -62,15 +60,16 @@ class AuthViewModel(
 
         // Check if user is already authenticated on init
         viewModelScope.launch {
-            getCurrentUserUseCase().onSuccess { user ->
-                if (user != null) {
-                    _globalAuthState.value = GlobalAuthState.Authenticated(user)
-                } else {
+            getCurrentUserUseCase()
+                .onSuccess { user ->
+                    if (user != null) {
+                        _globalAuthState.value = GlobalAuthState.Authenticated(user)
+                    } else {
+                        _globalAuthState.value = GlobalAuthState.Unauthenticated
+                    }
+                }.onFailure {
                     _globalAuthState.value = GlobalAuthState.Unauthenticated
                 }
-            }.onFailure {
-                _globalAuthState.value = GlobalAuthState.Unauthenticated
-            }
         }
     }
 
@@ -89,21 +88,22 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
 
-            val result = loginUseCase(
-                email = _email.value,
-                password = _password.value
-            )
+            val result =
+                loginUseCase(
+                    email = _email.value,
+                    password = _password.value,
+                )
 
             result
                 .onSuccess { user ->
                     _uiState.value = AuthUiState.Success(user)
                     clearForm()
-                }
-                .onFailure { error ->
-                    val errorMessage = when (error) {
-                        is AuthError -> error.message
-                        else -> "Login failed"
-                    }
+                }.onFailure { error ->
+                    val errorMessage =
+                        when (error) {
+                            is AuthError -> error.message
+                            else -> "Login failed"
+                        }
                     _uiState.value = AuthUiState.Error(errorMessage)
                 }
         }
@@ -113,22 +113,23 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
 
-            val result = signUpUseCase(
-                email = _email.value,
-                password = _password.value,
-                displayName = _displayName.value
-            )
+            val result =
+                signUpUseCase(
+                    email = _email.value,
+                    password = _password.value,
+                    displayName = _displayName.value,
+                )
 
             result
                 .onSuccess { user ->
                     _uiState.value = AuthUiState.Success(user)
                     clearForm()
-                }
-                .onFailure { error ->
-                    val errorMessage = when (error) {
-                        is AuthError -> error.message
-                        else -> "Sign up failed"
-                    }
+                }.onFailure { error ->
+                    val errorMessage =
+                        when (error) {
+                            is AuthError -> error.message
+                            else -> "Sign up failed"
+                        }
                     _uiState.value = AuthUiState.Error(errorMessage)
                 }
         }
@@ -141,8 +142,7 @@ class AuthViewModel(
                     _globalAuthState.value = GlobalAuthState.Unauthenticated
                     clearForm()
                     _uiState.value = AuthUiState.Idle
-                }
-                .onFailure {
+                }.onFailure {
                     _uiState.value = AuthUiState.Error("Logout failed")
                 }
         }

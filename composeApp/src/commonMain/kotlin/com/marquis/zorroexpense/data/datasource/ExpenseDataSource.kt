@@ -9,11 +9,20 @@ import com.marquis.zorroexpense.domain.model.Expense
 interface ExpenseDataSource {
     suspend fun getExpensesByListId(listId: String): Result<List<Expense>>
 
-    suspend fun addExpenseToList(listId: String, expense: Expense): Result<String>
+    suspend fun addExpenseToList(
+        listId: String,
+        expense: Expense,
+    ): Result<String>
 
-    suspend fun updateExpenseInList(listId: String, expense: Expense): Result<Unit>
+    suspend fun updateExpenseInList(
+        listId: String,
+        expense: Expense,
+    ): Result<Unit>
 
-    suspend fun deleteExpenseFromList(listId: String, expenseId: String): Result<Unit>
+    suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit>
 }
 
 /**

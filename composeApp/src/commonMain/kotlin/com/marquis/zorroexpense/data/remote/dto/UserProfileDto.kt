@@ -19,21 +19,23 @@ data class UserProfileDto(
     @SerialName("profileImage")
     val profileImage: String? = null,
     @SerialName("createdAt")
-    val createdAt: String = ""
+    val createdAt: String = "",
 )
 
-fun UserProfileDto.toDomain(): UserProfile = UserProfile(
-    userId = userId,
-    email = email,
-    name = name,
-    profileImage = profileImage,
-    createdAt = createdAt
-)
+fun UserProfileDto.toDomain(): UserProfile =
+    UserProfile(
+        userId = userId,
+        email = email,
+        name = name,
+        profileImage = profileImage,
+        createdAt = createdAt,
+    )
 
-fun UserProfile.toDto(): UserProfileDto = UserProfileDto(
-    userId = userId,
-    email = email,
-    name = name,
-    profileImage = profileImage,
-    createdAt = createdAt
-)
+fun UserProfile.toDto(): UserProfileDto =
+    UserProfileDto(
+        userId = userId,
+        email = email,
+        name = name,
+        profileImage = profileImage,
+        createdAt = createdAt,
+    )

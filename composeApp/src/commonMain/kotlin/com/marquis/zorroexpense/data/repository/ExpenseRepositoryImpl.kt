@@ -78,8 +78,8 @@ class ExpenseRepositoryImpl(
     /**
      * Get expenses for a specific expense list
      */
-    override suspend fun getExpensesByListId(listId: String): Result<List<Expense>> {
-        return try {
+    override suspend fun getExpensesByListId(listId: String): Result<List<Expense>> =
+        try {
             supervisorScope {
                 val remoteResult = remoteDataSource.getExpensesByListId(listId)
                 if (remoteResult.isSuccess) {
@@ -94,12 +94,14 @@ class ExpenseRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e.toExpenseError())
         }
-    }
 
     /**
      * Add expense to a list
      */
-    override suspend fun addExpenseToList(listId: String, expense: Expense): Result<String> =
+    override suspend fun addExpenseToList(
+        listId: String,
+        expense: Expense,
+    ): Result<String> =
         repositoryMutex.withLock {
             try {
                 supervisorScope {
@@ -122,7 +124,10 @@ class ExpenseRepositoryImpl(
     /**
      * Update expense in a list
      */
-    override suspend fun updateExpenseInList(listId: String, expense: Expense): Result<Unit> =
+    override suspend fun updateExpenseInList(
+        listId: String,
+        expense: Expense,
+    ): Result<Unit> =
         repositoryMutex.withLock {
             try {
                 supervisorScope {
@@ -145,7 +150,10 @@ class ExpenseRepositoryImpl(
     /**
      * Delete expense from a list
      */
-    override suspend fun deleteExpenseFromList(listId: String, expenseId: String): Result<Unit> =
+    override suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit> =
         repositoryMutex.withLock {
             try {
                 supervisorScope {

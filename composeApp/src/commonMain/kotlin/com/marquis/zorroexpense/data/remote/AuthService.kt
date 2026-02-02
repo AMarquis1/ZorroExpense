@@ -14,7 +14,7 @@ expect class AuthService {
     suspend fun signUp(
         email: String,
         password: String,
-        displayName: String
+        displayName: String,
     ): Result<AuthUserDto>
 
     /**
@@ -22,7 +22,7 @@ expect class AuthService {
      */
     suspend fun signIn(
         email: String,
-        password: String
+        password: String,
     ): Result<AuthUserDto>
 
     /**

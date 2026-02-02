@@ -10,6 +10,5 @@ import com.marquis.zorroexpense.domain.repository.UserRepository
 class GetUsersUseCase(
     private val userRepository: UserRepository,
 ) {
-    suspend operator fun invoke(userIds: List<String>): Result<List<User>> =
-        userRepository.getUsersByIds(userIds)
+    suspend operator fun invoke(userIds: List<String>): Result<List<User>> = userRepository.getUsersByIds(userIds)
 }

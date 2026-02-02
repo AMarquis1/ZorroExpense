@@ -7,8 +7,15 @@ import com.marquis.zorroexpense.domain.model.ExpenseList
  */
 sealed class ExpenseListsUiState {
     data object Loading : ExpenseListsUiState()
-    data class Success(val lists: List<ExpenseList>) : ExpenseListsUiState()
-    data class Error(val message: String) : ExpenseListsUiState()
+
+    data class Success(
+        val lists: List<ExpenseList>,
+    ) : ExpenseListsUiState()
+
+    data class Error(
+        val message: String,
+    ) : ExpenseListsUiState()
+
     data object Empty : ExpenseListsUiState()
 }
 
@@ -17,8 +24,16 @@ sealed class ExpenseListsUiState {
  */
 sealed class ExpenseListsUiEvent {
     data object LoadLists : ExpenseListsUiEvent()
+
     data object CreateNewList : ExpenseListsUiEvent()
-    data class SelectList(val listId: String) : ExpenseListsUiEvent()
-    data class JoinList(val shareCode: String) : ExpenseListsUiEvent()
+
+    data class SelectList(
+        val listId: String,
+    ) : ExpenseListsUiEvent()
+
+    data class JoinList(
+        val shareCode: String,
+    ) : ExpenseListsUiEvent()
+
     data object RetryLoad : ExpenseListsUiEvent()
 }

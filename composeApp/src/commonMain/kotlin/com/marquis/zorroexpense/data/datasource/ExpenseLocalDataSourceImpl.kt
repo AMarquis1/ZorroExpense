@@ -124,7 +124,10 @@ class ExpenseLocalDataSourceImpl(
             Result.failure(e)
         }
 
-    override suspend fun addExpenseToList(listId: String, expense: Expense): Result<String> =
+    override suspend fun addExpenseToList(
+        listId: String,
+        expense: Expense,
+    ): Result<String> =
         try {
             val currentExpenses = cacheManager.get(getListCacheKey(listId)) ?: emptyList()
             val updatedExpenses = currentExpenses + expense
@@ -134,28 +137,36 @@ class ExpenseLocalDataSourceImpl(
             Result.failure(e)
         }
 
-    override suspend fun updateExpenseInList(listId: String, expense: Expense): Result<Unit> =
+    override suspend fun updateExpenseInList(
+        listId: String,
+        expense: Expense,
+    ): Result<Unit> =
         try {
             val currentExpenses = cacheManager.get(getListCacheKey(listId)) ?: emptyList()
-            val updatedExpenses = currentExpenses.map { existingExpense ->
-                if (existingExpense.documentId == expense.documentId) {
-                    expense
-                } else {
-                    existingExpense
+            val updatedExpenses =
+                currentExpenses.map { existingExpense ->
+                    if (existingExpense.documentId == expense.documentId) {
+                        expense
+                    } else {
+                        existingExpense
+                    }
                 }
-            }
             cacheManager.put(getListCacheKey(listId), updatedExpenses)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
 
-    override suspend fun deleteExpenseFromList(listId: String, expenseId: String): Result<Unit> =
+    override suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit> =
         try {
             val currentExpenses = cacheManager.get(getListCacheKey(listId)) ?: emptyList()
-            val updatedExpenses = currentExpenses.filter { expense ->
-                expense.documentId != expenseId
-            }
+            val updatedExpenses =
+                currentExpenses.filter { expense ->
+                    expense.documentId != expenseId
+                }
             cacheManager.put(getListCacheKey(listId), updatedExpenses)
             Result.success(Unit)
         } catch (e: Exception) {

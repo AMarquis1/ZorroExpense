@@ -29,23 +29,24 @@ import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 fun LoginScreen(
     viewModel: AuthViewModel,
     onNavigateToSignUp: () -> Unit = {},
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
 ) {
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = "Sign In",
             style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 32.dp),
         )
 
         OutlinedTextField(
@@ -53,7 +54,7 @@ fun LoginScreen(
             onValueChange = { viewModel.onEvent(AuthUiEvent.EmailChanged(it)) },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = uiState !is AuthUiState.Loading
+            enabled = uiState !is AuthUiState.Loading,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -64,7 +65,7 @@ fun LoginScreen(
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
-            enabled = uiState !is AuthUiState.Loading
+            enabled = uiState !is AuthUiState.Loading,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -76,7 +77,7 @@ fun LoginScreen(
             is AuthUiState.Success -> {
                 Text(
                     text = "Login successful!",
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 LaunchedEffect(Unit) {
                     onLoginSuccess()
@@ -86,7 +87,7 @@ fun LoginScreen(
                 Text(
                     text = (uiState as AuthUiState.Error).message,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
             }
             AuthUiState.Idle -> {}
@@ -94,10 +95,11 @@ fun LoginScreen(
 
         Button(
             onClick = { viewModel.onEvent(AuthUiEvent.LoginClicked) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            enabled = email.isNotEmpty() && password.isNotEmpty() && uiState !is AuthUiState.Loading
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+            enabled = email.isNotEmpty() && password.isNotEmpty() && uiState !is AuthUiState.Loading,
         ) {
             Text("Sign In")
         }
@@ -106,7 +108,7 @@ fun LoginScreen(
 
         TextButton(
             onClick = onNavigateToSignUp,
-            enabled = uiState !is AuthUiState.Loading
+            enabled = uiState !is AuthUiState.Loading,
         ) {
             Text("Don't have an account? Sign up")
         }

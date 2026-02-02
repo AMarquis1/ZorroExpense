@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -82,22 +82,23 @@ fun CreateExpenseListScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
                         )
                     }
-                }
+                },
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         if (uiState is CreateExpenseListUiState.Loading) {
             // Loading state
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
@@ -106,15 +107,16 @@ fun CreateExpenseListScreen(
         } else {
             // Form
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.surface)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .background(MaterialTheme.colorScheme.surface),
             ) {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // List name input
                     item {
@@ -122,7 +124,7 @@ fun CreateExpenseListScreen(
                             Text(
                                 text = "List Name",
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             TextField(
@@ -132,7 +134,7 @@ fun CreateExpenseListScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("e.g., Vacation Trip") },
-                                singleLine = true
+                                singleLine = true,
                             )
                         }
                     }
@@ -143,27 +145,27 @@ fun CreateExpenseListScreen(
                             Text(
                                 text = "Categories",
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
 
                         items(availableCategories) { category ->
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        val newSelected = selectedCategories.toMutableSet()
-                                        if (newSelected.contains(category.documentId)) {
-                                            newSelected.remove(category.documentId)
-                                        } else {
-                                            newSelected.add(category.documentId)
-                                        }
-                                        viewModel.onEvent(
-                                            CreateExpenseListUiEvent.CategoriesSelected(newSelected.toList())
-                                        )
-                                    }
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            val newSelected = selectedCategories.toMutableSet()
+                                            if (newSelected.contains(category.documentId)) {
+                                                newSelected.remove(category.documentId)
+                                            } else {
+                                                newSelected.add(category.documentId)
+                                            }
+                                            viewModel.onEvent(
+                                                CreateExpenseListUiEvent.CategoriesSelected(newSelected.toList()),
+                                            )
+                                        }.padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Checkbox(
                                     checked = selectedCategories.contains(category.documentId),
@@ -175,14 +177,14 @@ fun CreateExpenseListScreen(
                                             newSelected.remove(category.documentId)
                                         }
                                         viewModel.onEvent(
-                                            CreateExpenseListUiEvent.CategoriesSelected(newSelected.toList())
+                                            CreateExpenseListUiEvent.CategoriesSelected(newSelected.toList()),
                                         )
-                                    }
+                                    },
                                 )
                                 Spacer(modifier = Modifier.padding(8.dp))
                                 Text(
                                     text = category.name,
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
                                 )
                             }
                         }
@@ -196,16 +198,17 @@ fun CreateExpenseListScreen(
                 // Create button
                 Button(
                     onClick = { viewModel.onEvent(CreateExpenseListUiEvent.CreateList) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .height(48.dp),
-                    enabled = listName.isNotBlank() && uiState !is CreateExpenseListUiState.Loading
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .height(48.dp),
+                    enabled = listName.isNotBlank() && uiState !is CreateExpenseListUiState.Loading,
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = "Create",
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     )
                     Text("Create List")
                 }

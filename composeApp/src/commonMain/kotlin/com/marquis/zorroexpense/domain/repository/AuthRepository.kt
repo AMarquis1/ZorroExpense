@@ -1,6 +1,5 @@
 package com.marquis.zorroexpense.domain.repository
 
-import com.marquis.zorroexpense.domain.error.AuthError
 import com.marquis.zorroexpense.domain.model.AuthUser
 import kotlinx.coroutines.flow.Flow
 
@@ -21,7 +20,7 @@ interface AuthRepository {
     suspend fun signUp(
         email: String,
         password: String,
-        displayName: String
+        displayName: String,
     ): Result<AuthUser>
 
     /**
@@ -29,7 +28,7 @@ interface AuthRepository {
      */
     suspend fun signIn(
         email: String,
-        password: String
+        password: String,
     ): Result<AuthUser>
 
     /**

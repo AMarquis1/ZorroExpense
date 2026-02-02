@@ -8,7 +8,7 @@ data class WasmSplitDetailDto(
     @SerialName("user")
     val userId: String = "",
     @SerialName("amount")
-    val amount: Double = 0.0
+    val amount: Double = 0.0,
 )
 
 @Serializable

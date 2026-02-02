@@ -9,6 +9,5 @@ import com.marquis.zorroexpense.domain.repository.ExpenseListRepository
 class GetUserExpenseListsUseCase(
     private val expenseListRepository: ExpenseListRepository,
 ) {
-    suspend operator fun invoke(userId: String): Result<List<ExpenseList>> =
-        expenseListRepository.getUserExpenseLists(userId)
+    suspend operator fun invoke(userId: String): Result<List<ExpenseList>> = expenseListRepository.getUserExpenseLists(userId)
 }

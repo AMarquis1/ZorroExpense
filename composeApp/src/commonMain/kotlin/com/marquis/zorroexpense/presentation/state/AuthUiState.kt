@@ -19,10 +19,14 @@ sealed class AuthUiState {
     /**
      * Success state - auth operation completed
      */
-    data class Success(val user: AuthUser) : AuthUiState()
+    data class Success(
+        val user: AuthUser,
+    ) : AuthUiState()
 
     /**
      * Error state - auth operation failed
      */
-    data class Error(val message: String) : AuthUiState()
+    data class Error(
+        val message: String,
+    ) : AuthUiState()
 }

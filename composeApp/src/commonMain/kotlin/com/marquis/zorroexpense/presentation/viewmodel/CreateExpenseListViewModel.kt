@@ -21,7 +21,6 @@ class CreateExpenseListViewModel(
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val onListCreated: (listId: String, listName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<CreateExpenseListUiState>(CreateExpenseListUiState.Idle)
     val uiState: StateFlow<CreateExpenseListUiState> = _uiState.asStateFlow()
 
@@ -79,11 +78,12 @@ class CreateExpenseListViewModel(
 
         viewModelScope.launch {
             _uiState.value = CreateExpenseListUiState.Loading
-            val result = createExpenseListUseCase(
-                userId = userId,
-                name = name,
-                categoryIds = _selectedCategories.value.toList()
-            )
+            val result =
+                createExpenseListUseCase(
+                    userId = userId,
+                    name = name,
+                    categoryIds = _selectedCategories.value.toList(),
+                )
 
             result.onSuccess { listId ->
                 _uiState.value = CreateExpenseListUiState.Success(listId, name)
@@ -91,9 +91,10 @@ class CreateExpenseListViewModel(
             }
 
             result.onFailure { error ->
-                _uiState.value = CreateExpenseListUiState.Error(
-                    error.message ?: "Failed to create expense list"
-                )
+                _uiState.value =
+                    CreateExpenseListUiState.Error(
+                        error.message ?: "Failed to create expense list",
+                    )
             }
         }
     }

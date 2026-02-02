@@ -10,7 +10,7 @@ data class SplitDetailDto(
     @SerialName("user")
     val userRef: DocumentReference? = null,
     @SerialName("amount")
-    val amount: Double = 0.0
+    val amount: Double = 0.0,
 )
 
 @Serializable

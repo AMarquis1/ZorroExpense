@@ -9,11 +9,13 @@ import com.marquis.zorroexpense.domain.util.ValidationUtil
  * Use case for signing up a new user.
  * Validates input and delegates to AuthRepository.
  */
-class SignUpUseCase(private val authRepository: AuthRepository) {
+class SignUpUseCase(
+    private val authRepository: AuthRepository,
+) {
     suspend operator fun invoke(
         email: String,
         password: String,
-        displayName: String
+        displayName: String,
     ): Result<AuthUser> {
         // Validate email
         if (!ValidationUtil.isValidEmail(email)) {

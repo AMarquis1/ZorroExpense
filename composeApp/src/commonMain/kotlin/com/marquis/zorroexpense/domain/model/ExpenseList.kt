@@ -9,9 +9,9 @@ data class ExpenseList(
     val listId: String = "",
     val name: String = "",
     val createdBy: String = "",
-    val members: List<String> = emptyList(),
+    val members: List<User> = emptyList(),
     val shareCode: String = "",
     val createdAt: String = "",
     val isArchived: Boolean = false,
-    val categories: List<Category> = emptyList()
+    val categories: List<Category> = emptyList(),
 )

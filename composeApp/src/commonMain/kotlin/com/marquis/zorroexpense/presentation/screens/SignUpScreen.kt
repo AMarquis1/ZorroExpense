@@ -29,7 +29,7 @@ import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 fun SignUpScreen(
     viewModel: AuthViewModel,
     onNavigateToLogin: () -> Unit = {},
-    onSignUpSuccess: () -> Unit = {}
+    onSignUpSuccess: () -> Unit = {},
 ) {
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
@@ -37,16 +37,17 @@ fun SignUpScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = "Create Account",
             style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 32.dp),
         )
 
         OutlinedTextField(
@@ -54,7 +55,7 @@ fun SignUpScreen(
             onValueChange = { viewModel.onEvent(AuthUiEvent.DisplayNameChanged(it)) },
             label = { Text("Display Name") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = uiState !is AuthUiState.Loading
+            enabled = uiState !is AuthUiState.Loading,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -64,7 +65,7 @@ fun SignUpScreen(
             onValueChange = { viewModel.onEvent(AuthUiEvent.EmailChanged(it)) },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = uiState !is AuthUiState.Loading
+            enabled = uiState !is AuthUiState.Loading,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -75,7 +76,7 @@ fun SignUpScreen(
             label = { Text("Password (min 6 characters)") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
-            enabled = uiState !is AuthUiState.Loading
+            enabled = uiState !is AuthUiState.Loading,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -87,7 +88,7 @@ fun SignUpScreen(
             is AuthUiState.Success -> {
                 Text(
                     text = "Account created successfully!",
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 LaunchedEffect(Unit) {
                     onSignUpSuccess()
@@ -97,7 +98,7 @@ fun SignUpScreen(
                 Text(
                     text = (uiState as AuthUiState.Error).message,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
             }
             AuthUiState.Idle -> {}
@@ -105,11 +106,15 @@ fun SignUpScreen(
 
         Button(
             onClick = { viewModel.onEvent(AuthUiEvent.SignUpClicked) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            enabled = email.isNotEmpty() && password.isNotEmpty() &&
-                    displayName.isNotEmpty() && uiState !is AuthUiState.Loading
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+            enabled =
+                email.isNotEmpty() &&
+                    password.isNotEmpty() &&
+                    displayName.isNotEmpty() &&
+                    uiState !is AuthUiState.Loading,
         ) {
             Text("Create Account")
         }
@@ -118,7 +123,7 @@ fun SignUpScreen(
 
         TextButton(
             onClick = onNavigateToLogin,
-            enabled = uiState !is AuthUiState.Loading
+            enabled = uiState !is AuthUiState.Loading,
         ) {
             Text("Already have an account? Sign in")
         }
