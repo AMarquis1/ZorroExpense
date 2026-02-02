@@ -7,13 +7,22 @@ import com.marquis.zorroexpense.domain.model.Expense
  * Provides clean separation between local and remote data sources
  */
 interface ExpenseDataSource {
-    suspend fun getExpenses(): Result<List<Expense>>
+    suspend fun getExpensesByListId(listId: String): Result<List<Expense>>
 
-    suspend fun addExpense(expense: Expense): Result<Unit>
+    suspend fun addExpenseToList(
+        listId: String,
+        expense: Expense,
+    ): Result<String>
 
-    suspend fun updateExpense(expense: Expense): Result<Unit>
+    suspend fun updateExpenseInList(
+        listId: String,
+        expense: Expense,
+    ): Result<Unit>
 
-    suspend fun deleteExpense(expenseId: String): Result<Unit>
+    suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit>
 }
 
 /**

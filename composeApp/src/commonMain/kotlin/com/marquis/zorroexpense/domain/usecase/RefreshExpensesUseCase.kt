@@ -1,6 +1,5 @@
 package com.marquis.zorroexpense.domain.usecase
 
-import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 
 /**
@@ -17,12 +16,13 @@ class RefreshExpensesUseCase(
 ) {
     /**
      * Refresh expenses from remote source
+     * @param userId The user ID to refresh expenses for
      * @return Result containing fresh list of expenses or error
      */
-    suspend operator fun invoke(): Result<List<Expense>> =
-        try {
-            expenseRepository.refreshExpenses()
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+//    suspend operator fun invoke(userId: String): Result<List<Expense>> =
+//        try {
+//            expenseRepository.refreshExpenses(userId)
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
 }

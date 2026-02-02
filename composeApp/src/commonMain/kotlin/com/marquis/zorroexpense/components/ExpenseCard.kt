@@ -56,7 +56,6 @@ import com.marquis.zorroexpense.domain.model.Expense
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlin.math.exp
 
 /**
  * Utility function to check if an expense date is in the future
@@ -175,9 +174,10 @@ fun ExpenseCard(
                             imageVector = Icons.Outlined.Repeat,
                             contentDescription = "Recurring expense",
                             tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .padding(4.dp),
+                            modifier =
+                                Modifier
+                                    .size(24.dp)
+                                    .padding(4.dp),
                         )
 
                         Text(
@@ -199,9 +199,10 @@ fun ExpenseCard(
                         imageVector = Icons.Outlined.Repeat,
                         contentDescription = "Recurring expense",
                         tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(4.dp),
+                        modifier =
+                            Modifier
+                                .size(24.dp)
+                                .padding(4.dp),
                     )
                 }
             }

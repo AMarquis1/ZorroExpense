@@ -10,12 +10,14 @@ data class SplitDetailDto(
     @SerialName("user")
     val userRef: DocumentReference? = null,
     @SerialName("amount")
-    val amount: Double = 0.0
+    val amount: Double = 0.0,
 )
 
 @Serializable
 data class AndroidExpenseDto(
     override val documentId: String = "",
+    @SerialName("listId")
+    override val listId: DocumentReference,
     @SerialName("description")
     override val description: String = "",
     @SerialName("name")

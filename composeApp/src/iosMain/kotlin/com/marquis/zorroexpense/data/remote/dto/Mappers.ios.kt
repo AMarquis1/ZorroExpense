@@ -25,10 +25,13 @@ actual fun Any?.getReferencePath(): String? = (this as? DocumentReference)?.path
 
 actual fun List<Any>.getReferencePaths(): List<String> = this.mapNotNull { (it as? DocumentReference)?.path }
 
-actual fun List<Any>.getSplitDetailData(): List<Pair<String, Double>> = this.mapNotNull { item ->
-    (item as? IosSplitDetailDto)?.let { splitDetail ->
-        splitDetail.userRef?.path?.let { path ->
-            Pair(path, splitDetail.amount)
+actual fun List<Any>.getSplitDetailData(): List<Pair<String, Double>> =
+    this.mapNotNull { item ->
+        (item as? IosSplitDetailDto)?.let { splitDetail ->
+            splitDetail.userRef?.path?.let { path ->
+                Pair(path, splitDetail.amount)
+            }
         }
     }
-}
+
+actual fun List<Any>.getCategoryPaths(): List<String> = filterIsInstance<DocumentReference>().map { ref -> ref.path }

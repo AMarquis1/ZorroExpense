@@ -1,20 +1,37 @@
 package com.marquis.zorroexpense.navigation
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
 sealed class AppDestinations {
     @Serializable
-    data object ExpenseList : AppDestinations()
+    data object Login : AppDestinations()
 
     @Serializable
-    data object AddExpense : AppDestinations()
+    data object SignUp : AppDestinations()
+
+    @Serializable
+    data object ExpenseLists : AppDestinations()
+
+    @Serializable
+    data object CreateExpenseList : AppDestinations()
+
+    @Serializable
+    data class ExpenseList(
+        val listId: String,
+    ) : AppDestinations()
+
+    @Serializable
+    data class AddExpense(
+        val listId: String,
+    ) : AppDestinations()
 
     @Serializable
     data class ExpenseDetail(
+        val listId: String,
         val expenseId: String,
         val expenseName: String,
         val expenseDescription: String,
@@ -27,21 +44,19 @@ sealed class AppDestinations {
         val paidByUserId: String,
         val splitDetailsJson: String,
     ) : AppDestinations() {
-        
         val splitDetails: List<SplitDetailNavigation>
-            get() = try {
-                Json.decodeFromString<List<SplitDetailNavigation>>(splitDetailsJson)
-            } catch (e: Exception) {
-                emptyList()
-            }
-        
+            get() =
+                try {
+                    Json.decodeFromString<List<SplitDetailNavigation>>(splitDetailsJson)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
         companion object {
-            fun createSplitDetailsJson(splitDetails: List<SplitDetailNavigation>): String {
-                return Json.encodeToString(splitDetails)
-            }
+            fun createSplitDetailsJson(splitDetails: List<SplitDetailNavigation>): String = Json.encodeToString(splitDetails)
         }
     }
-    
+
     @Serializable
     data class SplitDetailNavigation(
         val userId: String,
@@ -50,6 +65,7 @@ sealed class AppDestinations {
 
     @Serializable
     data class EditExpense(
+        val listId: String,
         val expenseId: String,
         val expenseName: String,
         val expenseDescription: String,
@@ -62,12 +78,12 @@ sealed class AppDestinations {
         val paidByUserId: String,
         val splitDetailsJson: String,
     ) : AppDestinations() {
-
         val splitDetails: List<SplitDetailNavigation>
-            get() = try {
-                Json.decodeFromString<List<SplitDetailNavigation>>(splitDetailsJson)
-            } catch (e: Exception) {
-                emptyList()
-            }
+            get() =
+                try {
+                    Json.decodeFromString<List<SplitDetailNavigation>>(splitDetailsJson)
+                } catch (e: Exception) {
+                    emptyList()
+                }
     }
 }

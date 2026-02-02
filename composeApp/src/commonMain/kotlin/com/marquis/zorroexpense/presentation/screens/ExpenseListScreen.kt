@@ -93,7 +93,6 @@ import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -226,11 +225,12 @@ fun ExpenseListScreen(
     LaunchedEffect(deletedExpenseName) {
         if (deletedExpenseName != null) {
             // Show snackbar and wait for result
-            val result = snackbarHostState.showSnackbar(
-                message = "Expense \"$deletedExpenseName\" has been deleted",
-                actionLabel = DeleteConstants.UNDO_BUTTON_TEXT,
-                duration = DeleteConstants.SNACKBAR_DURATION,
-            )
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = "Expense \"$deletedExpenseName\" has been deleted",
+                    actionLabel = DeleteConstants.UNDO_BUTTON_TEXT,
+                    duration = DeleteConstants.SNACKBAR_DURATION,
+                )
 
             when (result) {
                 SnackbarResult.ActionPerformed -> {
@@ -295,35 +295,33 @@ fun ExpenseListScreen(
             filteredExpenses.partition { expense -> !isFutureExpense(expense.date) }
         }
 
-    val groupedCurrentExpenses = remember(currentExpenses) {
-        currentExpenses
-            .groupBy { expense -> getMonthYear(expense.date) }
-            .toList()
-            .sortedByDescending { (_, expenses) ->
-                // Sort by the most recent date in each month group
-                expenses.maxOfOrNull { it.date } ?: ""
-            }
-            .map { (monthYear, expenses) ->
-                // Sort expenses within each month by date descending (most recent first)
-                monthYear to expenses.sortedByDescending { it.date }
-            }
-            .toMap()
-    }
+    val groupedCurrentExpenses =
+        remember(currentExpenses) {
+            currentExpenses
+                .groupBy { expense -> getMonthYear(expense.date) }
+                .toList()
+                .sortedByDescending { (_, expenses) ->
+                    // Sort by the most recent date in each month group
+                    expenses.maxOfOrNull { it.date } ?: ""
+                }.associate { (monthYear, expenses) ->
+                    // Sort expenses within each month by date descending (most recent first)
+                    monthYear to expenses.sortedByDescending { it.date }
+                }
+        }
 
-    val groupedFutureExpenses = remember(futureExpenses) {
-        futureExpenses
-            .groupBy { expense -> getMonthYear(expense.date) }
-            .toList()
-            .sortedBy { (_, expenses) ->
-                // Sort by the earliest date in each month group (ascending for future)
-                expenses.minOfOrNull { it.date } ?: ""
-            }
-            .map { (monthYear, expenses) ->
-                // Sort expenses within each month by date ascending (soonest first)
-                monthYear to expenses.sortedBy { it.date }
-            }
-            .toMap()
-    }
+    val groupedFutureExpenses =
+        remember(futureExpenses) {
+            futureExpenses
+                .groupBy { expense -> getMonthYear(expense.date) }
+                .toList()
+                .sortedBy { (_, expenses) ->
+                    // Sort by the earliest date in each month group (ascending for future)
+                    expenses.minOfOrNull { it.date } ?: ""
+                }.associate { (monthYear, expenses) ->
+                    // Sort expenses within each month by date ascending (soonest first)
+                    monthYear to expenses.sortedBy { it.date }
+                }
+        }
 
     LaunchedEffect(isSearchExpanded) {
         if (isSearchExpanded) {

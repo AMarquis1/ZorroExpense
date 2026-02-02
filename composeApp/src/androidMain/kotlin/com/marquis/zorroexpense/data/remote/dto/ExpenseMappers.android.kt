@@ -22,6 +22,7 @@ actual fun Expense.toDto(): ExpenseDto {
         description = this.description,
         price = this.price,
         isFromRecurring = this.isFromRecurring,
+        listId = firestore.collection("ExpenseLists").document(this.listId),
         date =
             try {
                 // Parse the date string (YYYY-MM-DD format) to create Firestore Timestamp
@@ -56,7 +57,7 @@ actual fun Expense.toDto(): ExpenseDto {
                 if (splitDetail.user.userId.isNotBlank()) {
                     SplitDetailDto(
                         userRef = firestore.collection("Users").document(splitDetail.user.userId),
-                        amount = splitDetail.amount
+                        amount = splitDetail.amount,
                     )
                 } else {
                     null

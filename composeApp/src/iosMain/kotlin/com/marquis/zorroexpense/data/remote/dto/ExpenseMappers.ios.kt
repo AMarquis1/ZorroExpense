@@ -56,7 +56,7 @@ actual fun Expense.toDto(): ExpenseDto {
                 if (splitDetail.user.userId.isNotBlank()) {
                     IosSplitDetailDto(
                         userRef = firestore.collection("Users").document(splitDetail.user.userId),
-                        amount = splitDetail.amount
+                        amount = splitDetail.amount,
                     )
                 } else {
                     null

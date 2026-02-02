@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,9 +31,14 @@ import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
+import com.marquis.zorroexpense.presentation.screens.CreateExpenseListScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
+import com.marquis.zorroexpense.presentation.screens.ExpenseListsScreen
+import com.marquis.zorroexpense.presentation.screens.LoginScreen
+import com.marquis.zorroexpense.presentation.screens.SignUpScreen
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
+import com.marquis.zorroexpense.presentation.state.GlobalAuthState
 import com.marquis.zorroexpense.ui.theme.ZorroExpenseTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -43,6 +49,9 @@ fun App() {
     ZorroExpenseTheme {
         Box(modifier = Modifier.fillMaxSize()) {
             val navController = rememberNavController()
+            val authViewModel = AppModule.provideAuthViewModel()
+            val globalAuthState by authViewModel.globalAuthState.collectAsState()
+
             var deletedExpenseName by remember { mutableStateOf<String?>(null) }
             var deletedExpenseId by remember { mutableStateOf<String?>(null) }
             var updatedExpenseName by remember { mutableStateOf<String?>(null) }
@@ -50,18 +59,130 @@ fun App() {
             // Bind browser navigation for WASM back/forward button support
             BindBrowserNavigation(navController)
 
+            // Determine start destination based on auth state
+            val startDestination =
+                when (globalAuthState) {
+                    GlobalAuthState.Unauthenticated -> AppDestinations.Login
+                    GlobalAuthState.Authenticating -> AppDestinations.Login
+                    is GlobalAuthState.Authenticated -> AppDestinations.ExpenseLists
+                }
+
             SharedTransitionLayout {
                 NavHost(
                     navController = navController,
-                    startDestination = AppDestinations.ExpenseList,
+                    startDestination = startDestination,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    composable<AppDestinations.ExpenseList> {
+                    composable<AppDestinations.Login> {
+                        LoginScreen(
+                            viewModel = authViewModel,
+                            onNavigateToSignUp = {
+                                navController.navigate(AppDestinations.SignUp)
+                            },
+                            onLoginSuccess = {
+                                // Navigate to ExpenseLists and clear login/signup from back stack
+                                navController.navigate(AppDestinations.ExpenseLists) {
+                                    popUpTo(AppDestinations.Login) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.SignUp> {
+                        SignUpScreen(
+                            viewModel = authViewModel,
+                            onNavigateToLogin = {
+                                navController.popBackStack()
+                            },
+                            onSignUpSuccess = {
+                                // Navigate to ExpenseLists and clear login/signup from back stack
+                                navController.navigate(AppDestinations.ExpenseLists) {
+                                    popUpTo(AppDestinations.Login) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.ExpenseLists> {
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+                        val viewModel =
+                            AppModule.provideExpenseListsViewModel(
+                                userId = userId,
+                                onListSelected = { listId, _ ->
+                                    navController.navigate(AppDestinations.ExpenseList(listId = listId))
+                                },
+                            )
+                        ExpenseListsScreen(
+                            viewModel = viewModel,
+                            onListSelected = { listId ->
+                                navController.navigate(AppDestinations.ExpenseList(listId = listId))
+                            },
+                            onCreateNewList = {
+                                navController.navigate(AppDestinations.CreateExpenseList)
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.CreateExpenseList> {
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+                        val viewModel =
+                            AppModule.provideCreateExpenseListViewModel(
+                                userId = userId,
+                                onListCreated = { _, _ ->
+                                    // Navigate back to ExpenseLists which will reload and show the new list
+                                    navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                                },
+                            )
+                        CreateExpenseListScreen(
+                            viewModel = viewModel,
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            onListCreated = { _, _ ->
+                                // Navigate back to ExpenseLists which will reload and show the new list
+                                navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.ExpenseList> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val expenseListRoute = backStackEntry.toRoute<AppDestinations.ExpenseList>()
+                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
                         val viewModel =
                             AppModule.provideExpenseListViewModel(
+                                userId = userId,
+                                listId = expenseListRoute.listId,
                                 onExpenseClick = { expense ->
                                     navController.navigate(
                                         AppDestinations.ExpenseDetail(
+                                            listId = expenseListRoute.listId,
                                             expenseId = expense.documentId,
                                             expenseName = expense.name,
                                             expenseDescription = expense.description,
@@ -72,19 +193,20 @@ fun App() {
                                             categoryIcon = expense.category.icon,
                                             categoryColor = expense.category.color,
                                             paidByUserId = expense.paidBy.userId,
-                                            splitDetailsJson = AppDestinations.ExpenseDetail.createSplitDetailsJson(
-                                                expense.splitDetails.map { splitDetail ->
-                                                    AppDestinations.SplitDetailNavigation(
-                                                        userId = splitDetail.user.userId,
-                                                        amount = splitDetail.amount
-                                                    )
-                                                }
-                                            ),
+                                            splitDetailsJson =
+                                                AppDestinations.ExpenseDetail.createSplitDetailsJson(
+                                                    expense.splitDetails.map { splitDetail ->
+                                                        AppDestinations.SplitDetailNavigation(
+                                                            userId = splitDetail.user.userId,
+                                                            amount = splitDetail.amount,
+                                                        )
+                                                    },
+                                                ),
                                         ),
                                     )
                                 },
                                 onAddExpenseClick = {
-                                    navController.navigate(AppDestinations.AddExpense)
+                                    navController.navigate(AppDestinations.AddExpense(listId = expenseListRoute.listId))
                                 },
                             )
                         ExpenseListScreen(
@@ -117,8 +239,20 @@ fun App() {
                         )
                     }
 
-                    composable<AppDestinations.AddExpense> {
-                        val addExpenseViewModel = AppModule.provideAddExpenseViewModel()
+                    composable<AppDestinations.AddExpense> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val addExpenseRoute = backStackEntry.toRoute<AppDestinations.AddExpense>()
+                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+
+                        val addExpenseViewModel = AppModule.provideAddExpenseViewModel(userId = userId, listId = addExpenseRoute.listId)
                         AddExpenseScreen(
                             viewModel = addExpenseViewModel,
                             onBackClick = {
@@ -127,7 +261,11 @@ fun App() {
                             onExpenseSaved = { savedExpenses ->
                                 // Add saved expenses to list immediately (no network refresh needed)
                                 if (savedExpenses.isNotEmpty()) {
-                                    val listViewModel = AppModule.provideExpenseListViewModel()
+                                    val listViewModel =
+                                        AppModule.provideExpenseListViewModel(
+                                            userId = userId,
+                                            listId = addExpenseRoute.listId,
+                                        )
                                     listViewModel.addExpensesLocally(savedExpenses)
                                 }
                                 navController.popBackStack()
@@ -136,6 +274,15 @@ fun App() {
                     }
 
                     composable<AppDestinations.ExpenseDetail> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
                         val expenseDetail = backStackEntry.toRoute<AppDestinations.ExpenseDetail>()
                         val expense =
                             Expense(
@@ -152,14 +299,16 @@ fun App() {
                                         color = expenseDetail.categoryColor,
                                     ),
                                 paidBy = MockExpenseData.usersMap[expenseDetail.paidByUserId] ?: User(),
-                                splitDetails = expenseDetail.splitDetails.mapNotNull { splitDetailNav ->
-                                    val user = MockExpenseData.usersMap[splitDetailNav.userId]
-                                    if (user != null) {
-                                        com.marquis.zorroexpense.domain.model.SplitDetail(user = user, amount = splitDetailNav.amount)
-                                    } else {
-                                        null
-                                    }
-                                },
+                                splitDetails =
+                                    expenseDetail.splitDetails.mapNotNull { splitDetailNav ->
+                                        val user = MockExpenseData.usersMap[splitDetailNav.userId]
+                                        if (user != null) {
+                                            com.marquis.zorroexpense.domain.model
+                                                .SplitDetail(user = user, amount = splitDetailNav.amount)
+                                        } else {
+                                            null
+                                        }
+                                    },
                             )
 
                         ExpenseDetailScreen(
@@ -173,7 +322,12 @@ fun App() {
                                 deletedExpenseId = expense.documentId
 
                                 // Use the singleton ViewModel instance
-                                val listViewModel = AppModule.provideExpenseListViewModel()
+                                val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+                                val listViewModel =
+                                    AppModule.provideExpenseListViewModel(
+                                        userId = userId,
+                                        listId = expenseDetail.listId,
+                                    )
                                 listViewModel.onEvent(ExpenseListUiEvent.PendingDeleteExpense(expense.documentId))
 
                                 // Navigate back to show snackbar
@@ -182,6 +336,7 @@ fun App() {
                             onEditExpense = { expenseToEdit ->
                                 navController.navigate(
                                     AppDestinations.EditExpense(
+                                        listId = expenseDetail.listId,
                                         expenseId = expenseToEdit.documentId,
                                         expenseName = expenseToEdit.name,
                                         expenseDescription = expenseToEdit.description,
@@ -192,15 +347,16 @@ fun App() {
                                         categoryIcon = expenseToEdit.category.icon,
                                         categoryColor = expenseToEdit.category.color,
                                         paidByUserId = expenseToEdit.paidBy.userId,
-                                        splitDetailsJson = AppDestinations.ExpenseDetail.createSplitDetailsJson(
-                                            expenseToEdit.splitDetails.map { splitDetail ->
-                                                AppDestinations.SplitDetailNavigation(
-                                                    userId = splitDetail.user.userId,
-                                                    amount = splitDetail.amount
-                                                )
-                                            }
-                                        ),
-                                    )
+                                        splitDetailsJson =
+                                            AppDestinations.ExpenseDetail.createSplitDetailsJson(
+                                                expenseToEdit.splitDetails.map { splitDetail ->
+                                                    AppDestinations.SplitDetailNavigation(
+                                                        userId = splitDetail.user.userId,
+                                                        amount = splitDetail.amount,
+                                                    )
+                                                },
+                                            ),
+                                    ),
                                 )
                             },
                             sharedTransitionScope = this@SharedTransitionLayout,
@@ -209,6 +365,15 @@ fun App() {
                     }
 
                     composable<AppDestinations.EditExpense> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
                         val editExpense = backStackEntry.toRoute<AppDestinations.EditExpense>()
                         val expense =
                             Expense(
@@ -225,17 +390,21 @@ fun App() {
                                         color = editExpense.categoryColor,
                                     ),
                                 paidBy = MockExpenseData.usersMap[editExpense.paidByUserId] ?: User(),
-                                splitDetails = editExpense.splitDetails.mapNotNull { splitDetailNav ->
-                                    val user = MockExpenseData.usersMap[splitDetailNav.userId]
-                                    if (user != null) {
-                                        com.marquis.zorroexpense.domain.model.SplitDetail(user = user, amount = splitDetailNav.amount)
-                                    } else {
-                                        null
-                                    }
-                                },
+                                splitDetails =
+                                    editExpense.splitDetails.mapNotNull { splitDetailNav ->
+                                        val user = MockExpenseData.usersMap[splitDetailNav.userId]
+                                        if (user != null) {
+                                            com.marquis.zorroexpense.domain.model
+                                                .SplitDetail(user = user, amount = splitDetailNav.amount)
+                                        } else {
+                                            null
+                                        }
+                                    },
                             )
 
-                        val editViewModel = AppModule.provideAddExpenseViewModel(expenseToEdit = expense)
+                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+
+                        val editViewModel = AppModule.provideAddExpenseViewModel(userId = userId, listId = editExpense.listId, expenseToEdit = expense)
                         AddExpenseScreen(
                             viewModel = editViewModel,
                             onBackClick = {
@@ -245,13 +414,17 @@ fun App() {
                                 // Update the expense in the list and show snackbar
                                 if (savedExpenses.isNotEmpty()) {
                                     val savedExpense = savedExpenses.first()
-                                    val listViewModel = AppModule.provideExpenseListViewModel()
+                                    val listViewModel =
+                                        AppModule.provideExpenseListViewModel(
+                                            userId = userId,
+                                            listId = editExpense.listId,
+                                        )
                                     listViewModel.updateExpenseLocally(savedExpense)
                                     // Set the name to trigger snackbar on ExpenseListScreen
                                     updatedExpenseName = savedExpense.name
                                 }
                                 // Navigate back to ExpenseList (pop both EditExpense and ExpenseDetail)
-                                navController.popBackStack(AppDestinations.ExpenseList, inclusive = false)
+                                navController.popBackStack(AppDestinations.ExpenseList(listId = editExpense.listId), inclusive = false)
                             },
                         )
                     }

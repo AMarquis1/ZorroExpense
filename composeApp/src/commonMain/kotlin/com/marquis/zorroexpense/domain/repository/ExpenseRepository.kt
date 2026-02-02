@@ -8,34 +8,39 @@ import com.marquis.zorroexpense.domain.model.Expense
  */
 interface ExpenseRepository {
     /**
-     * Get expenses with automatic cache handling
-     * Uses cache-first strategy with fallback to network
-     */
-    suspend fun getExpenses(): Result<List<Expense>>
-
-    /**
      * Force refresh expenses, bypassing cache
      * Always fetches from remote data source
      */
-    suspend fun refreshExpenses(): Result<List<Expense>>
+//    suspend fun refreshExpenses(userId: String): Result<List<Expense>>
 
     /**
-     * Add a new expense
-     * Invalidates relevant cache entries
+     * Get expenses for a specific expense list
      */
-    suspend fun addExpense(expense: Expense): Result<Unit>
+    suspend fun getExpensesByListId(listId: String): Result<List<Expense>>
 
     /**
-     * Update an existing expense
-     * Invalidates relevant cache entries
+     * Add a new expense to a specific expense list
      */
-    suspend fun updateExpense(expense: Expense): Result<Unit>
+    suspend fun addExpenseToList(
+        listId: String,
+        expense: Expense,
+    ): Result<String>
 
     /**
-     * Delete an expense by ID
-     * Invalidates relevant cache entries
+     * Update an existing expense in a specific expense list
      */
-    suspend fun deleteExpense(expenseId: String): Result<Unit>
+    suspend fun updateExpenseInList(
+        listId: String,
+        expense: Expense,
+    ): Result<Unit>
+
+    /**
+     * Delete an expense from a specific expense list
+     */
+    suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit>
 
     /**
      * Clear all cached data

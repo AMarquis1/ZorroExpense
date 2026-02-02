@@ -68,6 +68,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.firebase.common.ktx)
             implementation(libs.firebase.firestore.ktx)
+            implementation(libs.firebase.auth.ktx)
             implementation(libs.compose.material3)
             implementation(libs.android.material)
         }
@@ -76,6 +77,7 @@ kotlin {
             implementation(libs.ktor.client.darwin)
             implementation(libs.firebase.common.ktx)
             implementation(libs.firebase.firestore.ktx)
+            implementation(libs.firebase.auth.ktx)
         }
 
         wasmJsMain.dependencies {
@@ -137,7 +139,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }

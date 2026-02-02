@@ -14,13 +14,18 @@ import com.marquis.zorroexpense.domain.model.Expense
 class ExpenseRemoteDataSourceImpl(
     private val firestoreService: FirestoreService,
 ) : ExpenseRemoteDataSource {
-    override suspend fun getExpenses(): Result<List<Expense>> =
+    override suspend fun getExpensesByListId(listId: String): Result<List<Expense>> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
-                MockExpenseData.getMockExpenses()
+                // Mock implementation - return expenses filtered by listId
+                MockExpenseData
+                    .getMockExpenses()
+                    .getOrDefault(emptyList())
+                    .filter { it.listId == listId }
+                    .let { Result.success(it) }
             } else {
                 firestoreService
-                    .getExpenses()
+                    .getExpensesByListId(listId)
                     .mapCatching { expenseDtos ->
                         expenseDtos.map { dto ->
                             dto.toDomain(firestoreService)
@@ -31,42 +36,48 @@ class ExpenseRemoteDataSourceImpl(
             Result.failure(e)
         }
 
-    override suspend fun addExpense(expense: Expense): Result<Unit> =
+    override suspend fun addExpenseToList(
+        listId: String,
+        expense: Expense,
+    ): Result<String> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
-                // Mock implementation - just return success
-                Result.success(Unit)
+                // Mock implementation - return a generated ID
+                Result.success("mock-expense-${expense.documentId}")
             } else {
-                // Convert domain expense to DTO and save to Firestore
                 val expenseDto = expense.toDto()
-                firestoreService.addExpense(expenseDto)
+                firestoreService.addExpenseToList(listId, expenseDto)
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
 
-    override suspend fun updateExpense(expense: Expense): Result<Unit> =
+    override suspend fun updateExpenseInList(
+        listId: String,
+        expense: Expense,
+    ): Result<Unit> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - just return success
                 Result.success(Unit)
             } else {
-                // Convert domain expense to DTO and update in Firestore
-                val expenseDto = expense.toDto()
-                firestoreService.updateExpense(expense.documentId, expenseDto)
+                val expenseDto = expense.copy(listId = listId).toDto()
+                firestoreService.updateExpenseInList(listId, expense.documentId, expenseDto)
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
 
-    override suspend fun deleteExpense(expenseId: String): Result<Unit> =
+    override suspend fun deleteExpenseFromList(
+        listId: String,
+        expenseId: String,
+    ): Result<Unit> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Mock implementation - just return success
                 Result.success(Unit)
             } else {
-                // Delete from Firestore
-                firestoreService.deleteExpense(expenseId)
+                firestoreService.deleteExpenseFromList(listId, expenseId)
             }
         } catch (e: Exception) {
             Result.failure(e)
