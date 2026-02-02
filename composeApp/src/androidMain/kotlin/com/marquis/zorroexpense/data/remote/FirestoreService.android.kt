@@ -262,7 +262,6 @@ actual class FirestoreService {
             val userDoc = firestore.collection("Users").document(userId)
             val userSnapshot = userDoc.get()
 
-            @Suppress("UNCHECKED_CAST")
             val currentReferences =
                 (userSnapshot.get("ExpenseListReferences") as? List<DocumentReference>)
                     ?.toMutableList() ?: mutableListOf()

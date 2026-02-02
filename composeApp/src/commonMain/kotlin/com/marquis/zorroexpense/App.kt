@@ -146,9 +146,11 @@ fun App() {
                         val viewModel =
                             AppModule.provideCreateExpenseListViewModel(
                                 userId = userId,
-                                onListCreated = { _, _ ->
-                                    // Navigate back to ExpenseLists which will reload and show the new list
-                                    navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                                onListCreated = { listId, _ ->
+                                    // Navigate directly to the newly created expense list
+                                    navController.navigate(AppDestinations.ExpenseList(listId = listId)) {
+                                        popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
+                                    }
                                 },
                             )
                         CreateExpenseListScreen(
@@ -156,9 +158,11 @@ fun App() {
                             onBackClick = {
                                 navController.popBackStack()
                             },
-                            onListCreated = { _, _ ->
-                                // Navigate back to ExpenseLists which will reload and show the new list
-                                navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                            onListCreated = { listId, _ ->
+                                // Navigate directly to the newly created expense list
+                                navController.navigate(AppDestinations.ExpenseList(listId = listId)) {
+                                    popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
+                                }
                             },
                         )
                     }
