@@ -362,6 +362,8 @@ actual class FirestoreService {
     ): Result<Unit> =
         try {
             firestore
+                .collection("ExpenseLists")
+                .document(listId)
                 .collection("Expenses")
                 .document(expenseId)
                 .delete()

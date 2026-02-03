@@ -397,6 +397,7 @@ fun App() {
                         val expense =
                             Expense(
                                 documentId = editExpense.expenseId,
+                                listId = editExpense.listId,
                                 name = editExpense.expenseName,
                                 description = editExpense.expenseDescription,
                                 price = editExpense.expensePrice,
@@ -408,16 +409,23 @@ fun App() {
                                         icon = editExpense.categoryIcon,
                                         color = editExpense.categoryColor,
                                     ),
-                                paidBy = MockExpenseData.usersMap[editExpense.paidByUserId] ?: User(),
+                                paidBy =
+                                    com.marquis.zorroexpense.domain.model.User(
+                                        userId = editExpense.paidByUserId,
+                                        name = editExpense.paidByUserName,
+                                        profileImage = editExpense.paidByUserProfile,
+                                    ),
                                 splitDetails =
-                                    editExpense.splitDetails.mapNotNull { splitDetailNav ->
-                                        val user = MockExpenseData.usersMap[splitDetailNav.userId]
-                                        if (user != null) {
-                                            com.marquis.zorroexpense.domain.model
-                                                .SplitDetail(user = user, amount = splitDetailNav.amount)
-                                        } else {
-                                            null
-                                        }
+                                    editExpense.splitDetails.map { splitDetailNav ->
+                                        com.marquis.zorroexpense.domain.model.SplitDetail(
+                                            user =
+                                                com.marquis.zorroexpense.domain.model.User(
+                                                    userId = splitDetailNav.userId,
+                                                    name = splitDetailNav.userName,
+                                                    profileImage = splitDetailNav.userProfile,
+                                                ),
+                                            amount = splitDetailNav.amount,
+                                        )
                                     },
                             )
 
