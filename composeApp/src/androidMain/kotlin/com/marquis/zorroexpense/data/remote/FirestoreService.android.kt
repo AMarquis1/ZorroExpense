@@ -297,6 +297,29 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
+    actual suspend fun getExpenseById(
+        listId: String,
+        expenseId: String,
+    ): Result<ExpenseDto?> =
+        try {
+            val snapshot =
+                firestore
+                    .collection("ExpenseLists")
+                    .document(listId)
+                    .collection("Expenses")
+                    .document(expenseId)
+                    .get()
+            val expense =
+                if (snapshot.exists) {
+                    snapshot.data<AndroidExpenseDto>().copy(documentId = snapshot.id)
+                } else {
+                    null
+                }
+            Result.success(expense)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
     actual suspend fun addExpenseToList(
         listId: String,
         expense: ExpenseDto,

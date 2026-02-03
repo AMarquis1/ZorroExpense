@@ -26,6 +26,8 @@ expect fun Any?.toDateString(): String
 
 expect fun Any?.getReferencePath(): String?
 
+expect fun Any?.getListIdPath(): String
+
 expect fun List<Any>.getReferencePaths(): List<String>
 
 expect fun List<Any>.getSplitDetailData(): List<Pair<String, Double>>
@@ -55,6 +57,7 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
 
     return Expense(
         documentId = documentId,
+        listId = listId.getListIdPath(),
         description = description,
         name = name,
         price = price,

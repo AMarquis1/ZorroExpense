@@ -124,6 +124,18 @@ class ExpenseLocalDataSourceImpl(
             Result.failure(e)
         }
 
+    override suspend fun getExpenseById(
+        listId: String,
+        expenseId: String,
+    ): Result<Expense?> =
+        try {
+            val cachedExpenses = cacheManager.get(getListCacheKey(listId))
+            val expense = cachedExpenses?.find { it.documentId == expenseId }
+            Result.success(expense)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
     override suspend fun addExpenseToList(
         listId: String,
         expense: Expense,

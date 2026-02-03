@@ -6,11 +6,9 @@ import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.toDomain
 import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.Expense
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
-/**
- * Remote data source implementation for expenses
- * Handles network-based data operations
- */
 class ExpenseRemoteDataSourceImpl(
     private val firestoreService: FirestoreService,
 ) : ExpenseRemoteDataSource {
@@ -30,6 +28,29 @@ class ExpenseRemoteDataSourceImpl(
                         expenseDtos.map { dto ->
                             dto.toDomain(firestoreService)
                         }
+                    }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun getExpenseById(
+        listId: String,
+        expenseId: String,
+    ): Result<Expense?> =
+        try {
+            if (AppConfig.USE_MOCK_DATA) {
+                // Mock implementation - find expense by ID
+                MockExpenseData
+                    .getMockExpenses()
+                    .getOrDefault(emptyList())
+                    .find { it.documentId == expenseId }
+                    .let { Result.success(it) }
+            } else {
+                firestoreService
+                    .getExpenseById(listId, expenseId)
+                    .mapCatching { dto ->
+                        dto?.toDomain(firestoreService)
                     }
             }
         } catch (e: Exception) {

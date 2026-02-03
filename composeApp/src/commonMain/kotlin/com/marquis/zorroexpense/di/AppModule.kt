@@ -148,6 +148,10 @@ object AppModule {
         GetExpensesByListIdUseCase(expenseRepository)
     }
 
+    private val getExpenseByIdUseCase: com.marquis.zorroexpense.domain.usecase.GetExpenseByIdUseCase by lazy {
+        com.marquis.zorroexpense.domain.usecase.GetExpenseByIdUseCase(expenseRepository)
+    }
+
     private val refreshExpensesUseCase: RefreshExpensesUseCase by lazy {
         RefreshExpensesUseCase(expenseRepository)
     }
@@ -287,7 +291,8 @@ object AppModule {
             expenseToEdit = expenseToEdit,
         )
 
-    fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel = ExpenseDetailViewModel(expense)
+    fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel =
+        ExpenseDetailViewModel(expense)
 
     // =================
     // Public API for Testing and Direct Access

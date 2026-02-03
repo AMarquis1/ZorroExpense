@@ -96,6 +96,29 @@ class ExpenseRepositoryImpl(
         }
 
     /**
+     * Get a single expense by ID with full reference resolution
+     */
+    override suspend fun getExpenseById(
+        listId: String,
+        expenseId: String,
+    ): Result<Expense?> =
+        try {
+            supervisorScope {
+                val remoteResult = remoteDataSource.getExpenseById(listId, expenseId)
+                if (remoteResult.isSuccess) {
+                    Result.success(remoteResult.getOrThrow())
+                } else {
+                    val error =
+                        remoteResult.exceptionOrNull()?.toExpenseError()
+                            ?: ExpenseError.NetworkError("Failed to fetch expense")
+                    Result.failure(error)
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e.toExpenseError())
+        }
+
+    /**
      * Add expense to a list
      */
     override suspend fun addExpenseToList(

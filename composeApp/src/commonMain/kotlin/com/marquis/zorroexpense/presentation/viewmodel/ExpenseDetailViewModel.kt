@@ -20,7 +20,7 @@ class ExpenseDetailViewModel(
     fun onEvent(event: ExpenseDetailUiEvent) {
         when (event) {
             is ExpenseDetailUiEvent.LoadExpense -> {
-                // Already loaded in constructor, but could be used for refresh
+                // Already loaded in constructor
                 _uiState.value = ExpenseDetailUiState.Success(expense)
             }
             is ExpenseDetailUiEvent.BackClicked -> {

@@ -19,6 +19,14 @@ interface ExpenseRepository {
     suspend fun getExpensesByListId(listId: String): Result<List<Expense>>
 
     /**
+     * Get a single expense by ID with full reference resolution
+     */
+    suspend fun getExpenseById(
+        listId: String,
+        expenseId: String,
+    ): Result<Expense?>
+
+    /**
      * Add a new expense to a specific expense list
      */
     suspend fun addExpenseToList(

@@ -42,6 +42,8 @@ sealed class AppDestinations {
         val categoryIcon: String,
         val categoryColor: String,
         val paidByUserId: String,
+        val paidByUserName: String,
+        val paidByUserProfile: String,
         val splitDetailsJson: String,
     ) : AppDestinations() {
         val splitDetails: List<SplitDetailNavigation>
@@ -60,6 +62,8 @@ sealed class AppDestinations {
     @Serializable
     data class SplitDetailNavigation(
         val userId: String,
+        val userName: String,
+        val userProfile: String,
         val amount: Double,
     )
 
@@ -76,6 +80,8 @@ sealed class AppDestinations {
         val categoryIcon: String,
         val categoryColor: String,
         val paidByUserId: String,
+        val paidByUserName: String,
+        val paidByUserProfile: String,
         val splitDetailsJson: String,
     ) : AppDestinations() {
         val splitDetails: List<SplitDetailNavigation>
@@ -85,5 +91,9 @@ sealed class AppDestinations {
                 } catch (e: Exception) {
                     emptyList()
                 }
+
+        companion object {
+            fun createSplitDetailsJson(splitDetails: List<SplitDetailNavigation>): String = Json.encodeToString(splitDetails)
+        }
     }
 }

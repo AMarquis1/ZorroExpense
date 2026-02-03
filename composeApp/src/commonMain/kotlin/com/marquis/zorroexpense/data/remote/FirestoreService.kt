@@ -57,6 +57,11 @@ expect class FirestoreService() {
 
     suspend fun getExpensesByListId(listId: String): Result<List<ExpenseDto>>
 
+    suspend fun getExpenseById(
+        listId: String,
+        expenseId: String,
+    ): Result<ExpenseDto?>
+
     suspend fun addExpenseToList(
         listId: String,
         expense: ExpenseDto,

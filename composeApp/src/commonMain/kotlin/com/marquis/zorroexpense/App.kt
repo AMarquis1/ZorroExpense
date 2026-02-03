@@ -197,11 +197,15 @@ fun App() {
                                             categoryIcon = expense.category.icon,
                                             categoryColor = expense.category.color,
                                             paidByUserId = expense.paidBy.userId,
+                                            paidByUserName = expense.paidBy.name,
+                                            paidByUserProfile = expense.paidBy.profileImage,
                                             splitDetailsJson =
                                                 AppDestinations.ExpenseDetail.createSplitDetailsJson(
                                                     expense.splitDetails.map { splitDetail ->
                                                         AppDestinations.SplitDetailNavigation(
                                                             userId = splitDetail.user.userId,
+                                                            userName = splitDetail.user.name,
+                                                            userProfile = splitDetail.user.profileImage,
                                                             amount = splitDetail.amount,
                                                         )
                                                     },
@@ -278,7 +282,6 @@ fun App() {
                     }
 
                     composable<AppDestinations.ExpenseDetail> { backStackEntry ->
-                        // Auth guard: redirect to login if not authenticated
                         LaunchedEffect(globalAuthState) {
                             if (globalAuthState is GlobalAuthState.Unauthenticated) {
                                 navController.navigate(AppDestinations.Login) {
@@ -291,6 +294,7 @@ fun App() {
                         val expense =
                             Expense(
                                 documentId = expenseDetail.expenseId,
+                                listId = expenseDetail.listId,
                                 name = expenseDetail.expenseName,
                                 description = expenseDetail.expenseDescription,
                                 price = expenseDetail.expensePrice,
@@ -302,16 +306,23 @@ fun App() {
                                         icon = expenseDetail.categoryIcon,
                                         color = expenseDetail.categoryColor,
                                     ),
-                                paidBy = MockExpenseData.usersMap[expenseDetail.paidByUserId] ?: User(),
+                                paidBy =
+                                    com.marquis.zorroexpense.domain.model.User(
+                                        userId = expenseDetail.paidByUserId,
+                                        name = expenseDetail.paidByUserName,
+                                        profileImage = expenseDetail.paidByUserProfile,
+                                    ),
                                 splitDetails =
-                                    expenseDetail.splitDetails.mapNotNull { splitDetailNav ->
-                                        val user = MockExpenseData.usersMap[splitDetailNav.userId]
-                                        if (user != null) {
-                                            com.marquis.zorroexpense.domain.model
-                                                .SplitDetail(user = user, amount = splitDetailNav.amount)
-                                        } else {
-                                            null
-                                        }
+                                    expenseDetail.splitDetails.map { splitDetailNav ->
+                                        com.marquis.zorroexpense.domain.model.SplitDetail(
+                                            user =
+                                                com.marquis.zorroexpense.domain.model.User(
+                                                    userId = splitDetailNav.userId,
+                                                    name = splitDetailNav.userName,
+                                                    profileImage = splitDetailNav.userProfile,
+                                                ),
+                                            amount = splitDetailNav.amount,
+                                        )
                                     },
                             )
 
@@ -351,11 +362,15 @@ fun App() {
                                         categoryIcon = expenseToEdit.category.icon,
                                         categoryColor = expenseToEdit.category.color,
                                         paidByUserId = expenseToEdit.paidBy.userId,
+                                        paidByUserName = expenseToEdit.paidBy.name,
+                                        paidByUserProfile = expenseToEdit.paidBy.profileImage,
                                         splitDetailsJson =
-                                            AppDestinations.ExpenseDetail.createSplitDetailsJson(
+                                            AppDestinations.EditExpense.createSplitDetailsJson(
                                                 expenseToEdit.splitDetails.map { splitDetail ->
                                                     AppDestinations.SplitDetailNavigation(
                                                         userId = splitDetail.user.userId,
+                                                        userName = splitDetail.user.name,
+                                                        userProfile = splitDetail.user.profileImage,
                                                         amount = splitDetail.amount,
                                                     )
                                                 },

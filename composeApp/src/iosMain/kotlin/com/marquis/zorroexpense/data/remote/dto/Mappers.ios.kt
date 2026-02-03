@@ -23,6 +23,13 @@ actual fun Any?.toDateString(): String =
 // Platform-specific helper functions for iOS
 actual fun Any?.getReferencePath(): String? = (this as? DocumentReference)?.path
 
+actual fun Any?.getListIdPath(): String =
+    when (this) {
+        is DocumentReference -> this.path
+        is String -> this
+        else -> ""
+    }
+
 actual fun List<Any>.getReferencePaths(): List<String> = this.mapNotNull { (it as? DocumentReference)?.path }
 
 actual fun List<Any>.getSplitDetailData(): List<Pair<String, Double>> =
