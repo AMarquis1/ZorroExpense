@@ -7,6 +7,12 @@ import com.marquis.zorroexpense.domain.model.ExpenseList
  */
 interface ExpenseListRepository {
     /**
+     * Force refresh all expense lists for a user, bypassing cache
+     * Always fetches from remote data source
+     */
+    suspend fun refreshUserExpenseLists(userId: String): Result<List<ExpenseList>>
+
+    /**
      * Get all expense lists for a user (lists they own or are members of)
      */
     suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseList>>

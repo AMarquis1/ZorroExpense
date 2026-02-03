@@ -8,6 +8,7 @@ import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
+import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
 import com.marquis.zorroexpense.presentation.state.SortOption
@@ -25,6 +26,7 @@ class ExpenseListViewModel(
     private val listId: String,
     val listName: String = "",
     private val getExpensesByListIdUseCase: GetExpensesByListIdUseCase,
+    private val refreshExpensesUseCase: RefreshExpensesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
     private val calculateDebtsUseCase: CalculateDebtsUseCase,
@@ -95,7 +97,7 @@ class ExpenseListViewModel(
     fun onEvent(event: ExpenseListUiEvent) {
         when (event) {
             is ExpenseListUiEvent.LoadExpenses -> loadExpenses(isRefresh = false)
-            is ExpenseListUiEvent.RefreshExpenses -> loadExpenses(isRefresh = true)
+            is ExpenseListUiEvent.RefreshExpenses -> loadExpenses(isRefresh = true, forceRefresh = true)
             is ExpenseListUiEvent.SearchQueryChanged -> updateSearchQuery(event.query)
             is ExpenseListUiEvent.SearchExpandedChanged -> updateSearchExpanded(event.isExpanded)
             is ExpenseListUiEvent.CategoryToggled -> toggleCategory(event.category)
@@ -111,7 +113,7 @@ class ExpenseListViewModel(
         }
     }
 
-    private fun loadExpenses(isRefresh: Boolean = false) {
+    private fun loadExpenses(isRefresh: Boolean = false, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             val currentState = _uiState.value
 
@@ -131,8 +133,12 @@ class ExpenseListViewModel(
             }
 
             // Load both expenses and categories
-            // Always load by listId since it's required
-            val expensesResult = getExpensesByListIdUseCase(listId)
+            // Use refreshExpensesUseCase for force refresh (pull-to-refresh), otherwise use cache-first strategy
+            val expensesResult = if (forceRefresh) {
+                refreshExpensesUseCase(listId)
+            } else {
+                getExpensesByListIdUseCase(listId)
+            }
             val categoriesResult = getCategoriesUseCase()
 
             if (expensesResult.isSuccess && categoriesResult.isSuccess) {

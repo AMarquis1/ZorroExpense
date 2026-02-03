@@ -35,6 +35,7 @@ import com.marquis.zorroexpense.domain.usecase.LoginUseCase
 import com.marquis.zorroexpense.domain.usecase.LogoutUseCase
 import com.marquis.zorroexpense.domain.usecase.ObserveAuthStateUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
+import com.marquis.zorroexpense.domain.usecase.RefreshUserExpenseListsUseCase
 import com.marquis.zorroexpense.domain.usecase.SignUpUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
@@ -193,6 +194,10 @@ object AppModule {
         JoinExpenseListUseCase(expenseListRepository)
     }
 
+    private val refreshUserExpenseListsUseCase: RefreshUserExpenseListsUseCase by lazy {
+        RefreshUserExpenseListsUseCase(expenseListRepository)
+    }
+
     // =================
     // Presentation Layer
     // =================
@@ -229,6 +234,7 @@ object AppModule {
             expenseListsViewModel ?: ExpenseListsViewModel(
                 userId = userId,
                 getUserExpenseListsUseCase = getUserExpenseListsUseCase,
+                refreshUserExpenseListsUseCase = refreshUserExpenseListsUseCase,
                 joinExpenseListUseCase = joinExpenseListUseCase,
                 getUsersUseCase = getUsersUseCase,
                 onListSelected = onListSelected,
@@ -273,6 +279,7 @@ object AppModule {
                     listId = listId,
                     listName = listName,
                     getExpensesByListIdUseCase = getExpensesByListIdUseCase,
+                    refreshExpensesUseCase = refreshExpensesUseCase,
                     getCategoriesUseCase = getCategoriesUseCase,
                     deleteExpenseUseCase = deleteExpenseUseCase,
                     calculateDebtsUseCase = calculateDebtsUseCase,

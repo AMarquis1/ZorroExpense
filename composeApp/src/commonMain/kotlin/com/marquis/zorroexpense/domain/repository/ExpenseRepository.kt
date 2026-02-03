@@ -8,10 +8,10 @@ import com.marquis.zorroexpense.domain.model.Expense
  */
 interface ExpenseRepository {
     /**
-     * Force refresh expenses, bypassing cache
-     * Always fetches from remote data source
+     * Force refresh expenses for a specific list, bypassing cache
+     * Always fetches from remote data source and updates cache
      */
-//    suspend fun refreshExpenses(userId: String): Result<List<Expense>>
+    suspend fun refreshExpensesByListId(listId: String): Result<List<Expense>>
 
     /**
      * Get expenses for a specific expense list

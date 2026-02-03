@@ -34,6 +34,20 @@ class ExpenseListRepositoryImpl(
         } ?: list
     }
 
+    override suspend fun refreshUserExpenseLists(userId: String): Result<List<ExpenseList>> =
+        mutex.withLock {
+            firestoreService
+                .getUserExpenseLists(userId)
+                .mapCatching { dtos ->
+                    dtos
+                        .map { it.toDomain(firestoreService) }
+                        .map { enrichListMembers(it) }
+                        .also { lists ->
+                            cachedLists = cachedLists + (userId to lists)
+                        }
+                }
+        }
+
     override suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseList>> =
         mutex.withLock {
             firestoreService

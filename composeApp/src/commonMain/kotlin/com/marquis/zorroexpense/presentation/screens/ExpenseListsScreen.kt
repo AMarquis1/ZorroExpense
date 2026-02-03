@@ -52,17 +52,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.platform.pullToRefreshBox
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiState
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsViewModel
 
 @Composable
-fun ExpenseListsScreen(
+internal fun ExpenseListsScreen(
     viewModel: ExpenseListsViewModel,
     onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     onCreateNewList: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Pull-to-refresh state
+    val isRefreshing = (uiState as? ExpenseListsUiState.Success)?.isRefreshing ?: false
 
     Scaffold(
         floatingActionButton = {
@@ -75,65 +79,73 @@ fun ExpenseListsScreen(
             }
         },
     ) { paddingValues ->
-        Column(
+        pullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.onEvent(ExpenseListsUiEvent.RefreshLists) },
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.surface),
+                    .padding(paddingValues),
         ) {
-            // Modern gradient header
-            ModernHeader()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
+            ) {
+                // Modern gradient header
+                ModernHeader()
 
-            // Content based on state
-            Box(modifier = Modifier.fillMaxSize()) {
-                when (uiState) {
-                    ExpenseListsUiState.Loading -> {
-                        LoadingState()
-                    }
 
-                    is ExpenseListsUiState.Success -> {
-                        val successState = uiState as ExpenseListsUiState.Success
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            // Show refresh indicator when refreshing
-                            if (successState.isRefreshing) {
-                                LinearProgressIndicator(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = MaterialTheme.colorScheme.primary,
+                // Content based on state
+                Box(modifier = Modifier.fillMaxSize()) {
+                    when (uiState) {
+                        is ExpenseListsUiState.Loading -> {
+                            LoadingState()
+                        }
+
+                        is ExpenseListsUiState.Success -> {
+                            val successState = uiState as ExpenseListsUiState.Success
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                // Show refresh indicator when refreshing
+                                if (successState.isRefreshing) {
+                                    LinearProgressIndicator(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                                SuccessState(
+                                    lists = successState.lists,
+                                    onListSelected = { list ->
+                                        viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
+                                        onListSelected(list.listId, list.name)
+                                    },
                                 )
                             }
-                            SuccessState(
-                                lists = successState.lists,
-                                onListSelected = { list ->
-                                    viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
-                                    onListSelected(list.listId, list.name)
-                                },
-                            )
                         }
-                    }
 
-                    ExpenseListsUiState.Empty -> {
-                        EmptyState(onCreateNewList = onCreateNewList)
-                    }
+                        is ExpenseListsUiState.Empty -> {
+                            EmptyState(onCreateNewList = onCreateNewList)
+                        }
 
-                    is ExpenseListsUiState.Error -> {
-                        val errorState = uiState as ExpenseListsUiState.Error
-                        if (errorState.cachedLists != null) {
-                            // Show cached lists with error message
-                            ErrorStateWithCache(
-                                message = errorState.message,
-                                lists = errorState.cachedLists,
-                                onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
-                                onListSelected = { list ->
-                                    viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
-                                    onListSelected(list.listId, list.name)
-                                },
-                            )
-                        } else {
-                            ErrorState(
-                                message = errorState.message,
-                                onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
-                            )
+                        is ExpenseListsUiState.Error -> {
+                            val errorState = uiState as ExpenseListsUiState.Error
+                            if (errorState.cachedLists != null) {
+                                // Show cached lists with error message
+                                ErrorStateWithCache(
+                                    message = errorState.message,
+                                    lists = errorState.cachedLists,
+                                    onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
+                                    onListSelected = { list ->
+                                        viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
+                                        onListSelected(list.listId, list.name)
+                                    },
+                                )
+                            } else {
+                                ErrorState(
+                                    message = errorState.message,
+                                    onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
+                                )
+                            }
                         }
                     }
                 }
@@ -184,17 +196,7 @@ private fun LoadingState() {
     Box(
         modifier =
             Modifier
-                .fillMaxSize()
-                .background(
-                    brush =
-                        Brush.verticalGradient(
-                            colors =
-                                listOf(
-                                    MaterialTheme.colorScheme.surface,
-                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                                ),
-                        ),
-                ),
+                .fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -404,7 +406,7 @@ private fun ExpenseListCard(
 }
 
 @Composable
-private fun EmptyState(onCreateNewList: () -> Unit) {
+fun EmptyState(onCreateNewList: () -> Unit) {
     Column(
         modifier =
             Modifier

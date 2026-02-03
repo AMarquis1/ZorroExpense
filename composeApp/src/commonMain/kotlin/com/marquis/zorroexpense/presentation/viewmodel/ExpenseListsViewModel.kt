@@ -7,6 +7,8 @@ import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.JoinExpenseListUseCase
+import com.marquis.zorroexpense.domain.usecase.RefreshUserExpenseListsUseCase
+import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.launch
 class ExpenseListsViewModel(
     private val userId: String,
     private val getUserExpenseListsUseCase: GetUserExpenseListsUseCase,
+    private val refreshUserExpenseListsUseCase: RefreshUserExpenseListsUseCase,
     private val joinExpenseListUseCase: JoinExpenseListUseCase,
     private val getUsersUseCase: GetUsersUseCase,
     private val onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
@@ -35,27 +38,24 @@ class ExpenseListsViewModel(
 
     fun onEvent(event: ExpenseListsUiEvent) {
         when (event) {
-            ExpenseListsUiEvent.LoadLists -> loadLists()
-            ExpenseListsUiEvent.CreateNewList -> {
-                // This will be handled by navigation callback
-            }
+            is ExpenseListsUiEvent.LoadLists -> loadLists()
+            is ExpenseListsUiEvent.RefreshLists -> refreshLists()
+            is ExpenseListsUiEvent.CreateNewList -> {}
             is ExpenseListsUiEvent.SelectList -> selectList(event.listId)
             is ExpenseListsUiEvent.JoinList -> joinList(event.shareCode)
-            ExpenseListsUiEvent.RetryLoad -> loadLists()
+            is ExpenseListsUiEvent.RetryLoad -> loadLists()
         }
     }
 
     fun refreshLists() {
-        // Load with cache - shows cached data while refreshing
-        loadListsWithCache(showCacheImmediately = true)
+        loadListsWithCache(showCacheImmediately = true, forceRefresh = true)
     }
 
     private fun loadLists() {
-        // Initial load without cache optimization
-        loadListsWithCache(showCacheImmediately = false)
+        loadListsWithCache(showCacheImmediately = false, forceRefresh = false)
     }
 
-    private fun loadListsWithCache(showCacheImmediately: Boolean) {
+    private fun loadListsWithCache(showCacheImmediately: Boolean, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             // Check if we should show cache immediately
             val currentState = _uiState.value
@@ -69,7 +69,12 @@ class ExpenseListsViewModel(
                 _uiState.value = ExpenseListsUiState.Loading
             }
 
-            val result = getUserExpenseListsUseCase.invoke(userId)
+            // Use refresh use case for force refresh (pull-to-refresh), otherwise use normal get
+            val result = if (forceRefresh) {
+                refreshUserExpenseListsUseCase.invoke(userId)
+            } else {
+                getUserExpenseListsUseCase.invoke(userId)
+            }
 
             result.onSuccess { lists ->
                 val allUserIds = lists.flatMap { list -> list.members.map { "Users/${it.userId}" } }.distinct()

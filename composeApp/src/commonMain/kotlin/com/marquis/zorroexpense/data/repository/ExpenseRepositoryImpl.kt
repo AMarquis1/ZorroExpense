@@ -29,35 +29,36 @@ class ExpenseRepositoryImpl(
     private val repositoryMutex = Mutex()
 
     /**
-     * Force refresh with optimized error handling
+     * Force refresh expenses for a specific list, bypassing cache
+     * Always fetches from remote data source and updates cache
      */
-//    override suspend fun refreshExpenses(userId: String): Result<List<Expense>> =
-//        try {
-//            supervisorScope {
-//                val remoteResult = remoteDataSource.getExpenses(userId)
-//
-//                if (remoteResult.isSuccess) {
-//                    val expenses = remoteResult.getOrThrow()
-//
-//                    // Update cache in background without blocking
-//                    async {
-//                        runCatching {
-//                            localDataSource.cacheExpenses(expenses)
-//                        }
-//                    }
-//
-//                    Result.success(expenses)
-//                } else {
-//                    // Convert to domain error
-//                    val error =
-//                        remoteResult.exceptionOrNull()?.toExpenseError()
-//                            ?: ExpenseError.NetworkError("Failed to refresh expenses")
-//                    Result.failure(error)
-//                }
-//            }
-//        } catch (e: Exception) {
-//            Result.failure(e.toExpenseError())
-//        }
+    override suspend fun refreshExpensesByListId(listId: String): Result<List<Expense>> =
+        try {
+            supervisorScope {
+                val remoteResult = remoteDataSource.getExpensesByListId(listId)
+
+                if (remoteResult.isSuccess) {
+                    val expenses = remoteResult.getOrThrow()
+
+                    // Update cache in background without blocking
+                    async {
+                        runCatching {
+                            localDataSource.cacheExpensesForList(listId, expenses)
+                        }
+                    }
+
+                    Result.success(expenses)
+                } else {
+                    // Convert to domain error
+                    val error =
+                        remoteResult.exceptionOrNull()?.toExpenseError()
+                            ?: ExpenseError.NetworkError("Failed to refresh expenses")
+                    Result.failure(error)
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e.toExpenseError())
+        }
 
     /**
      * Non-blocking cache clear

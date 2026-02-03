@@ -28,6 +28,7 @@ sealed class ExpenseListsUiEvent {
     data object LoadLists : ExpenseListsUiEvent()
 
     data object CreateNewList : ExpenseListsUiEvent()
+    data object RefreshLists: ExpenseListsUiEvent()
 
     data class SelectList(
         val listId: String,
