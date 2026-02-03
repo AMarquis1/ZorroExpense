@@ -10,10 +10,12 @@ sealed class ExpenseListsUiState {
 
     data class Success(
         val lists: List<ExpenseList>,
+        val isRefreshing: Boolean = false,
     ) : ExpenseListsUiState()
 
     data class Error(
         val message: String,
+        val cachedLists: List<ExpenseList>? = null,
     ) : ExpenseListsUiState()
 
     data object Empty : ExpenseListsUiState()

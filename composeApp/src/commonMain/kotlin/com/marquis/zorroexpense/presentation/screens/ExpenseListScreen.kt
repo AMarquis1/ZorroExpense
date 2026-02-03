@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
@@ -214,9 +215,11 @@ fun ExpenseListScreen(
     onDeleteFlowComplete: () -> Unit = {},
     updatedExpenseName: String? = null,
     onUpdateFlowComplete: () -> Unit = {},
+    onBackPressed: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
+    val listName by remember { mutableStateOf(viewModel.listName) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -460,9 +463,20 @@ fun ExpenseListScreen(
                                 shape = RoundedCornerShape(25.dp),
                             )
                         } else {
-                            // Collapsed state: App title + search icon + filter icon
+                            // Collapsed state: Back arrow + list title + search icon + filter icon
+                            IconButton(
+                                onClick = onBackPressed,
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = androidx.compose.ui.graphics.Color.White,
+                                    modifier = Modifier.size(28.dp),
+                                )
+                            }
+
                             Text(
-                                text = "Zorro Expense",
+                                text = listName,
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = androidx.compose.ui.graphics.Color.White,

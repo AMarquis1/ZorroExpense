@@ -27,6 +27,8 @@ class ExpenseListsViewModel(
     private val _uiState = MutableStateFlow<ExpenseListsUiState>(ExpenseListsUiState.Loading)
     val uiState: StateFlow<ExpenseListsUiState> = _uiState.asStateFlow()
 
+    private var cachedLists: List<ExpenseList>? = null
+
     init {
         loadLists()
     }
@@ -44,12 +46,29 @@ class ExpenseListsViewModel(
     }
 
     fun refreshLists() {
-        loadLists()
+        // Load with cache - shows cached data while refreshing
+        loadListsWithCache(showCacheImmediately = true)
     }
 
     private fun loadLists() {
+        // Initial load without cache optimization
+        loadListsWithCache(showCacheImmediately = false)
+    }
+
+    private fun loadListsWithCache(showCacheImmediately: Boolean) {
         viewModelScope.launch {
-            _uiState.value = ExpenseListsUiState.Loading
+            // Check if we should show cache immediately
+            val currentState = _uiState.value
+            val shouldShowCacheImmediately = showCacheImmediately || (currentState is ExpenseListsUiState.Success)
+
+            // If we have cached data and should show it immediately, do so
+            if (shouldShowCacheImmediately && (cachedLists != null || currentState is ExpenseListsUiState.Success)) {
+                val listsToShow = cachedLists ?: (currentState as? ExpenseListsUiState.Success)?.lists ?: emptyList()
+                _uiState.value = ExpenseListsUiState.Success(listsToShow, isRefreshing = true)
+            } else {
+                _uiState.value = ExpenseListsUiState.Loading
+            }
+
             val result = getUserExpenseListsUseCase.invoke(userId)
 
             result.onSuccess { lists ->
@@ -68,6 +87,8 @@ class ExpenseListsViewModel(
                             list.copy(members = enrichedMembers)
                         }
 
+                        cachedLists = enrichedLists
+
                         _uiState.value =
                             if (enrichedLists.isEmpty()) {
                                 ExpenseListsUiState.Empty
@@ -75,6 +96,8 @@ class ExpenseListsViewModel(
                                 ExpenseListsUiState.Success(enrichedLists)
                             }
                     }.onFailure {
+                        cachedLists = lists
+
                         _uiState.value =
                             if (lists.isEmpty()) {
                                 ExpenseListsUiState.Empty
@@ -83,6 +106,8 @@ class ExpenseListsViewModel(
                             }
                     }
                 } else {
+                    cachedLists = lists
+
                     _uiState.value =
                         if (lists.isEmpty()) {
                             ExpenseListsUiState.Empty
@@ -93,9 +118,11 @@ class ExpenseListsViewModel(
             }
 
             result.onFailure { error ->
+                // Show error but keep cached data visible if available
                 _uiState.value =
                     ExpenseListsUiState.Error(
                         error.message ?: "Failed to load expense lists",
+                        cachedLists,
                     )
             }
         }

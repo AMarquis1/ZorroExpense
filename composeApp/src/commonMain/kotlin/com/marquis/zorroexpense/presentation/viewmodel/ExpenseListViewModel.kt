@@ -23,6 +23,7 @@ import kotlinx.datetime.toLocalDateTime
 class ExpenseListViewModel(
     private val userId: String,
     private val listId: String,
+    val listName: String = "",
     private val getExpensesByListIdUseCase: GetExpensesByListIdUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,

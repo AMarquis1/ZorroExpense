@@ -35,11 +35,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -47,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,15 +59,10 @@ import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsViewModel
 @Composable
 fun ExpenseListsScreen(
     viewModel: ExpenseListsViewModel,
-    onListSelected: (listId: String) -> Unit = {},
+    onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     onCreateNewList: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    // Refresh lists when screen is displayed
-    LaunchedEffect(Unit) {
-        viewModel.refreshLists()
-    }
 
     Scaffold(
         floatingActionButton = {
@@ -99,13 +93,23 @@ fun ExpenseListsScreen(
                     }
 
                     is ExpenseListsUiState.Success -> {
-                        SuccessState(
-                            lists = (uiState as ExpenseListsUiState.Success).lists,
-                            onListSelected = { list ->
-                                viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
-                                onListSelected(list.listId)
-                            },
-                        )
+                        val successState = uiState as ExpenseListsUiState.Success
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            // Show refresh indicator when refreshing
+                            if (successState.isRefreshing) {
+                                LinearProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                            SuccessState(
+                                lists = successState.lists,
+                                onListSelected = { list ->
+                                    viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
+                                    onListSelected(list.listId, list.name)
+                                },
+                            )
+                        }
                     }
 
                     ExpenseListsUiState.Empty -> {
@@ -113,10 +117,24 @@ fun ExpenseListsScreen(
                     }
 
                     is ExpenseListsUiState.Error -> {
-                        ErrorState(
-                            message = (uiState as ExpenseListsUiState.Error).message,
-                            onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
-                        )
+                        val errorState = uiState as ExpenseListsUiState.Error
+                        if (errorState.cachedLists != null) {
+                            // Show cached lists with error message
+                            ErrorStateWithCache(
+                                message = errorState.message,
+                                lists = errorState.cachedLists,
+                                onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
+                                onListSelected = { list ->
+                                    viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
+                                    onListSelected(list.listId, list.name)
+                                },
+                            )
+                        } else {
+                            ErrorState(
+                                message = errorState.message,
+                                onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
+                            )
+                        }
                     }
                 }
             }
@@ -467,6 +485,70 @@ private fun EmptyState(onCreateNewList: () -> Unit) {
             )
             Text("Create New List")
         }
+    }
+}
+
+@Composable
+private fun ErrorStateWithCache(
+    message: String,
+    lists: List<ExpenseList>,
+    onRetry: () -> Unit,
+    onListSelected: (ExpenseList) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Error banner at the top
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(20.dp),
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Error Loading Updates",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+                Button(
+                    onClick = onRetry,
+                    modifier =
+                        Modifier
+                            .height(32.dp),
+                    shape = RoundedCornerShape(6.dp),
+                ) {
+                    Text(
+                        "Retry",
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
+        }
+
+        // Show cached lists below the error banner
+        SuccessState(
+            lists = lists,
+            onListSelected = onListSelected,
+        )
     }
 }
 

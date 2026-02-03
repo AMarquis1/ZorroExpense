@@ -215,20 +215,27 @@ object AppModule {
         return viewModel
     }
 
+    private var expenseListsViewModel: ExpenseListsViewModel? = null
+
     /**
      * Provide ExpenseListsViewModel for list selection
+     * Cached as singleton to preserve state when navigating back
      */
     fun provideExpenseListsViewModel(
         userId: String,
         onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
-    ): ExpenseListsViewModel =
-        ExpenseListsViewModel(
-            userId = userId,
-            getUserExpenseListsUseCase = getUserExpenseListsUseCase,
-            joinExpenseListUseCase = joinExpenseListUseCase,
-            getUsersUseCase = getUsersUseCase,
-            onListSelected = onListSelected,
-        )
+    ): ExpenseListsViewModel {
+        val viewModel =
+            expenseListsViewModel ?: ExpenseListsViewModel(
+                userId = userId,
+                getUserExpenseListsUseCase = getUserExpenseListsUseCase,
+                joinExpenseListUseCase = joinExpenseListUseCase,
+                getUsersUseCase = getUsersUseCase,
+                onListSelected = onListSelected,
+            ).also { expenseListsViewModel = it }
+
+        return viewModel
+    }
 
     fun provideCreateExpenseListViewModel(
         userId: String,
@@ -251,6 +258,7 @@ object AppModule {
     fun provideExpenseListViewModel(
         userId: String,
         listId: String,
+        listName: String = "",
         onExpenseClick: (Expense) -> Unit = {},
         onAddExpenseClick: () -> Unit = {},
     ): ExpenseListViewModel {
@@ -263,6 +271,7 @@ object AppModule {
                 ExpenseListViewModel(
                     userId = userId,
                     listId = listId,
+                    listName = listName,
                     getExpensesByListIdUseCase = getExpensesByListIdUseCase,
                     getCategoriesUseCase = getCategoriesUseCase,
                     deleteExpenseUseCase = deleteExpenseUseCase,
@@ -349,6 +358,7 @@ object AppModule {
      */
     fun clearAuthenticatedData() {
         authViewModel = null
+        expenseListsViewModel = null
         clearAllViewModels()
         clearAllCaches()
     }
@@ -358,6 +368,7 @@ object AppModule {
      */
     fun resetForTesting() {
         authViewModel = null
+        expenseListsViewModel = null
         clearAllViewModels()
         clearAllCaches()
     }

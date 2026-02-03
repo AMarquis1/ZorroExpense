@@ -117,14 +117,11 @@ fun App() {
                         val viewModel =
                             AppModule.provideExpenseListsViewModel(
                                 userId = userId,
-                                onListSelected = { listId, _ ->
-                                    navController.navigate(AppDestinations.ExpenseList(listId = listId))
-                                },
                             )
                         ExpenseListsScreen(
                             viewModel = viewModel,
-                            onListSelected = { listId ->
-                                navController.navigate(AppDestinations.ExpenseList(listId = listId))
+                            onListSelected = { listId, listName ->
+                                navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName))
                             },
                             onCreateNewList = {
                                 navController.navigate(AppDestinations.CreateExpenseList)
@@ -146,9 +143,9 @@ fun App() {
                         val viewModel =
                             AppModule.provideCreateExpenseListViewModel(
                                 userId = userId,
-                                onListCreated = { listId, _ ->
+                                onListCreated = { listId, listName ->
                                     // Navigate directly to the newly created expense list
-                                    navController.navigate(AppDestinations.ExpenseList(listId = listId)) {
+                                    navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
                                         popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
                                     }
                                 },
@@ -158,9 +155,9 @@ fun App() {
                             onBackClick = {
                                 navController.popBackStack()
                             },
-                            onListCreated = { listId, _ ->
+                            onListCreated = { listId, listName ->
                                 // Navigate directly to the newly created expense list
-                                navController.navigate(AppDestinations.ExpenseList(listId = listId)) {
+                                navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
                                     popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
                                 }
                             },
@@ -183,6 +180,7 @@ fun App() {
                             AppModule.provideExpenseListViewModel(
                                 userId = userId,
                                 listId = expenseListRoute.listId,
+                                listName = expenseListRoute.listName,
                                 onExpenseClick = { expense ->
                                     navController.navigate(
                                         AppDestinations.ExpenseDetail(
@@ -243,6 +241,9 @@ fun App() {
                             onUpdateFlowComplete = {
                                 // Clear update state after snackbar is shown
                                 updatedExpenseName = null
+                            },
+                            onBackPressed = {
+                                navController.popBackStack()
                             },
                         )
                     }
