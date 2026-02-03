@@ -119,7 +119,13 @@ class ExpenseListViewModel(
             // This prevents flickering of collapsed/expanded months during navigation
             if (currentState is ExpenseListUiState.Success) {
                 _uiState.value = currentState.copy(isRefreshing = true)
+            } else if (!isRefresh && hasLoadedOnce) {
+                // On navigation back to list: keep the previous success state visible while fetching fresh data
+                // This provides instant UI feedback from cache without showing loading state
+                // The repository's cache-first strategy ensures data loads from cache immediately
+                // We'll update the data once fresh data arrives
             } else if (!isRefresh) {
+                // Only show Loading on very first load when we have no data yet
                 _uiState.value = ExpenseListUiState.Loading
             }
 

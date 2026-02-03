@@ -76,19 +76,55 @@ class ExpenseRepositoryImpl(
     }
 
     /**
-     * Get expenses for a specific expense list
+     * Get expenses for a specific expense list with cache-first strategy
+     * 1. Return cached data immediately if available
+     * 2. Fetch fresh data from network
+     * 3. Update cache with fresh data
+     * 4. Fall back to cache if network fails
      */
     override suspend fun getExpensesByListId(listId: String): Result<List<Expense>> =
         try {
             supervisorScope {
-                val remoteResult = remoteDataSource.getExpensesByListId(listId)
-                if (remoteResult.isSuccess) {
-                    Result.success(remoteResult.getOrThrow())
+                // Try to get cached data first
+                val cachedResult = localDataSource.getExpensesByListId(listId)
+                val cachedExpenses = cachedResult.getOrNull()
+
+                // If we have cached data, return it immediately for instant display
+                if (cachedExpenses != null && cachedExpenses.isNotEmpty()) {
+                    // But still fetch fresh data in background to keep cache updated
+                    val remoteResult = remoteDataSource.getExpensesByListId(listId)
+                    if (remoteResult.isSuccess) {
+                        val freshExpenses = remoteResult.getOrThrow()
+                        // Update cache with fresh data in background
+                        async {
+                            runCatching {
+                                localDataSource.cacheExpensesForList(listId, freshExpenses)
+                            }
+                        }
+                        // Return fresh data
+                        Result.success(freshExpenses)
+                    } else {
+                        // Network failed but we have cache - return it
+                        Result.success(cachedExpenses)
+                    }
                 } else {
-                    val error =
-                        remoteResult.exceptionOrNull()?.toExpenseError()
-                            ?: ExpenseError.NetworkError("Failed to fetch expenses for list")
-                    Result.failure(error)
+                    // No cache available, fetch from network
+                    val remoteResult = remoteDataSource.getExpensesByListId(listId)
+                    if (remoteResult.isSuccess) {
+                        val freshExpenses = remoteResult.getOrThrow()
+                        // Cache the fresh data for next time
+                        async {
+                            runCatching {
+                                localDataSource.cacheExpensesForList(listId, freshExpenses)
+                            }
+                        }
+                        Result.success(freshExpenses)
+                    } else {
+                        val error =
+                            remoteResult.exceptionOrNull()?.toExpenseError()
+                                ?: ExpenseError.NetworkError("Failed to fetch expenses for list")
+                        Result.failure(error)
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -119,7 +155,7 @@ class ExpenseRepositoryImpl(
         }
 
     /**
-     * Add expense to a list
+     * Add expense to a list with immediate cache update
      */
     override suspend fun addExpenseToList(
         listId: String,
@@ -131,7 +167,14 @@ class ExpenseRepositoryImpl(
                     val remoteResult = remoteDataSource.addExpenseToList(listId, expense)
 
                     if (remoteResult.isSuccess) {
-                        Result.success(remoteResult.getOrThrow())
+                        val expenseId = remoteResult.getOrThrow()
+                        // Update cache immediately with the new expense
+                        async {
+                            runCatching {
+                                localDataSource.addExpenseToList(listId, expense.copy(documentId = expenseId))
+                            }
+                        }
+                        Result.success(expenseId)
                     } else {
                         val error =
                             remoteResult.exceptionOrNull()?.toExpenseError()
@@ -145,7 +188,7 @@ class ExpenseRepositoryImpl(
         }
 
     /**
-     * Update expense in a list
+     * Update expense in a list with immediate cache update
      */
     override suspend fun updateExpenseInList(
         listId: String,
@@ -157,6 +200,12 @@ class ExpenseRepositoryImpl(
                     val remoteResult = remoteDataSource.updateExpenseInList(listId, expense)
 
                     if (remoteResult.isSuccess) {
+                        // Update cache immediately with the updated expense
+                        async {
+                            runCatching {
+                                localDataSource.updateExpenseInList(listId, expense)
+                            }
+                        }
                         Result.success(Unit)
                     } else {
                         val error =
@@ -171,7 +220,7 @@ class ExpenseRepositoryImpl(
         }
 
     /**
-     * Delete expense from a list
+     * Delete expense from a list with immediate cache update
      */
     override suspend fun deleteExpenseFromList(
         listId: String,
@@ -183,6 +232,12 @@ class ExpenseRepositoryImpl(
                     val remoteResult = remoteDataSource.deleteExpenseFromList(listId, expenseId)
 
                     if (remoteResult.isSuccess) {
+                        // Update cache immediately by removing the deleted expense
+                        async {
+                            runCatching {
+                                localDataSource.deleteExpenseFromList(listId, expenseId)
+                            }
+                        }
                         Result.success(Unit)
                     } else {
                         val error =

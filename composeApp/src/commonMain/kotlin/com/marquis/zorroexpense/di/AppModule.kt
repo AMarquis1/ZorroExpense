@@ -241,10 +241,11 @@ object AppModule {
             onListCreated = onListCreated,
         )
 
-    private var expenseListViewModel: ExpenseListViewModel? = null
+    private val expenseListViewModels = mutableMapOf<String, ExpenseListViewModel>()
 
     /**
      * Provide ExpenseListViewModel with proper lifecycle management
+     * Caches ViewModel instances per listId to preserve state when navigating back
      * Uses clean dependency injection with interfaces
      */
     fun provideExpenseListViewModel(
@@ -253,26 +254,43 @@ object AppModule {
         onExpenseClick: (Expense) -> Unit = {},
         onAddExpenseClick: () -> Unit = {},
     ): ExpenseListViewModel {
-        // Get or create singleton instance - note: create new instance per userId for proper data isolation
-        val viewModel =
-            ExpenseListViewModel(
-                userId = userId,
-                listId = listId,
-                getExpensesByListIdUseCase = getExpensesByListIdUseCase,
-                getCategoriesUseCase = getCategoriesUseCase,
-                deleteExpenseUseCase = deleteExpenseUseCase,
-                calculateDebtsUseCase = calculateDebtsUseCase,
-                onExpenseClick = onExpenseClick,
-                onAddExpenseClick = onAddExpenseClick,
-            )
+        // Cache key combines userId and listId for proper data isolation
+        val cacheKey = "$userId:$listId"
 
-        // Update callbacks for navigation
+        // Return cached ViewModel if available, or create new one
+        val viewModel =
+            expenseListViewModels.getOrPut(cacheKey) {
+                ExpenseListViewModel(
+                    userId = userId,
+                    listId = listId,
+                    getExpensesByListIdUseCase = getExpensesByListIdUseCase,
+                    getCategoriesUseCase = getCategoriesUseCase,
+                    deleteExpenseUseCase = deleteExpenseUseCase,
+                    calculateDebtsUseCase = calculateDebtsUseCase,
+                    onExpenseClick = onExpenseClick,
+                    onAddExpenseClick = onAddExpenseClick,
+                )
+            }
+
+        // Update callbacks for navigation (in case callbacks changed)
         viewModel.updateCallbacks(onExpenseClick, onAddExpenseClick)
 
-        // Note: Data loading is handled by ViewModel's init block
-        // No need to call ensureDataLoaded() here - it causes unnecessary refreshes on navigation
-
         return viewModel
+    }
+
+    /**
+     * Clear a specific expense list ViewModel from cache
+     */
+    fun clearExpenseListViewModel(userId: String, listId: String) {
+        val cacheKey = "$userId:$listId"
+        expenseListViewModels.remove(cacheKey)
+    }
+
+    /**
+     * Clear all cached ViewModels
+     */
+    fun clearAllViewModels() {
+        expenseListViewModels.clear()
     }
 
     fun provideAddExpenseViewModel(
@@ -331,7 +349,7 @@ object AppModule {
      */
     fun clearAuthenticatedData() {
         authViewModel = null
-        expenseListViewModel = null
+        clearAllViewModels()
         clearAllCaches()
     }
 
@@ -340,7 +358,7 @@ object AppModule {
      */
     fun resetForTesting() {
         authViewModel = null
-        expenseListViewModel = null
+        clearAllViewModels()
         clearAllCaches()
     }
 }
