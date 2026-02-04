@@ -131,7 +131,10 @@ fun App() {
                                 navController.navigate(AppDestinations.CreateExpenseList)
                             },
                             onEditList = { list ->
-                                navController.navigate(AppDestinations.EditExpenseList(listId = list.listId, listName = list.name))
+                                navController.navigate(AppDestinations.EditExpenseList(
+                                    listId = list.listId,
+                                    listName = list.name,
+                                ))
                             },
                         )
                     }
@@ -151,6 +154,8 @@ fun App() {
                             AppModule.provideCreateExpenseListViewModel(
                                 userId = userId,
                                 onListCreated = { listId, listName ->
+                                    // Clear the ViewModel cache before navigation
+                                    AppModule.clearCreateExpenseListViewModel()
                                     // Navigate directly to the newly created expense list
                                     navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
                                         popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
@@ -160,9 +165,13 @@ fun App() {
                         CreateExpenseListScreen(
                             viewModel = viewModel,
                             onBackClick = {
+                                // Clear cache when user navigates back without creating
+                                AppModule.clearCreateExpenseListViewModel()
                                 navController.popBackStack()
                             },
                             onListCreated = { listId, listName ->
+                                // Clear the ViewModel cache before navigation
+                                AppModule.clearCreateExpenseListViewModel()
                                 // Navigate directly to the newly created expense list
                                 navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
                                     popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
@@ -186,18 +195,25 @@ fun App() {
                         val viewModel =
                             AppModule.provideCreateExpenseListViewModel(
                                 userId = userId,
+                                listIdToEdit = editRoute.listId,
+                                listNameToEdit = editRoute.listName,
                                 onListCreated = { _, _ ->
-                                    // Just pop back - don't navigate again
+                                    // Clear cache after successful update
+                                    AppModule.clearCreateExpenseListViewModel(editRoute.listId)
                                 },
                             )
                         CreateExpenseListScreen(
                             viewModel = viewModel,
                             onBackClick = {
-                                navController.popBackStack(AppDestinations.ExpenseLists, false)
+                                // Clear cache when user navigates back
+                                AppModule.clearCreateExpenseListViewModel(editRoute.listId)
+                                navController.popBackStack()
                             },
                             onListCreated = { _, _ ->
-                                // Pop back to lists screen
-                                navController.popBackStack(AppDestinations.ExpenseLists, false)
+                                // Clear cache after successful update
+                                AppModule.clearCreateExpenseListViewModel(editRoute.listId)
+                                // Pop back to previous screen
+                                navController.popBackStack()
                             },
                         )
                     }

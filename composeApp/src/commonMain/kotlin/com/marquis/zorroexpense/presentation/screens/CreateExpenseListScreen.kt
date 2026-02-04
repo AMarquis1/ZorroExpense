@@ -54,6 +54,7 @@ fun CreateExpenseListScreen(
     val listName by viewModel.listName.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
     val selectedCategories by viewModel.selectedCategories.collectAsState()
+    val isEditMode = viewModel.isEditMode
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -77,7 +78,7 @@ fun CreateExpenseListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create New List") },
+                title = { Text(if (isEditMode) "Edit List" else "Create New List") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -102,7 +103,7 @@ fun CreateExpenseListScreen(
             ) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Creating list...")
+                Text(if (isEditMode) "Updating list..." else "Creating list...")
             }
         } else {
             // Form
@@ -195,7 +196,7 @@ fun CreateExpenseListScreen(
                     }
                 }
 
-                // Create button
+                // Create/Update button
                 Button(
                     onClick = { viewModel.onEvent(CreateExpenseListUiEvent.CreateList) },
                     modifier =
@@ -207,10 +208,10 @@ fun CreateExpenseListScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
-                        contentDescription = "Create",
+                        contentDescription = if (isEditMode) "Update" else "Create",
                         modifier = Modifier.padding(end = 8.dp),
                     )
-                    Text("Create List")
+                    Text(if (isEditMode) "Update List" else "Create List")
                 }
             }
         }

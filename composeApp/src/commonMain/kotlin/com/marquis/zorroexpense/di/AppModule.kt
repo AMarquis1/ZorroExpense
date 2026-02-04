@@ -257,16 +257,46 @@ object AppModule {
         return viewModel
     }
 
+    private val createExpenseListViewModels = mutableMapOf<String, CreateExpenseListViewModel>()
+
+    /**
+     * Provide CreateExpenseListViewModel with proper caching
+     * - For create mode: uses "create" as cache key
+     * - For edit mode: uses listId as cache key
+     * This prevents multiple loadCategories() calls on recomposition
+     */
     fun provideCreateExpenseListViewModel(
         userId: String,
         onListCreated: (listId: String, listName: String) -> Unit = { _, _ -> },
-    ): CreateExpenseListViewModel =
-        CreateExpenseListViewModel(
-            userId = userId,
-            createExpenseListUseCase = createExpenseListUseCase,
-            getCategoriesUseCase = getCategoriesUseCase,
-            onListCreated = onListCreated,
-        )
+        listIdToEdit: String? = null,
+        listNameToEdit: String? = null,
+    ): CreateExpenseListViewModel {
+        val cacheKey = listIdToEdit ?: "create"
+
+        return createExpenseListViewModels.getOrPut(cacheKey) {
+            CreateExpenseListViewModel(
+                userId = userId,
+                createExpenseListUseCase = createExpenseListUseCase,
+                updateExpenseListUseCase = updateExpenseListUseCase,
+                getCategoriesUseCase = getCategoriesUseCase,
+                expenseListRepository = expenseListRepository,
+                onListCreated = onListCreated,
+                listIdToEdit = listIdToEdit,
+                listNameToEdit = listNameToEdit,
+            )
+        }
+    }
+
+    /**
+     * Clear CreateExpenseListViewModel cache - call after successful creation/update
+     */
+    fun clearCreateExpenseListViewModel(listId: String? = null) {
+        if (listId != null) {
+            createExpenseListViewModels.remove(listId)
+        } else {
+            createExpenseListViewModels.remove("create")
+        }
+    }
 
     private val expenseListViewModels = mutableMapOf<String, ExpenseListViewModel>()
 
@@ -321,6 +351,7 @@ object AppModule {
      */
     fun clearAllViewModels() {
         expenseListViewModels.clear()
+        createExpenseListViewModels.clear()
     }
 
     fun provideAddExpenseViewModel(
