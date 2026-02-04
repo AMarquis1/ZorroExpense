@@ -25,7 +25,7 @@ actual fun ExpenseList.toDto(): ExpenseListDto {
         memberRefs = memberRefs,
         shareCode = shareCode,
         createdAt = createdAt,
-        isArchived = isArchived,
+        lastModified = lastModified,
         categoryRefs = categoryRefs,
     )
 }

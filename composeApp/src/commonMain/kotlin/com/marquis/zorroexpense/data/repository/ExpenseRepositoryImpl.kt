@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.data.repository
 
 import com.marquis.zorroexpense.data.datasource.ExpenseLocalDataSource
 import com.marquis.zorroexpense.data.datasource.ExpenseRemoteDataSource
+import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.domain.error.ExpenseError
 import com.marquis.zorroexpense.domain.error.toExpenseError
 import com.marquis.zorroexpense.domain.model.Expense
@@ -25,6 +26,7 @@ import kotlinx.coroutines.sync.withLock
 class ExpenseRepositoryImpl(
     private val remoteDataSource: ExpenseRemoteDataSource,
     private val localDataSource: ExpenseLocalDataSource,
+    private val firestoreService: FirestoreService,
 ) : ExpenseRepository {
     private val repositoryMutex = Mutex()
 
@@ -175,6 +177,12 @@ class ExpenseRepositoryImpl(
                                 localDataSource.addExpenseToList(listId, expense.copy(documentId = expenseId))
                             }
                         }
+                        // Update lastModified timestamp on the expense list
+                        async {
+                            runCatching {
+                                firestoreService.updateExpenseListLastModified(listId)
+                            }
+                        }
                         Result.success(expenseId)
                     } else {
                         val error =
@@ -207,6 +215,12 @@ class ExpenseRepositoryImpl(
                                 localDataSource.updateExpenseInList(listId, expense)
                             }
                         }
+                        // Update lastModified timestamp on the expense list
+                        async {
+                            runCatching {
+                                firestoreService.updateExpenseListLastModified(listId)
+                            }
+                        }
                         Result.success(Unit)
                     } else {
                         val error =
@@ -237,6 +251,12 @@ class ExpenseRepositoryImpl(
                         async {
                             runCatching {
                                 localDataSource.deleteExpenseFromList(listId, expenseId)
+                            }
+                        }
+                        // Update lastModified timestamp on the expense list
+                        async {
+                            runCatching {
+                                firestoreService.updateExpenseListLastModified(listId)
                             }
                         }
                         Result.success(Unit)

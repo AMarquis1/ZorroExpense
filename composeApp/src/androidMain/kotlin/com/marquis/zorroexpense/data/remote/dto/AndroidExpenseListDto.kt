@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.data.remote.dto
 
 import com.marquis.zorroexpense.domain.model.User
 import dev.gitlive.firebase.firestore.DocumentReference
+import dev.gitlive.firebase.firestore.Timestamp
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -19,8 +20,8 @@ data class AndroidExpenseListDto(
     override val shareCode: String = "",
     @SerialName("createdAt")
     override val createdAt: String = "",
-    @SerialName("isArchived")
-    override val isArchived: Boolean = false,
+    @SerialName("lastModified")
+    override val lastModified: Timestamp,
     @SerialName("categories")
     val categoriesRef: List<DocumentReference> = emptyList(),
 ) : ExpenseListDto {

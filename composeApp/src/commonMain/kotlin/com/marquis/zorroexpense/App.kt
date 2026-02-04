@@ -27,14 +27,14 @@ import androidx.navigation.toRoute
 import com.marquis.zorroexpense.di.AppModule
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
-import com.marquis.zorroexpense.domain.model.User
+import com.marquis.zorroexpense.domain.model.ExpenseList
 import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.CreateExpenseListScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
-import com.marquis.zorroexpense.presentation.screens.ExpenseListsScreen
+import com.marquis.zorroexpense.presentation.screens.ExpenseListsOverviewScreen
 import com.marquis.zorroexpense.presentation.screens.LoginScreen
 import com.marquis.zorroexpense.presentation.screens.SignUpScreen
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
@@ -117,14 +117,21 @@ fun App() {
                         val viewModel =
                             AppModule.provideExpenseListsViewModel(
                                 userId = userId,
+                                onListDeleted = { _ ->
+                                    // List deleted successfully, no navigation needed
+                                    // The UI is already updated in the ViewModel
+                                },
                             )
-                        ExpenseListsScreen(
+                        ExpenseListsOverviewScreen(
                             viewModel = viewModel,
                             onListSelected = { listId, listName ->
                                 navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName))
                             },
                             onCreateNewList = {
                                 navController.navigate(AppDestinations.CreateExpenseList)
+                            },
+                            onEditList = { list ->
+                                navController.navigate(AppDestinations.EditExpenseList(listId = list.listId, listName = list.name))
                             },
                         )
                     }
@@ -160,6 +167,37 @@ fun App() {
                                 navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
                                     popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
                                 }
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.EditExpenseList> {
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val editRoute = it.toRoute<AppDestinations.EditExpenseList>()
+                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+                        val viewModel =
+                            AppModule.provideCreateExpenseListViewModel(
+                                userId = userId,
+                                onListCreated = { _, _ ->
+                                    // Just pop back - don't navigate again
+                                },
+                            )
+                        CreateExpenseListScreen(
+                            viewModel = viewModel,
+                            onBackClick = {
+                                navController.popBackStack(AppDestinations.ExpenseLists, false)
+                            },
+                            onListCreated = { _, _ ->
+                                // Pop back to lists screen
+                                navController.popBackStack(AppDestinations.ExpenseLists, false)
                             },
                         )
                     }

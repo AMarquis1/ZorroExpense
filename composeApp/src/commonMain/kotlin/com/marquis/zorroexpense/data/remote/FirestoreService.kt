@@ -77,4 +77,6 @@ expect class FirestoreService() {
         listId: String,
         expenseId: String,
     ): Result<Unit>
+
+    suspend fun updateExpenseListLastModified(listId: String): Result<Unit>
 }

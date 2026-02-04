@@ -10,7 +10,7 @@ interface ExpenseListDto {
     val members: List<Any>
     val shareCode: String
     val createdAt: String
-    val isArchived: Boolean
+    val lastModified: Any
     val categories: List<Any>
 }
 

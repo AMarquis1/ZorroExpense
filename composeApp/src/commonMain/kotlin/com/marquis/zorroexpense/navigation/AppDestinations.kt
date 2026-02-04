@@ -20,6 +20,12 @@ sealed class AppDestinations {
     data object CreateExpenseList : AppDestinations()
 
     @Serializable
+    data class EditExpenseList(
+        val listId: String,
+        val listName: String,
+    ) : AppDestinations()
+
+    @Serializable
     data class ExpenseList(
         val listId: String,
         val listName: String = "",

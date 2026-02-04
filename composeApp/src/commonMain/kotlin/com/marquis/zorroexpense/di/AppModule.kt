@@ -23,6 +23,7 @@ import com.marquis.zorroexpense.domain.repository.UserRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.CreateExpenseListUseCase
+import com.marquis.zorroexpense.domain.usecase.DeleteExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
@@ -37,13 +38,14 @@ import com.marquis.zorroexpense.domain.usecase.ObserveAuthStateUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshUserExpenseListsUseCase
 import com.marquis.zorroexpense.domain.usecase.SignUpUseCase
+import com.marquis.zorroexpense.domain.usecase.UpdateExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.CreateExpenseListViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
-import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsOverviewViewModel
 
 /**
  * Clean dependency injection module following KMP and Clean Architecture standards
@@ -100,6 +102,7 @@ object AppModule {
         ExpenseRepositoryImpl(
             remoteDataSource = expenseRemoteDataSource,
             localDataSource = expenseLocalDataSource,
+            firestoreService = firestoreService,
         )
     }
 
@@ -198,6 +201,14 @@ object AppModule {
         RefreshUserExpenseListsUseCase(expenseListRepository)
     }
 
+    private val deleteExpenseListUseCase: DeleteExpenseListUseCase by lazy {
+        DeleteExpenseListUseCase(expenseListRepository)
+    }
+
+    private val updateExpenseListUseCase: UpdateExpenseListUseCase by lazy {
+        UpdateExpenseListUseCase(expenseListRepository)
+    }
+
     // =================
     // Presentation Layer
     // =================
@@ -220,25 +231,28 @@ object AppModule {
         return viewModel
     }
 
-    private var expenseListsViewModel: ExpenseListsViewModel? = null
+    private var expenseListsOverviewViewModel: ExpenseListsOverviewViewModel? = null
 
     /**
-     * Provide ExpenseListsViewModel for list selection
+     * Provide ExpenseListsOverviewViewModel for list selection
      * Cached as singleton to preserve state when navigating back
      */
     fun provideExpenseListsViewModel(
         userId: String,
         onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
-    ): ExpenseListsViewModel {
+        onListDeleted: (listId: String) -> Unit = { _ -> },
+    ): ExpenseListsOverviewViewModel {
         val viewModel =
-            expenseListsViewModel ?: ExpenseListsViewModel(
+            expenseListsOverviewViewModel ?: ExpenseListsOverviewViewModel(
                 userId = userId,
                 getUserExpenseListsUseCase = getUserExpenseListsUseCase,
                 refreshUserExpenseListsUseCase = refreshUserExpenseListsUseCase,
                 joinExpenseListUseCase = joinExpenseListUseCase,
+                deleteExpenseListUseCase = deleteExpenseListUseCase,
                 getUsersUseCase = getUsersUseCase,
                 onListSelected = onListSelected,
-            ).also { expenseListsViewModel = it }
+                onListDeleted = onListDeleted,
+            ).also { expenseListsOverviewViewModel = it }
 
         return viewModel
     }
@@ -365,7 +379,7 @@ object AppModule {
      */
     fun clearAuthenticatedData() {
         authViewModel = null
-        expenseListsViewModel = null
+        expenseListsOverviewViewModel = null
         clearAllViewModels()
         clearAllCaches()
     }
@@ -375,7 +389,7 @@ object AppModule {
      */
     fun resetForTesting() {
         authViewModel = null
-        expenseListsViewModel = null
+        expenseListsOverviewViewModel = null
         clearAllViewModels()
         clearAllCaches()
     }

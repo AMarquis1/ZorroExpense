@@ -27,16 +27,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,20 +59,25 @@ import androidx.compose.ui.unit.sp
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.ExpenseList
 import com.marquis.zorroexpense.platform.pullToRefreshBox
+import com.marquis.zorroexpense.presentation.components.SwipeableExpenseListCard
+import com.marquis.zorroexpense.presentation.components.bottomsheets.formatDateForDisplay
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiState
-import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsOverviewViewModel
 
 @Composable
-internal fun ExpenseListsScreen(
-    viewModel: ExpenseListsViewModel,
+internal fun ExpenseListsOverviewScreen(
+    viewModel: ExpenseListsOverviewViewModel,
     onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     onCreateNewList: () -> Unit = {},
+    onEditList: (ExpenseList) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     // Pull-to-refresh state
     val isRefreshing = (uiState as? ExpenseListsUiState.Success)?.isRefreshing ?: false
+    val showDeleteDialog = (uiState as? ExpenseListsUiState.Success)?.showDeleteDialog ?: false
+    val listToDelete = (uiState as? ExpenseListsUiState.Success)?.listToDelete
 
     Scaffold(
         floatingActionButton = {
@@ -119,6 +130,13 @@ internal fun ExpenseListsScreen(
                                         viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
                                         onListSelected(list.listId, list.name)
                                     },
+                                    onEditList = { list ->
+                                        viewModel.onEvent(ExpenseListsUiEvent.EditList(list))
+                                        onEditList(list)
+                                    },
+                                    onDeleteList = { list ->
+                                        viewModel.onEvent(ExpenseListsUiEvent.DeleteList(list))
+                                    },
                                 )
                             }
                         }
@@ -139,6 +157,13 @@ internal fun ExpenseListsScreen(
                                         viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
                                         onListSelected(list.listId, list.name)
                                     },
+                                    onEditList = { list ->
+                                        viewModel.onEvent(ExpenseListsUiEvent.EditList(list))
+                                        onEditList(list)
+                                    },
+                                    onDeleteList = { list ->
+                                        viewModel.onEvent(ExpenseListsUiEvent.DeleteList(list))
+                                    },
                                 )
                             } else {
                                 ErrorState(
@@ -151,6 +176,19 @@ internal fun ExpenseListsScreen(
                 }
             }
         }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog && listToDelete != null) {
+        DeleteExpenseListDialog(
+            listName = listToDelete.name,
+            onConfirm = {
+                viewModel.onEvent(ExpenseListsUiEvent.ConfirmDelete)
+            },
+            onDismiss = {
+                viewModel.onEvent(ExpenseListsUiEvent.CancelDelete)
+            },
+        )
     }
 }
 
@@ -222,6 +260,8 @@ private fun LoadingState() {
 private fun SuccessState(
     lists: List<ExpenseList>,
     onListSelected: (ExpenseList) -> Unit,
+    onEditList: (ExpenseList) -> Unit = {},
+    onDeleteList: (ExpenseList) -> Unit = {},
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -244,9 +284,11 @@ private fun SuccessState(
                             initialOffsetY = { 40 },
                         ),
             ) {
-                ExpenseListCard(
+                SwipeableExpenseListCard(
                     list = list,
                     onClick = { onListSelected(list) },
+                    onEdit = { onEditList(list) },
+                    onDelete = { onDeleteList(list) },
                 )
             }
         }
@@ -254,9 +296,12 @@ private fun SuccessState(
 }
 
 @Composable
-private fun ExpenseListCard(
+internal fun ExpenseListCard(
     list: ExpenseList,
     onClick: () -> Unit,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    isSwipeable: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -280,12 +325,7 @@ private fun ExpenseListCard(
                 ),
         colors =
             CardDefaults.cardColors(
-                containerColor =
-                    if (list.isArchived) {
-                        MaterialTheme.colorScheme.surfaceContainerLow
-                    } else {
-                        MaterialTheme.colorScheme.surfaceContainer
-                    },
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
             ),
         elevation =
             CardDefaults.cardElevation(
@@ -293,110 +333,152 @@ private fun ExpenseListCard(
             ),
         shape = RoundedCornerShape(16.dp),
     ) {
-        Column(
+        Row(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Icon and content
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    // Folder icon with gradient background
-                    Box(
-                        modifier =
-                            Modifier
-                                .width(48.dp)
-                                .height(48.dp)
-                                .background(
-                                    brush =
-                                        Brush.linearGradient(
-                                            colors =
-                                                listOf(
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                                ),
+            // Folder icon with gradient background
+            Box(
+                modifier =
+                    Modifier
+                        .width(48.dp)
+                        .height(48.dp)
+                        .background(
+                            brush =
+                                Brush.linearGradient(
+                                    colors =
+                                        listOf(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                                         ),
-                                    shape = RoundedCornerShape(12.dp),
                                 ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.FolderOpen,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.scale(1.2f),
+                            shape = RoundedCornerShape(12.dp),
+                        ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.FolderOpen,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.scale(1.2f),
+                )
+            }
+
+            // Title and last modified date (center section)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = list.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val formattedTime = formatDateForDisplay(list.lastModified)
+                    Text(
+                        text = "Last Modified: ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    Text(
+                        text = formattedTime,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+            }
+
+            // Member avatars and action buttons (right section)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Display member avatars
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy((-8).dp),
+                ) {
+                    list.members.take(4).forEach { member ->
+                        ProfileAvatar(
+                            name = member.name,
+                            size = 32.dp,
+                            userProfile = member.profileImage,
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surface,
+                                        shape = CircleShape,
+                                    ),
                         )
                     }
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = list.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy((-8).dp),
+                    // Show +N if more than 4 members
+                    if (list.members.size > 4) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                                        shape = CircleShape,
+                                    ),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            // Display member avatars
-                            list.members.take(4).forEach { member ->
-                                ProfileAvatar(
-                                    name = member.name,
-                                    size = 32.dp,
-                                    userProfile = member.profileImage,
-                                    modifier =
-                                        Modifier
-                                            .size(32.dp)
-                                            .background(
-                                                color = MaterialTheme.colorScheme.surface,
-                                                shape = CircleShape,
-                                            ),
-                                )
-                            }
+                            Text(
+                                text = "+${list.members.size - 4}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                }
 
-                            // Show +N if more than 4 members
-                            if (list.members.size > 4) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .size(32.dp)
-                                            .background(
-                                                color = MaterialTheme.colorScheme.tertiaryContainer,
-                                                shape = CircleShape,
-                                            ),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = "+${list.members.size - 4}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                }
-                            }
+                // Action buttons (edit and delete) - hidden on Android when using swipe
+                if (!isSwipeable) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        // Edit button
+                        IconButton(
+                            onClick = {
+                                onEdit()
+                            },
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Edit list",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
 
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            if (list.isArchived) {
-                                Text(
-                                    text = "Archived",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
+                        // Delete button
+                        IconButton(
+                            onClick = {
+                                onDelete()
+                            },
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Delete list",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp),
+                            )
                         }
                     }
                 }
@@ -496,6 +578,8 @@ private fun ErrorStateWithCache(
     lists: List<ExpenseList>,
     onRetry: () -> Unit,
     onListSelected: (ExpenseList) -> Unit,
+    onEditList: (ExpenseList) -> Unit = {},
+    onDeleteList: (ExpenseList) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Error banner at the top
@@ -550,6 +634,8 @@ private fun ErrorStateWithCache(
         SuccessState(
             lists = lists,
             onListSelected = onListSelected,
+            onEditList = onEditList,
+            onDeleteList = onDeleteList,
         )
     }
 }
@@ -634,4 +720,36 @@ private fun ErrorState(
             Text("Retry")
         }
     }
+}
+
+@Composable
+private fun DeleteExpenseListDialog(
+    listName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Delete Expense List")
+        },
+        text = {
+            Text("Are you sure you want to delete \"$listName\"? This action cannot be undone.")
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+    )
 }

@@ -380,4 +380,15 @@ actual class FirestoreService {
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    actual suspend fun updateExpenseListLastModified(listId: String): Result<Unit> =
+        try {
+            firestore
+                .collection("ExpenseLists")
+                .document(listId)
+                .update("lastModified" to dev.gitlive.firebase.firestore.Timestamp.now())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 }

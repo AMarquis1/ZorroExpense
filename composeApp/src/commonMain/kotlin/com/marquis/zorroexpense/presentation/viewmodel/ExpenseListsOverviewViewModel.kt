@@ -2,13 +2,13 @@ package com.marquis.zorroexpense.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marquis.zorroexpense.data.remote.dto.toDateString
 import com.marquis.zorroexpense.domain.model.ExpenseList
-import com.marquis.zorroexpense.domain.model.User
+import com.marquis.zorroexpense.domain.usecase.DeleteExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.JoinExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshUserExpenseListsUseCase
-import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,13 +19,15 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel for managing expense lists selection
  */
-class ExpenseListsViewModel(
+class ExpenseListsOverviewViewModel(
     private val userId: String,
     private val getUserExpenseListsUseCase: GetUserExpenseListsUseCase,
     private val refreshUserExpenseListsUseCase: RefreshUserExpenseListsUseCase,
     private val joinExpenseListUseCase: JoinExpenseListUseCase,
+    private val deleteExpenseListUseCase: DeleteExpenseListUseCase,
     private val getUsersUseCase: GetUsersUseCase,
     private val onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
+    private val onListDeleted: (listId: String) -> Unit = { _ -> },
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ExpenseListsUiState>(ExpenseListsUiState.Loading)
     val uiState: StateFlow<ExpenseListsUiState> = _uiState.asStateFlow()
@@ -43,6 +45,10 @@ class ExpenseListsViewModel(
             is ExpenseListsUiEvent.CreateNewList -> {}
             is ExpenseListsUiEvent.SelectList -> selectList(event.listId)
             is ExpenseListsUiEvent.JoinList -> joinList(event.shareCode)
+            is ExpenseListsUiEvent.DeleteList -> showDeleteConfirmation(event.list)
+            is ExpenseListsUiEvent.ConfirmDelete -> confirmDelete()
+            is ExpenseListsUiEvent.CancelDelete -> cancelDelete()
+            is ExpenseListsUiEvent.EditList -> editList(event.list)
             is ExpenseListsUiEvent.RetryLoad -> loadLists()
         }
     }
@@ -90,7 +96,7 @@ class ExpenseListsViewModel(
                                 } ?: member
                             }
                             list.copy(members = enrichedMembers)
-                        }
+                        }.sortedByDescending { it.lastModified }
 
                         cachedLists = enrichedLists
 
@@ -101,23 +107,25 @@ class ExpenseListsViewModel(
                                 ExpenseListsUiState.Success(enrichedLists)
                             }
                     }.onFailure {
-                        cachedLists = lists
+                        val sortedLists = lists.sortedByDescending { it.lastModified }
+                        cachedLists = sortedLists
 
                         _uiState.value =
-                            if (lists.isEmpty()) {
+                            if (sortedLists.isEmpty()) {
                                 ExpenseListsUiState.Empty
                             } else {
-                                ExpenseListsUiState.Success(lists)
+                                ExpenseListsUiState.Success(sortedLists)
                             }
                     }
                 } else {
-                    cachedLists = lists
+                    val sortedLists = lists.sortedByDescending { it.lastModified }
+                    cachedLists = sortedLists
 
                     _uiState.value =
-                        if (lists.isEmpty()) {
+                        if (sortedLists.isEmpty()) {
                             ExpenseListsUiState.Empty
                         } else {
-                            ExpenseListsUiState.Success(lists)
+                            ExpenseListsUiState.Success(sortedLists)
                         }
                 }
             }
@@ -170,5 +178,74 @@ class ExpenseListsViewModel(
                 }
             }
         }
+    }
+
+    private fun showDeleteConfirmation(list: ExpenseList) {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListsUiState.Success) {
+            _uiState.value =
+                currentState.copy(
+                    showDeleteDialog = true,
+                    listToDelete = list,
+                )
+        }
+    }
+
+    private fun cancelDelete() {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListsUiState.Success) {
+            _uiState.value =
+                currentState.copy(
+                    showDeleteDialog = false,
+                    listToDelete = null,
+                )
+        }
+    }
+
+    private fun confirmDelete() {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListsUiState.Success) {
+            val listToDelete = currentState.listToDelete
+            if (listToDelete != null) {
+                viewModelScope.launch {
+                    val result = deleteExpenseListUseCase.invoke(listToDelete.listId)
+
+                    result.onSuccess {
+                        // Remove the list from cached data
+                        val updatedLists = cachedLists?.filter { it.listId != listToDelete.listId } ?: emptyList()
+                        cachedLists = updatedLists
+
+                        _uiState.value =
+                            if (updatedLists.isEmpty()) {
+                                ExpenseListsUiState.Empty
+                            } else {
+                                ExpenseListsUiState.Success(updatedLists)
+                            }
+
+                        // Notify parent that list was deleted
+                        onListDeleted(listToDelete.listId)
+                    }
+
+                    result.onFailure { error ->
+                        // Show error but keep showing the list
+                        _uiState.value =
+                            currentState.copy(
+                                showDeleteDialog = false,
+                                listToDelete = null,
+                            )
+                        _uiState.value =
+                            ExpenseListsUiState.Error(
+                                error.message ?: "Failed to delete list",
+                                cachedLists,
+                            )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun editList(list: ExpenseList) {
+        // Callback will be handled by the screen to navigate to edit
+        // This is a placeholder - the screen will handle navigation
     }
 }

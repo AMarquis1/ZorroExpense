@@ -18,8 +18,8 @@ data class WasmExpenseListDto(
     override val shareCode: String = "",
     @SerialName("createdAt")
     override val createdAt: String = "",
-    @SerialName("isArchived")
-    override val isArchived: Boolean = false,
+    @SerialName("lastModified")
+    override val lastModified: String = "",
     @SerialName("categories")
     val categoryIds: List<String> = emptyList(),
 ) : ExpenseListDto {

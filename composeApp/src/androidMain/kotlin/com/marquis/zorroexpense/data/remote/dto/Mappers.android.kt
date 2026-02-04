@@ -7,6 +7,7 @@ import java.util.Date
 import java.util.Locale
 
 // Android-specific timestamp conversion
+// Returns ISO format (yyyy-MM-dd) for internal use. Display format is handled in UI layer.
 actual fun Any?.toDateString(): String =
     when (this) {
         is Timestamp -> {

@@ -11,6 +11,8 @@ sealed class ExpenseListsUiState {
     data class Success(
         val lists: List<ExpenseList>,
         val isRefreshing: Boolean = false,
+        val showDeleteDialog: Boolean = false,
+        val listToDelete: ExpenseList? = null,
     ) : ExpenseListsUiState()
 
     data class Error(
@@ -37,6 +39,14 @@ sealed class ExpenseListsUiEvent {
     data class JoinList(
         val shareCode: String,
     ) : ExpenseListsUiEvent()
+
+    data class DeleteList(val list: ExpenseList) : ExpenseListsUiEvent()
+
+    data object ConfirmDelete : ExpenseListsUiEvent()
+
+    data object CancelDelete : ExpenseListsUiEvent()
+
+    data class EditList(val list: ExpenseList) : ExpenseListsUiEvent()
 
     data object RetryLoad : ExpenseListsUiEvent()
 }

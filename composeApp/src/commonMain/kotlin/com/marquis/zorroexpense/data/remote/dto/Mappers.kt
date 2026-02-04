@@ -82,7 +82,7 @@ suspend fun ExpenseListDto.toDomain(firestoreService: FirestoreService): Expense
         members = members.getMemberUsers(),
         shareCode = shareCode,
         createdAt = createdAt,
-        isArchived = isArchived,
+        lastModified = lastModified.toDateString(),
         categories = resolvedCategories,
     )
 }

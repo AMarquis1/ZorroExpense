@@ -12,6 +12,6 @@ data class ExpenseList(
     val members: List<User> = emptyList(),
     val shareCode: String = "",
     val createdAt: String = "",
-    val isArchived: Boolean = false,
+    val lastModified: String = "",
     val categories: List<Category> = emptyList(),
 )

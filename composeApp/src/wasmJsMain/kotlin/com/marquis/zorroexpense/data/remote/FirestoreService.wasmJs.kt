@@ -256,4 +256,8 @@ actual class FirestoreService actual constructor() {
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
+
+    actual suspend fun updateExpenseListLastModified(listId: String): Result<Unit> {
+        TODO("Not yet implemented")
+    }
 }
