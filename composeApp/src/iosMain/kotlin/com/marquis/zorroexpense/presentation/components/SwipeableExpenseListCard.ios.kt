@@ -12,13 +12,11 @@ import com.marquis.zorroexpense.presentation.screens.ExpenseListCard
 actual fun SwipeableExpenseListCard(
     list: ExpenseList,
     onClick: () -> Unit,
-    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     ExpenseListCard(
         list = list,
         onClick = onClick,
-        onEdit = onEdit,
         onDelete = onDelete,
         isSwipeable = false,
     )

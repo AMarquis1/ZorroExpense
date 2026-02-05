@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -216,6 +217,7 @@ fun ExpenseListScreen(
     updatedExpenseName: String? = null,
     onUpdateFlowComplete: () -> Unit = {},
     onBackPressed: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
@@ -541,6 +543,18 @@ fun ExpenseListScreen(
                                         )
                                     }
                                 }
+                            }
+
+                            // Settings button for list details
+                            IconButton(
+                                onClick = onSettingsClick,
+                            ) {
+                                Icon(
+                                    Icons.Default.Settings,
+                                    contentDescription = "List settings",
+                                    tint = androidx.compose.ui.graphics.Color.White,
+                                    modifier = Modifier.size(28.dp),
+                                )
                             }
                         }
                     }

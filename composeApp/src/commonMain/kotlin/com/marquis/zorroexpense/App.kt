@@ -33,6 +33,7 @@ import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.CreateExpenseListScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
+import com.marquis.zorroexpense.presentation.screens.ExpenseListDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListsOverviewScreen
 import com.marquis.zorroexpense.presentation.screens.LoginScreen
@@ -130,12 +131,6 @@ fun App() {
                             onCreateNewList = {
                                 navController.navigate(AppDestinations.CreateExpenseList)
                             },
-                            onEditList = { list ->
-                                navController.navigate(AppDestinations.EditExpenseList(
-                                    listId = list.listId,
-                                    listName = list.name,
-                                ))
-                            },
                         )
                     }
 
@@ -176,44 +171,6 @@ fun App() {
                                 navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
                                     popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
                                 }
-                            },
-                        )
-                    }
-
-                    composable<AppDestinations.EditExpenseList> {
-                        // Auth guard: redirect to login if not authenticated
-                        LaunchedEffect(globalAuthState) {
-                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
-                                navController.navigate(AppDestinations.Login) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            }
-                        }
-
-                        val editRoute = it.toRoute<AppDestinations.EditExpenseList>()
-                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
-                        val viewModel =
-                            AppModule.provideCreateExpenseListViewModel(
-                                userId = userId,
-                                listIdToEdit = editRoute.listId,
-                                listNameToEdit = editRoute.listName,
-                                onListCreated = { _, _ ->
-                                    // Clear cache after successful update
-                                    AppModule.clearCreateExpenseListViewModel(editRoute.listId)
-                                },
-                            )
-                        CreateExpenseListScreen(
-                            viewModel = viewModel,
-                            onBackClick = {
-                                // Clear cache when user navigates back
-                                AppModule.clearCreateExpenseListViewModel(editRoute.listId)
-                                navController.popBackStack()
-                            },
-                            onListCreated = { _, _ ->
-                                // Clear cache after successful update
-                                AppModule.clearCreateExpenseListViewModel(editRoute.listId)
-                                // Pop back to previous screen
-                                navController.popBackStack()
                             },
                         )
                     }
@@ -298,6 +255,100 @@ fun App() {
                             },
                             onBackPressed = {
                                 navController.popBackStack()
+                            },
+                            onSettingsClick = {
+                                val expenseList = viewModel.expenseListMetadata.value
+                                if (expenseList != null) {
+                                    navController.navigate(
+                                        AppDestinations.ExpenseListDetail(
+                                            listId = expenseList.listId,
+                                            listName = expenseList.name,
+                                            shareCode = expenseList.shareCode,
+                                            createdBy = expenseList.createdBy,
+                                            createdAt = expenseList.createdAt,
+                                            lastModified = expenseList.lastModified,
+                                            membersJson = AppDestinations.ExpenseListDetail.createMembersJson(
+                                                expenseList.members.map { member ->
+                                                    AppDestinations.MemberNavigation(
+                                                        userId = member.userId,
+                                                        name = member.name,
+                                                        profileImage = member.profileImage,
+                                                    )
+                                                },
+                                            ),
+                                            categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(
+                                                expenseList.categories.map { category ->
+                                                    AppDestinations.CategoryNavigation(
+                                                        documentId = category.documentId,
+                                                        name = category.name,
+                                                        icon = category.icon,
+                                                        color = category.color,
+                                                    )
+                                                },
+                                            ),
+                                        ),
+                                    )
+                                }
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.ExpenseListDetail> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val listDetailRoute = backStackEntry.toRoute<AppDestinations.ExpenseListDetail>()
+
+                        // Reconstruct ExpenseList from navigation params
+                        val expenseList = ExpenseList(
+                            listId = listDetailRoute.listId,
+                            name = listDetailRoute.listName,
+                            shareCode = listDetailRoute.shareCode,
+                            createdBy = listDetailRoute.createdBy,
+                            createdAt = listDetailRoute.createdAt,
+                            lastModified = listDetailRoute.lastModified,
+                            members = listDetailRoute.members.map { memberNav ->
+                                com.marquis.zorroexpense.domain.model.User(
+                                    userId = memberNav.userId,
+                                    name = memberNav.name,
+                                    profileImage = memberNav.profileImage,
+                                )
+                            },
+                            categories = listDetailRoute.categories.map { categoryNav ->
+                                Category(
+                                    documentId = categoryNav.documentId,
+                                    name = categoryNav.name,
+                                    icon = categoryNav.icon,
+                                    color = categoryNav.color,
+                                )
+                            },
+                        )
+
+                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+                        val viewModel = AppModule.provideExpenseListDetailViewModel(
+                            listId = listDetailRoute.listId,
+                            userId = userId,
+                            initialExpenseList = expenseList,
+                            onListDeleted = {
+                                // Navigate back to the lists overview after deletion
+                                navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                            },
+                        )
+
+                        ExpenseListDetailScreen(
+                            viewModel = viewModel,
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            onListDeleted = {
+                                // Navigate back to the lists overview after deletion
+                                navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
                             },
                         )
                     }

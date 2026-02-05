@@ -12,6 +12,5 @@ import com.marquis.zorroexpense.domain.model.ExpenseList
 expect fun SwipeableExpenseListCard(
     list: ExpenseList,
     onClick: () -> Unit,
-    onEdit: () -> Unit,
     onDelete: () -> Unit,
 )

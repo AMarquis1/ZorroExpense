@@ -27,6 +27,7 @@ import com.marquis.zorroexpense.domain.usecase.DeleteExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
+import com.marquis.zorroexpense.domain.usecase.GetExpenseListByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
@@ -44,6 +45,7 @@ import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.CreateExpenseListViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsOverviewViewModel
 
@@ -209,6 +211,10 @@ object AppModule {
         UpdateExpenseListUseCase(expenseListRepository)
     }
 
+    private val getExpenseListByIdUseCase: GetExpenseListByIdUseCase by lazy {
+        GetExpenseListByIdUseCase(expenseListRepository)
+    }
+
     // =================
     // Presentation Layer
     // =================
@@ -327,6 +333,7 @@ object AppModule {
                     getCategoriesUseCase = getCategoriesUseCase,
                     deleteExpenseUseCase = deleteExpenseUseCase,
                     calculateDebtsUseCase = calculateDebtsUseCase,
+                    getExpenseListByIdUseCase = getExpenseListByIdUseCase,
                     onExpenseClick = onExpenseClick,
                     onAddExpenseClick = onAddExpenseClick,
                 )
@@ -372,6 +379,57 @@ object AppModule {
 
     fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel =
         ExpenseDetailViewModel(expense)
+
+    private val expenseListDetailViewModels = mutableMapOf<String, ExpenseListDetailViewModel>()
+
+    fun provideExpenseListDetailViewModel(
+        listId: String,
+        userId: String,
+        initialExpenseList: com.marquis.zorroexpense.domain.model.ExpenseList,
+        initialMode: com.marquis.zorroexpense.presentation.state.ListDetailMode =
+            com.marquis.zorroexpense.presentation.state.ListDetailMode.VIEW,
+        onListDeleted: () -> Unit = {},
+        onListSaved: (listId: String, listName: String) -> Unit = { _, _ -> },
+    ): ExpenseListDetailViewModel {
+        // For ADD mode, always create a new ViewModel (no caching)
+        if (initialMode == com.marquis.zorroexpense.presentation.state.ListDetailMode.ADD) {
+            return ExpenseListDetailViewModel(
+                listId = listId,
+                userId = userId,
+                initialExpenseList = initialExpenseList,
+                initialMode = initialMode,
+                deleteExpenseListUseCase = deleteExpenseListUseCase,
+                getExpenseListByIdUseCase = getExpenseListByIdUseCase,
+                updateExpenseListUseCase = updateExpenseListUseCase,
+                createExpenseListUseCase = createExpenseListUseCase,
+                onListDeleted = onListDeleted,
+                onListSaved = onListSaved,
+            )
+        }
+
+        return expenseListDetailViewModels.getOrPut(listId) {
+            ExpenseListDetailViewModel(
+                listId = listId,
+                userId = userId,
+                initialExpenseList = initialExpenseList,
+                initialMode = initialMode,
+                deleteExpenseListUseCase = deleteExpenseListUseCase,
+                getExpenseListByIdUseCase = getExpenseListByIdUseCase,
+                updateExpenseListUseCase = updateExpenseListUseCase,
+                createExpenseListUseCase = createExpenseListUseCase,
+                onListDeleted = onListDeleted,
+                onListSaved = onListSaved,
+            )
+        }
+    }
+
+    fun clearExpenseListDetailViewModel(listId: String) {
+        expenseListDetailViewModels.remove(listId)
+    }
+
+    fun refreshExpenseListDetailViewModel(listId: String) {
+        expenseListDetailViewModels[listId]?.refreshData()
+    }
 
     // =================
     // Public API for Testing and Direct Access

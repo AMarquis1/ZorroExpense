@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.model.ExpenseList
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetExpenseListByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
@@ -30,6 +32,7 @@ class ExpenseListViewModel(
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
     private val calculateDebtsUseCase: CalculateDebtsUseCase,
+    private val getExpenseListByIdUseCase: GetExpenseListByIdUseCase,
     private var onExpenseClick: (Expense) -> Unit = {},
     private var onAddExpenseClick: () -> Unit = {},
 ) : ViewModel() {
@@ -38,6 +41,9 @@ class ExpenseListViewModel(
 
     private val _availableCategories = MutableStateFlow<List<Category>>(emptyList())
     val availableCategories: StateFlow<List<Category>> = _availableCategories.asStateFlow()
+
+    private val _expenseListMetadata = MutableStateFlow<ExpenseList?>(null)
+    val expenseListMetadata: StateFlow<ExpenseList?> = _expenseListMetadata.asStateFlow()
 
     private var hasLoadedOnce = false
 
@@ -72,6 +78,16 @@ class ExpenseListViewModel(
             loadExpenses(isRefresh = false)
         }
         hasLoadedOnce = true
+        // Load expense list metadata
+        loadExpenseListMetadata()
+    }
+
+    private fun loadExpenseListMetadata() {
+        viewModelScope.launch {
+            getExpenseListByIdUseCase(listId).onSuccess { expenseList ->
+                _expenseListMetadata.value = expenseList
+            }
+        }
     }
 
     fun updateCallbacks(

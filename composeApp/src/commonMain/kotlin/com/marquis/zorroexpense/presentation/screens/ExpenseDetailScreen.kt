@@ -285,12 +285,6 @@ private fun ExpenseDetailContent(
 
             // Buyer information
             val buyer = expense.paidBy
-            val profileImageResource =
-                when (buyer.profileImage) {
-                    "sarah" -> Res.drawable.sarah
-                    "alex" -> Res.drawable.alex
-                    else -> Res.drawable.sarah
-                }
             if (buyer.userId.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),

@@ -75,6 +75,53 @@ sealed class AppDestinations {
     )
 
     @Serializable
+    data class ExpenseListDetail(
+        val listId: String,
+        val listName: String,
+        val shareCode: String,
+        val createdBy: String,
+        val createdAt: String,
+        val lastModified: String,
+        val membersJson: String,
+        val categoriesJson: String,
+    ) : AppDestinations() {
+        companion object {
+            fun createMembersJson(members: List<MemberNavigation>): String = Json.encodeToString(members)
+
+            fun createCategoriesJson(categories: List<CategoryNavigation>): String = Json.encodeToString(categories)
+        }
+
+        val members: List<MemberNavigation>
+            get() = try {
+                Json.decodeFromString<List<MemberNavigation>>(membersJson)
+            } catch (e: Exception) {
+                emptyList()
+            }
+
+        val categories: List<CategoryNavigation>
+            get() = try {
+                Json.decodeFromString<List<CategoryNavigation>>(categoriesJson)
+            } catch (e: Exception) {
+                emptyList()
+            }
+    }
+
+    @Serializable
+    data class MemberNavigation(
+        val userId: String,
+        val name: String,
+        val profileImage: String,
+    )
+
+    @Serializable
+    data class CategoryNavigation(
+        val documentId: String,
+        val name: String,
+        val icon: String,
+        val color: String,
+    )
+
+    @Serializable
     data class EditExpense(
         val listId: String,
         val expenseId: String,

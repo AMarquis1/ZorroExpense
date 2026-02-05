@@ -28,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.AlertDialog
@@ -70,7 +69,6 @@ internal fun ExpenseListsOverviewScreen(
     viewModel: ExpenseListsOverviewViewModel,
     onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     onCreateNewList: () -> Unit = {},
-    onEditList: (ExpenseList) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -130,10 +128,6 @@ internal fun ExpenseListsOverviewScreen(
                                         viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
                                         onListSelected(list.listId, list.name)
                                     },
-                                    onEditList = { list ->
-                                        viewModel.onEvent(ExpenseListsUiEvent.EditList(list))
-                                        onEditList(list)
-                                    },
                                     onDeleteList = { list ->
                                         viewModel.onEvent(ExpenseListsUiEvent.DeleteList(list))
                                     },
@@ -156,10 +150,6 @@ internal fun ExpenseListsOverviewScreen(
                                     onListSelected = { list ->
                                         viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
                                         onListSelected(list.listId, list.name)
-                                    },
-                                    onEditList = { list ->
-                                        viewModel.onEvent(ExpenseListsUiEvent.EditList(list))
-                                        onEditList(list)
                                     },
                                     onDeleteList = { list ->
                                         viewModel.onEvent(ExpenseListsUiEvent.DeleteList(list))
@@ -260,7 +250,6 @@ private fun LoadingState() {
 private fun SuccessState(
     lists: List<ExpenseList>,
     onListSelected: (ExpenseList) -> Unit,
-    onEditList: (ExpenseList) -> Unit = {},
     onDeleteList: (ExpenseList) -> Unit = {},
 ) {
     LazyColumn(
@@ -287,7 +276,6 @@ private fun SuccessState(
                 SwipeableExpenseListCard(
                     list = list,
                     onClick = { onListSelected(list) },
-                    onEdit = { onEditList(list) },
                     onDelete = { onDeleteList(list) },
                 )
             }
@@ -299,7 +287,6 @@ private fun SuccessState(
 internal fun ExpenseListCard(
     list: ExpenseList,
     onClick: () -> Unit,
-    onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
     isSwipeable: Boolean = false,
 ) {
@@ -447,39 +434,19 @@ internal fun ExpenseListCard(
 
                 // Action buttons (edit and delete) - hidden on Android when using swipe
                 if (!isSwipeable) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    // Delete button
+                    IconButton(
+                        onClick = {
+                            onDelete()
+                        },
+                        modifier = Modifier.size(32.dp),
                     ) {
-                        // Edit button
-                        IconButton(
-                            onClick = {
-                                onEdit()
-                            },
-                            modifier = Modifier.size(32.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
-                                contentDescription = "Edit list",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-
-                        // Delete button
-                        IconButton(
-                            onClick = {
-                                onDelete()
-                            },
-                            modifier = Modifier.size(32.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = "Delete list",
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete list",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp),
+                        )
                     }
                 }
             }
@@ -578,7 +545,6 @@ private fun ErrorStateWithCache(
     lists: List<ExpenseList>,
     onRetry: () -> Unit,
     onListSelected: (ExpenseList) -> Unit,
-    onEditList: (ExpenseList) -> Unit = {},
     onDeleteList: (ExpenseList) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -634,7 +600,6 @@ private fun ErrorStateWithCache(
         SuccessState(
             lists = lists,
             onListSelected = onListSelected,
-            onEditList = onEditList,
             onDeleteList = onDeleteList,
         )
     }
