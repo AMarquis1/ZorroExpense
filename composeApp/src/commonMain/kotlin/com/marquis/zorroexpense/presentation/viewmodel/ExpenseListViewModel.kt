@@ -7,7 +7,6 @@ import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
-import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
@@ -24,12 +23,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class ExpenseListViewModel(
-    private val userId: String,
     private val listId: String,
     val listName: String = "",
     private val getExpensesByListIdUseCase: GetExpensesByListIdUseCase,
     private val refreshExpensesUseCase: RefreshExpensesUseCase,
-    private val getCategoriesUseCase: GetCategoriesUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
     private val calculateDebtsUseCase: CalculateDebtsUseCase,
     private val getExpenseListByIdUseCase: GetGroupByIdUseCase,
@@ -132,10 +129,6 @@ class ExpenseListViewModel(
     private fun loadExpenses(isRefresh: Boolean = false, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             val currentState = _uiState.value
-
-            // For initial load (no existing data), show loading state
-            // For refresh OR reload with existing data, keep UI state visible and set isRefreshing = true
-            // This prevents flickering of collapsed/expanded months during navigation
             if (currentState is ExpenseListUiState.Success) {
                 _uiState.value = currentState.copy(isRefreshing = true)
             } else if (!isRefresh && hasLoadedOnce) {
@@ -144,44 +137,34 @@ class ExpenseListViewModel(
                 // The repository's cache-first strategy ensures data loads from cache immediately
                 // We'll update the data once fresh data arrives
             } else if (!isRefresh) {
-                // Only show Loading on very first load when we have no data yet
                 _uiState.value = ExpenseListUiState.Loading
             }
 
-            // Load both expenses and categories
-            // Use refreshExpensesUseCase for force refresh (pull-to-refresh), otherwise use cache-first strategy
             val expensesResult = if (forceRefresh) {
                 refreshExpensesUseCase(listId)
             } else {
                 getExpensesByListIdUseCase(listId)
             }
-            val categoriesResult = getCategoriesUseCase()
 
-            if (expensesResult.isSuccess && categoriesResult.isSuccess) {
+            if (expensesResult.isSuccess) {
                 val expenses = expensesResult.getOrThrow()
-                val categories = categoriesResult.getOrThrow()
+                val categories = expenses
+                    .map { it.category }
+                    .distinctBy { category ->
+                        category.documentId.ifBlank { category.name }
+                    }
 
-                // Update available categories for the UI
                 _availableCategories.value = categories
 
-                // Preserve existing UI state (especially collapsedMonths) from previous state
-                // This ensures user's collapsed/expanded preferences survive reloads
                 val existingState =
-                    if (currentState is ExpenseListUiState.Success) {
-                        currentState
-                    } else {
-                        ExpenseListUiState.Success()
-                    }
+                    currentState as? ExpenseListUiState.Success ?: ExpenseListUiState.Success()
 
                 val selectedCats =
                     if (isRefresh && currentState is ExpenseListUiState.Success) {
                         currentState.selectedCategories
                     } else {
-                        categories.toSet() // Use all categories for initial load
+                        categories.toSet()
                     }
-
-                // Preserve pending deletions when we have existing state
-                // This ensures items being deleted stay hidden during any reload
                 val preservedPendingDeletions =
                     if (currentState is ExpenseListUiState.Success) {
                         currentState.pendingDeletions
@@ -189,16 +172,12 @@ class ExpenseListViewModel(
                         emptySet()
                     }
 
-                // When refreshing with pending deletions, we need to merge the new expenses
-                // with any expenses that are pending deletion (so they can be restored)
                 val finalExpenses =
                     if (isRefresh && currentState is ExpenseListUiState.Success && preservedPendingDeletions.isNotEmpty()) {
-                        // Get expenses that are pending deletion from current state
                         val pendingExpenses =
                             currentState.expenses.filter { expense ->
                                 preservedPendingDeletions.contains(expense.documentId)
                             }
-                        // Merge new expenses with pending expenses, avoiding duplicates
                         (expenses + pendingExpenses).distinctBy { it.documentId }
                     } else {
                         expenses
@@ -223,7 +202,6 @@ class ExpenseListViewModel(
                         debtSummaries = debtSummaries,
                     )
 
-                // Apply filtering with current filters
                 _uiState.value =
                     newState.copy(
                         filteredExpenses =
@@ -236,10 +214,8 @@ class ExpenseListViewModel(
                             ),
                     )
             } else {
-                val error = expensesResult.exceptionOrNull() ?: categoriesResult.exceptionOrNull()
+                val error = expensesResult.exceptionOrNull()
                 if (isRefresh && currentState is ExpenseListUiState.Success) {
-                    // If refresh fails, keep existing data but show error somehow
-                    // For now, just stop refreshing
                     _uiState.value = currentState.copy(isRefreshing = false)
                 } else {
                     _uiState.value =

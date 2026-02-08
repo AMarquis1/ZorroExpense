@@ -270,27 +270,22 @@ object AppModule {
      * Provide ExpenseListViewModel with proper lifecycle management
      * Caches ViewModel instances per listId to preserve state when navigating back
      * Uses clean dependency injection with interfaces
+     * Categories are extracted from the current group's expenses only
      */
     fun provideExpenseListViewModel(
-        userId: String,
         listId: String,
         listName: String = "",
         onExpenseClick: (Expense) -> Unit = {},
         onAddExpenseClick: () -> Unit = {},
     ): ExpenseListViewModel {
-        // Cache key combines userId and listId for proper data isolation
-        val cacheKey = "$userId:$listId"
-
         // Return cached ViewModel if available, or create new one
         val viewModel =
-            expenseListViewModels.getOrPut(cacheKey) {
+            expenseListViewModels.getOrPut(listId) {
                 ExpenseListViewModel(
-                    userId = userId,
                     listId = listId,
                     listName = listName,
                     getExpensesByListIdUseCase = getExpensesByListIdUseCase,
                     refreshExpensesUseCase = refreshExpensesUseCase,
-                    getCategoriesUseCase = getCategoriesUseCase,
                     deleteExpenseUseCase = deleteExpenseUseCase,
                     calculateDebtsUseCase = calculateDebtsUseCase,
                     getExpenseListByIdUseCase = getExpenseListByIdUseCase,
@@ -308,9 +303,8 @@ object AppModule {
     /**
      * Clear a specific expense list ViewModel from cache
      */
-    fun clearExpenseListViewModel(userId: String, listId: String) {
-        val cacheKey = "$userId:$listId"
-        expenseListViewModels.remove(cacheKey)
+    fun clearExpenseListViewModel(listId: String) {
+        expenseListViewModels.remove(listId)
     }
 
     /**

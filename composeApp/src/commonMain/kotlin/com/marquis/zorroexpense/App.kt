@@ -217,10 +217,8 @@ fun App() {
                         }
 
                         val expenseListRoute = backStackEntry.toRoute<AppDestinations.ExpenseList>()
-                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
                         val viewModel =
                             AppModule.provideExpenseListViewModel(
-                                userId = userId,
                                 listId = expenseListRoute.listId,
                                 listName = expenseListRoute.listName,
                                 onExpenseClick = { expense ->
@@ -425,7 +423,6 @@ fun App() {
                                 if (savedExpenses.isNotEmpty()) {
                                     val listViewModel =
                                         AppModule.provideExpenseListViewModel(
-                                            userId = userId,
                                             listId = addExpenseRoute.listId,
                                         )
                                     listViewModel.addExpensesLocally(savedExpenses)
@@ -491,10 +488,8 @@ fun App() {
                                 deletedExpenseId = expense.documentId
 
                                 // Use the singleton ViewModel instance
-                                val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
                                 val listViewModel =
                                     AppModule.provideExpenseListViewModel(
-                                        userId = userId,
                                         listId = expenseDetail.listId,
                                     )
                                 listViewModel.onEvent(ExpenseListUiEvent.PendingDeleteExpense(expense.documentId))
@@ -597,7 +592,6 @@ fun App() {
                                     val savedExpense = savedExpenses.first()
                                     val listViewModel =
                                         AppModule.provideExpenseListViewModel(
-                                            userId = userId,
                                             listId = editExpense.listId,
                                         )
                                     listViewModel.updateExpenseLocally(savedExpense)
