@@ -64,7 +64,7 @@ import androidx.compose.ui.unit.sp
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.platform.pullToRefreshBox
-import com.marquis.zorroexpense.presentation.components.SwipeableExpenseListCard
+import com.marquis.zorroexpense.presentation.components.SwipeableGroupCard
 import com.marquis.zorroexpense.presentation.components.bottomsheets.formatDateForDisplay
 import com.marquis.zorroexpense.presentation.state.GroupListUiEvent
 import com.marquis.zorroexpense.presentation.state.GroupListUiState
@@ -73,8 +73,9 @@ import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
 @Composable
 internal fun GroupListScreen(
     viewModel: GroupListViewModel,
-    onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
-    onCreateNewList: () -> Unit = {},
+    onGroupSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
+    onCreateGroup: () -> Unit = {},
+    onEditGroup: (group: Group) -> Unit = { _ -> },
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -116,7 +117,7 @@ internal fun GroupListScreen(
     Scaffold(
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { onCreateNewList() },
+                onClick = { onCreateGroup() },
                 expanded = isFabExpanded,
                 icon = {
                     Icon(
@@ -168,21 +169,24 @@ internal fun GroupListScreen(
                                     )
                                 }
                                 SuccessState(
-                                    lists = successState.lists,
+                                    lists = successState.groups,
                                     listState = listState,
-                                    onListSelected = { list ->
-                                        viewModel.onEvent(GroupListUiEvent.SelectGroup(list.listId))
-                                        onListSelected(list.listId, list.name)
+                                    onGroupSelected = { group ->
+                                        viewModel.onEvent(GroupListUiEvent.SelectGroup(group.listId))
+                                        onGroupSelected(group.listId, group.name)
                                     },
-                                    onDeleteList = { list ->
-                                        viewModel.onEvent(GroupListUiEvent.DeleteGroup(list))
+                                    onEditGroup = { group ->
+                                        onEditGroup(group)
+                                    },
+                                    onDeleteGroup = { group ->
+                                        viewModel.onEvent(GroupListUiEvent.DeleteGroup(group))
                                     },
                                 )
                             }
                         }
 
                         is GroupListUiState.Empty -> {
-                            EmptyState(onCreateNewList = onCreateNewList)
+                            EmptyState(onCreateGroup = onCreateGroup)
                         }
 
                         is GroupListUiState.Error -> {
@@ -193,12 +197,15 @@ internal fun GroupListScreen(
                                     lists = errorState.cachedLists,
                                     listState = listState,
                                     onRetry = { viewModel.onEvent(GroupListUiEvent.RetryLoad) },
-                                    onListSelected = { list ->
-                                        viewModel.onEvent(GroupListUiEvent.SelectGroup(list.listId))
-                                        onListSelected(list.listId, list.name)
+                                    onGroupSelected = { group ->
+                                        viewModel.onEvent(GroupListUiEvent.SelectGroup(group.listId))
+                                        onGroupSelected(group.listId, group.name)
                                     },
-                                    onDeleteList = { list ->
-                                        viewModel.onEvent(GroupListUiEvent.DeleteGroup(list))
+                                    onEditGroup = { group ->
+                                        onEditGroup(group)
+                                    },
+                                    onDeleteGroup = { group ->
+                                        viewModel.onEvent(GroupListUiEvent.DeleteGroup(group))
                                     },
                                 )
                             } else {
@@ -214,7 +221,6 @@ internal fun GroupListScreen(
         }
     }
 
-    // Delete confirmation dialog
     if (showDeleteDialog && listToDelete != null) {
         DeleteExpenseListDialog(
             listName = listToDelete.name,
@@ -228,9 +234,6 @@ internal fun GroupListScreen(
     }
 }
 
-/**
- * Modern gradient header with title and subtitle
- */
 @Composable
 private fun ModernHeader() {
     Column(
@@ -296,8 +299,9 @@ private fun LoadingState() {
 private fun SuccessState(
     lists: List<Group>,
     listState: androidx.compose.foundation.lazy.LazyListState,
-    onListSelected: (Group) -> Unit,
-    onDeleteList: (Group) -> Unit = {},
+    onGroupSelected: (Group) -> Unit,
+    onEditGroup: (Group) -> Unit = {},
+    onDeleteGroup: (Group) -> Unit = {},
 ) {
     LazyColumn(
         state = listState,
@@ -308,8 +312,8 @@ private fun SuccessState(
         items(
             items = lists,
             key = { it.listId },
-        ) { list ->
-            val index = lists.indexOf(list)
+        ) { group ->
+            val index = lists.indexOf(group)
             AnimatedVisibility(
                 visible = true,
                 enter =
@@ -321,10 +325,11 @@ private fun SuccessState(
                             initialOffsetY = { 40 },
                         ),
             ) {
-                SwipeableExpenseListCard(
-                    list = list,
-                    onClick = { onListSelected(list) },
-                    onDelete = { onDeleteList(list) },
+                SwipeableGroupCard(
+                    list = group,
+                    onClick = { onGroupSelected(group) },
+                    onEdit = { onEditGroup(group)},
+                    onDelete = { onDeleteGroup(group) },
                 )
             }
         }
@@ -503,7 +508,7 @@ internal fun ExpenseListCard(
 }
 
 @Composable
-fun EmptyState(onCreateNewList: () -> Unit) {
+fun EmptyState(onCreateGroup: () -> Unit) {
     Column(
         modifier =
             Modifier
@@ -570,7 +575,7 @@ fun EmptyState(onCreateNewList: () -> Unit) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = onCreateNewList,
+            onClick = onCreateGroup,
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -593,8 +598,9 @@ private fun ErrorStateWithCache(
     lists: List<Group>,
     listState: androidx.compose.foundation.lazy.LazyListState,
     onRetry: () -> Unit,
-    onListSelected: (Group) -> Unit,
-    onDeleteList: (Group) -> Unit = {},
+    onGroupSelected: (Group) -> Unit,
+    onEditGroup: (Group) -> Unit = { _ -> },
+    onDeleteGroup: (Group) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Error banner at the top
@@ -649,8 +655,9 @@ private fun ErrorStateWithCache(
         SuccessState(
             lists = lists,
             listState = listState,
-            onListSelected = onListSelected,
-            onDeleteList = onDeleteList,
+            onGroupSelected = onGroupSelected,
+            onEditGroup = onEditGroup,
+            onDeleteGroup = onDeleteGroup,
         )
     }
 }
@@ -746,7 +753,7 @@ private fun DeleteExpenseListDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Delete Expense List")
+            Text("Delete Group")
         },
         text = {
             Text("Are you sure you want to delete \"$listName\"? This action cannot be undone.")

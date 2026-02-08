@@ -9,8 +9,9 @@ import com.marquis.zorroexpense.domain.model.Group
  * iOS/Web: Falls back to simple card without swipe
  */
 @Composable
-expect fun SwipeableExpenseListCard(
+expect fun SwipeableGroupCard(
     list: Group,
     onClick: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 )

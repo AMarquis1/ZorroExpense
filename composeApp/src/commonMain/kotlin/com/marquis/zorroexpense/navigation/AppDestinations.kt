@@ -81,6 +81,7 @@ sealed class AppDestinations {
         val lastModified: String,
         val membersJson: String,
         val categoriesJson: String,
+        val mode: String = "VIEW",
     ) : AppDestinations() {
         companion object {
             fun createMembersJson(members: List<MemberNavigation>): String = Json.encodeToString(members)

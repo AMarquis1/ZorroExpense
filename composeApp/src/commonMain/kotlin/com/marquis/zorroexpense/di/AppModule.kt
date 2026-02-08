@@ -246,6 +246,7 @@ object AppModule {
         userId: String,
         onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
         onListDeleted: (listId: String) -> Unit = { _ -> },
+        onEditGroup: (group: com.marquis.zorroexpense.domain.model.Group) -> Unit = { _ -> },
     ): GroupListViewModel {
         val viewModel =
             groupListViewModel ?: GroupListViewModel(
@@ -257,6 +258,7 @@ object AppModule {
                 getUsersUseCase = getUsersUseCase,
                 onListSelected = onListSelected,
                 onListDeleted = onListDeleted,
+                onEditGroup = onEditGroup,
             ).also { groupListViewModel = it }
 
         return viewModel

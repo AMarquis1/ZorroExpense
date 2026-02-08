@@ -47,6 +47,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -65,9 +66,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -103,9 +104,6 @@ import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.zorro_header
 import kotlin.math.roundToInt
 
-/**
- * Utility function to check if an expense date is in the future
- */
 @OptIn(kotlin.time.ExperimentalTime::class)
 private fun isFutureExpense(expenseDate: String): Boolean =
     try {
@@ -116,13 +114,10 @@ private fun isFutureExpense(expenseDate: String): Boolean =
                 .date
         val expenseLocalDate = LocalDate.parse(expenseDate.substringBefore("T")) // Handle both ISO format and date-only
         expenseLocalDate > today
-    } catch (e: Exception) {
-        false // If parsing fails, treat as not future
+    } catch (_: Exception) {
+        false
     }
 
-/**
- * Upcoming expenses separator component with chevron toggle
- */
 @Composable
 private fun UpcomingExpensesSeparator(
     showUpcomingExpenses: Boolean,
@@ -130,18 +125,15 @@ private fun UpcomingExpensesSeparator(
     expenseCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    // Interaction source for press feedback
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    // Animate the arrow rotation
     val rotationAngle by animateFloatAsState(
         targetValue = if (showUpcomingExpenses) 0f else -90f,
         animationSpec = tween(durationMillis = 300),
         label = "arrow_rotation",
     )
 
-    // Animate press scale
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(durationMillis = 100),
@@ -157,7 +149,7 @@ private fun UpcomingExpensesSeparator(
                     scaleY = scale
                 }.clickable(
                     interactionSource = interactionSource,
-                    indication = null, // We handle the feedback with scale animation
+                    indication = null,
                 ) { onToggleUpcomingExpenses() }
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -225,11 +217,8 @@ fun ExpenseListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle delete snackbar with integrated timer
-    // This LaunchedEffect manages both the snackbar display AND the auto-delete timer
     LaunchedEffect(deletedExpenseName) {
         if (deletedExpenseName != null) {
-            // Show snackbar and wait for result
             val result =
                 snackbarHostState.showSnackbar(
                     message = "Expense \"$deletedExpenseName\" has been deleted",
@@ -239,12 +228,10 @@ fun ExpenseListScreen(
 
             when (result) {
                 SnackbarResult.ActionPerformed -> {
-                    // User clicked UNDO
                     onUndoDelete()
                     onDeleteFlowComplete()
                 }
                 SnackbarResult.Dismissed -> {
-                    // Snackbar was dismissed (by timeout or swipe) - confirm delete
                     onConfirmDelete()
                     onDeleteFlowComplete()
                 }
@@ -252,16 +239,13 @@ fun ExpenseListScreen(
         }
     }
 
-    // Auto-dismiss snackbar after delay (since we're using Indefinite duration)
     LaunchedEffect(deletedExpenseName) {
         if (deletedExpenseName != null) {
             kotlinx.coroutines.delay(DeleteConstants.AUTO_DELETE_DELAY_MS)
-            // This will trigger the Dismissed result above
             snackbarHostState.currentSnackbarData?.dismiss()
         }
     }
 
-    // Handle update snackbar - simple notification without undo
     LaunchedEffect(updatedExpenseName) {
         if (updatedExpenseName != null) {
             snackbarHostState.showSnackbar(
@@ -272,7 +256,6 @@ fun ExpenseListScreen(
         }
     }
 
-    // Local UI state for things not managed by ViewModel
     var showConfigMenu by remember { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
 
@@ -280,7 +263,6 @@ fun ExpenseListScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(true) }
 
-    // Extract state values from the current UI state
     val currentState = uiState
     val filteredExpenses = if (currentState is ExpenseListUiState.Success) currentState.filteredExpenses else emptyList()
     val searchQuery = if (currentState is ExpenseListUiState.Success) currentState.searchQuery else ""
@@ -293,7 +275,6 @@ fun ExpenseListScreen(
     val showUpcoming = if (currentState is ExpenseListUiState.Success) currentState.showUpcomingExpenses else true
     val errorMessage = if (currentState is ExpenseListUiState.Error) currentState.message else null
 
-    // Separate current/past and future expenses
     val (currentExpenses, futureExpenses) =
         remember(filteredExpenses) {
             filteredExpenses.partition { expense -> !isFutureExpense(expense.date) }
@@ -305,10 +286,8 @@ fun ExpenseListScreen(
                 .groupBy { expense -> getMonthYear(expense.date) }
                 .toList()
                 .sortedByDescending { (_, expenses) ->
-                    // Sort by the most recent date in each month group
                     expenses.maxOfOrNull { it.date } ?: ""
                 }.associate { (monthYear, expenses) ->
-                    // Sort expenses within each month by date descending (most recent first)
                     monthYear to expenses.sortedByDescending { it.date }
                 }
         }
@@ -319,10 +298,8 @@ fun ExpenseListScreen(
                 .groupBy { expense -> getMonthYear(expense.date) }
                 .toList()
                 .sortedBy { (_, expenses) ->
-                    // Sort by the earliest date in each month group (ascending for future)
                     expenses.minOfOrNull { it.date } ?: ""
                 }.associate { (monthYear, expenses) ->
-                    // Sort expenses within each month by date ascending (soonest first)
                     monthYear to expenses.sortedBy { it.date }
                 }
         }
@@ -333,7 +310,6 @@ fun ExpenseListScreen(
         }
     }
 
-    // FAB scroll behavior: collapse when scrolling down, expand when near top or scrolling up
     LaunchedEffect(listState) {
         var previousFirstVisibleItemIndex = 0
         var previousFirstVisibleItemScrollOffset = 0
@@ -348,14 +324,12 @@ fun ExpenseListScreen(
                     currentOffset > previousFirstVisibleItemScrollOffset
                 }
 
-            // Auto-expand when near the top (within 5 items) for better UX
             isFabExpanded = if (currentIndex <= 5) {
                 true
             } else {
                 !isScrollingDown
             }
 
-            // Update previous values for next iteration
             previousFirstVisibleItemIndex = currentIndex
             previousFirstVisibleItemScrollOffset = currentOffset
         }
@@ -389,7 +363,6 @@ fun ExpenseListScreen(
                                     }
                                 },
                     ) {
-                        // Background image - true full width with custom layout compensation
                         Image(
                             painter = painterResource(Res.drawable.zorro_header),
                             contentDescription = "Zorro header background",
@@ -427,14 +400,14 @@ fun ExpenseListScreen(
                                     Text(
                                         "Search expenses...",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = androidx.compose.ui.graphics.Color.Gray,
+                                        color = Color.Gray,
                                     )
                                 },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.Search,
                                         contentDescription = "Search",
-                                        tint = androidx.compose.ui.graphics.Color.Gray,
+                                        tint = Color.Gray,
                                     )
                                 },
                                 trailingIcon = {
@@ -447,18 +420,18 @@ fun ExpenseListScreen(
                                         Icon(
                                             Icons.Default.Close,
                                             contentDescription = "Close search",
-                                            tint = androidx.compose.ui.graphics.Color.Gray,
+                                            tint = Color.Gray,
                                         )
                                     }
                                 },
                                 colors =
-                                    androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        focusedContainerColor = androidx.compose.ui.graphics.Color.White,
-                                        unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
-                                        focusedTextColor = androidx.compose.ui.graphics.Color.Black,
-                                        unfocusedTextColor = androidx.compose.ui.graphics.Color.Black,
+                                    OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
                                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = androidx.compose.ui.graphics.Color.Gray,
+                                        unfocusedBorderColor = Color.Gray,
                                     ),
                                 modifier =
                                     Modifier
@@ -549,14 +522,13 @@ fun ExpenseListScreen(
                                 }
                             }
 
-                            // Settings button for list details
                             IconButton(
                                 onClick = onSettingsClick,
                             ) {
                                 Icon(
                                     Icons.Default.Settings,
                                     contentDescription = "List settings",
-                                    tint = androidx.compose.ui.graphics.Color.White,
+                                    tint = Color.White,
                                     modifier = Modifier.size(28.dp),
                                 )
                             }
@@ -565,8 +537,8 @@ fun ExpenseListScreen(
                 },
                 colors =
                     TopAppBarDefaults.topAppBarColors(
-                        containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        titleContentColor = androidx.compose.ui.graphics.Color.White,
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
                     ),
             )
         },
@@ -610,7 +582,6 @@ fun ExpenseListScreen(
                 }
 
                 isLoading -> {
-                    // Show shimmer skeleton placeholders while loading
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding =
@@ -619,22 +590,18 @@ fun ExpenseListScreen(
                                 bottom = 72.dp,
                             ),
                     ) {
-                        // Debt summary skeleton
                         item {
                             DebtSummaryBarSkeleton()
                         }
 
-                        // Category filter skeleton
                         item {
                             CategoryFilterRowSkeleton()
                         }
 
-                        // Month separator skeleton
                         item {
                             MonthSeparatorSkeleton()
                         }
 
-                        // Expense card skeletons
                         items(5) {
                             ExpenseCardSkeleton()
                         }
@@ -642,7 +609,6 @@ fun ExpenseListScreen(
                 }
 
                 filteredExpenses.isEmpty() && !isLoading -> {
-                    // Show category filter even when empty, but not in error state
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding =
@@ -651,7 +617,6 @@ fun ExpenseListScreen(
                                 bottom = 72.dp,
                             ),
                     ) {
-                        // Debt summary bar - first item if there are debts to show
                         if (currentState is ExpenseListUiState.Success && currentState.debtSummaries.isNotEmpty()) {
                             item {
                                 DebtSummaryBar(
@@ -660,7 +625,6 @@ fun ExpenseListScreen(
                             }
                         }
 
-                        // Category filter row
                         item {
                             CategoryFilterRow(
                                 categories = availableCategories,
@@ -671,7 +635,6 @@ fun ExpenseListScreen(
                             )
                         }
 
-                        // Empty state message
                         item {
                             if (searchQuery.isNotEmpty()) {
                                 EmptyState(
@@ -709,7 +672,6 @@ fun ExpenseListScreen(
                                     },
                             ),
                     ) {
-                        // Debt summary bar - first item if there are debts to show
                         if (currentState is ExpenseListUiState.Success && currentState.debtSummaries.isNotEmpty()) {
                             item {
                                 DebtSummaryBar(
@@ -718,7 +680,6 @@ fun ExpenseListScreen(
                             }
                         }
 
-                        // Category filter row - always after debt summary
                         item {
                             CategoryFilterRow(
                                 categories = availableCategories,
@@ -729,7 +690,6 @@ fun ExpenseListScreen(
                             )
                         }
 
-                        // Display search results count if searching
                         if (searchQuery.isNotEmpty()) {
                             item {
                                 Text(
@@ -741,7 +701,6 @@ fun ExpenseListScreen(
                             }
                         }
 
-                        // Add upcoming expenses separator if there are future expenses (AT TOP)
                         if (futureExpenses.isNotEmpty()) {
                             item(key = "upcoming_separator") {
                                 UpcomingExpensesSeparator(
@@ -752,7 +711,6 @@ fun ExpenseListScreen(
                             }
                         }
 
-                        // Display future expenses with month separators (AT TOP, only if toggle is on)
                         if (showUpcoming) {
                             groupedFutureExpenses.forEach { entry ->
                                 val monthYear = entry.key
@@ -767,7 +725,6 @@ fun ExpenseListScreen(
                                     )
                                 }
 
-                                // Animated visibility for future expenses
                                 items(
                                     items = expensesInMonth,
                                     key = { expense: Expense -> "expense_future_${expense.documentId}" },
@@ -800,9 +757,8 @@ fun ExpenseListScreen(
                                     }
                                 }
                             }
-                        } // End of if (showUpcoming)
+                        }
 
-                        // Display current/past expenses with month separators (BELOW upcoming expenses)
                         groupedCurrentExpenses.forEach { entry ->
                             val monthYear = entry.key
                             val expensesInMonth = entry.value
@@ -815,8 +771,7 @@ fun ExpenseListScreen(
                                     },
                                 )
                             }
-
-                            // Animated visibility for current expenses
+                            
                             items(
                                 items = expensesInMonth,
                                 key = { expense: Expense -> "expense_current_${expense.documentId}" },

@@ -9,9 +9,10 @@ import com.marquis.zorroexpense.presentation.screens.ExpenseListCard
  * Falls back to card with visible edit and delete buttons
  */
 @Composable
-actual fun SwipeableExpenseListCard(
+actual fun SwipeableGroupCard(
     list: Group,
     onClick: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     ExpenseListCard(

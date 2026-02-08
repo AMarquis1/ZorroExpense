@@ -27,6 +27,7 @@ class GroupListViewModel(
     private val getUsersUseCase: GetUsersUseCase,
     private val onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     private val onListDeleted: (listId: String) -> Unit = { _ -> },
+    private val onEditGroup: (group: Group) -> Unit = { _ -> },
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<GroupListUiState>(GroupListUiState.Loading)
     val uiState: StateFlow<GroupListUiState> = _uiState.asStateFlow()
@@ -42,12 +43,12 @@ class GroupListViewModel(
             is GroupListUiEvent.LoadGroups -> loadLists()
             is GroupListUiEvent.RefreshGroups -> refreshLists()
             is GroupListUiEvent.CreateNewGroup -> {}
-            is GroupListUiEvent.SelectGroup -> selectList(event.listId)
+            is GroupListUiEvent.SelectGroup -> selectGroup(event.groupId)
             is GroupListUiEvent.JoinGroup -> joinList(event.shareCode)
-            is GroupListUiEvent.DeleteGroup -> showDeleteConfirmation(event.list)
+            is GroupListUiEvent.DeleteGroup -> showDeleteConfirmation(event.group)
             is GroupListUiEvent.ConfirmDelete -> confirmDelete()
             is GroupListUiEvent.CancelDelete -> cancelDelete()
-            is GroupListUiEvent.EditGroup -> editList(event.list)
+            is GroupListUiEvent.EditGroup -> editList(event.group)
             is GroupListUiEvent.RetryLoad -> loadLists()
         }
     }
@@ -68,7 +69,7 @@ class GroupListViewModel(
 
             // If we have cached data and should show it immediately, do so
             if (shouldShowCacheImmediately && (cachedLists != null || currentState is GroupListUiState.Success)) {
-                val listsToShow = cachedLists ?: (currentState as? GroupListUiState.Success)?.lists ?: emptyList()
+                val listsToShow = cachedLists ?: (currentState as? GroupListUiState.Success)?.groups ?: emptyList()
                 _uiState.value = GroupListUiState.Success(listsToShow, isRefreshing = true)
             } else {
                 _uiState.value = GroupListUiState.Loading
@@ -140,10 +141,10 @@ class GroupListViewModel(
         }
     }
 
-    private fun selectList(listId: String) {
+    private fun selectGroup(groupId: String) {
         val currentState = _uiState.value
         if (currentState is GroupListUiState.Success) {
-            val selectedList = currentState.lists.find { it.listId == listId }
+            val selectedList = currentState.groups.find { it.listId == groupId }
             selectedList?.let {
                 onListSelected(it.listId, it.name)
             }
@@ -244,7 +245,6 @@ class GroupListViewModel(
     }
 
     private fun editList(list: Group) {
-        // Callback will be handled by the screen to navigate to edit
-        // This is a placeholder - the screen will handle navigation
+        onEditGroup(list)
     }
 }

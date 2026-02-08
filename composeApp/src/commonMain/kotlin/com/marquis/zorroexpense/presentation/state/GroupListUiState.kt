@@ -9,7 +9,7 @@ sealed class GroupListUiState {
     data object Loading : GroupListUiState()
 
     data class Success(
-        val lists: List<Group>,
+        val groups: List<Group>,
         val isRefreshing: Boolean = false,
         val showDeleteDialog: Boolean = false,
         val listToDelete: Group? = null,
@@ -33,20 +33,20 @@ sealed class GroupListUiEvent {
     data object RefreshGroups: GroupListUiEvent()
 
     data class SelectGroup(
-        val listId: String,
+        val groupId: String,
     ) : GroupListUiEvent()
 
     data class JoinGroup(
         val shareCode: String,
     ) : GroupListUiEvent()
 
-    data class DeleteGroup(val list: Group) : GroupListUiEvent()
+    data class DeleteGroup(val group: Group) : GroupListUiEvent()
 
     data object ConfirmDelete : GroupListUiEvent()
 
     data object CancelDelete : GroupListUiEvent()
 
-    data class EditGroup(val list: Group) : GroupListUiEvent()
+    data class EditGroup(val group: Group) : GroupListUiEvent()
 
     data object RetryLoad : GroupListUiEvent()
 }

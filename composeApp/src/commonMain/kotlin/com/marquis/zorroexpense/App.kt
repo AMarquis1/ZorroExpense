@@ -122,13 +122,44 @@ fun App() {
                                     // List deleted successfully, no navigation needed
                                     // The UI is already updated in the ViewModel
                                 },
+                                onEditGroup = { group ->
+                                    // Navigate to ExpenseListDetail with the group data in EDIT mode
+                                    navController.navigate(AppDestinations.ExpenseListDetail(
+                                        listId = group.listId,
+                                        listName = group.name,
+                                        shareCode = group.shareCode,
+                                        createdBy = group.createdBy,
+                                        createdAt = group.createdAt,
+                                        lastModified = group.lastModified,
+                                        membersJson = AppDestinations.ExpenseListDetail.createMembersJson(
+                                            group.members.map { member ->
+                                                AppDestinations.MemberNavigation(
+                                                    userId = member.userId,
+                                                    name = member.name,
+                                                    profileImage = member.profileImage,
+                                                )
+                                            },
+                                        ),
+                                        categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(
+                                            group.categories.map { category ->
+                                                AppDestinations.CategoryNavigation(
+                                                    documentId = category.documentId,
+                                                    name = category.name,
+                                                    icon = category.icon,
+                                                    color = category.color,
+                                                )
+                                            },
+                                        ),
+                                        mode = "EDIT",
+                                    ))
+                                },
                             )
                         GroupListScreen(
                             viewModel = viewModel,
-                            onListSelected = { listId, listName ->
+                            onGroupSelected = { listId, listName ->
                                 navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName))
                             },
-                            onCreateNewList = {
+                            onCreateGroup = {
                                 // Navigate to ExpenseListDetail with ADD mode to create a new list
                                 navController.navigate(AppDestinations.ExpenseListDetail(
                                     listId = "",
@@ -139,6 +170,37 @@ fun App() {
                                     lastModified = "",
                                     membersJson = AppDestinations.ExpenseListDetail.createMembersJson(emptyList()),
                                     categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(emptyList()),
+                                ))
+                            },
+                            onEditGroup = { group ->
+                                // Navigate to ExpenseListDetail with the group data in EDIT mode
+                                navController.navigate(AppDestinations.ExpenseListDetail(
+                                    listId = group.listId,
+                                    listName = group.name,
+                                    shareCode = group.shareCode,
+                                    createdBy = group.createdBy,
+                                    createdAt = group.createdAt,
+                                    lastModified = group.lastModified,
+                                    membersJson = AppDestinations.ExpenseListDetail.createMembersJson(
+                                        group.members.map { member ->
+                                            AppDestinations.MemberNavigation(
+                                                userId = member.userId,
+                                                name = member.name,
+                                                profileImage = member.profileImage,
+                                            )
+                                        },
+                                    ),
+                                    categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(
+                                        group.categories.map { category ->
+                                            AppDestinations.CategoryNavigation(
+                                                documentId = category.documentId,
+                                                name = category.name,
+                                                icon = category.icon,
+                                                color = category.color,
+                                            )
+                                        },
+                                    ),
+                                    mode = "EDIT",
                                 ))
                             },
                         )
@@ -301,11 +363,11 @@ fun App() {
 
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
 
-                        // Determine if this is ADD mode (creating new list) or VIEW mode
-                        val initialMode = if (listDetailRoute.listId.isEmpty()) {
-                            GroupDetailMode.ADD
-                        } else {
-                            GroupDetailMode.VIEW
+                        // Determine initial mode from route parameter, with fallback logic
+                        val initialMode = when {
+                            listDetailRoute.listId.isEmpty() -> GroupDetailMode.ADD
+                            listDetailRoute.mode == "EDIT" -> GroupDetailMode.EDIT
+                            else -> GroupDetailMode.VIEW
                         }
 
                         val viewModel = AppModule.provideExpenseListDetailViewModel(
