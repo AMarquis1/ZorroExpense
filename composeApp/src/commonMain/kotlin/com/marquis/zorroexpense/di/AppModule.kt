@@ -402,6 +402,7 @@ object AppModule {
                 getExpenseListByIdUseCase = getExpenseListByIdUseCase,
                 updateExpenseListUseCase = updateExpenseListUseCase,
                 createExpenseListUseCase = createExpenseListUseCase,
+                getCategoriesUseCase = getCategoriesUseCase,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
             )
@@ -417,6 +418,7 @@ object AppModule {
                 getExpenseListByIdUseCase = getExpenseListByIdUseCase,
                 updateExpenseListUseCase = updateExpenseListUseCase,
                 createExpenseListUseCase = createExpenseListUseCase,
+                getCategoriesUseCase = getCategoriesUseCase,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
             )

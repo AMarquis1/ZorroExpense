@@ -41,10 +41,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +60,7 @@ import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.ExpenseList
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.presentation.components.AddCategoryButton
+import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionMultiBottomSheet
 import com.marquis.zorroexpense.presentation.state.ExpenseListDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListDetailUiState
 import com.marquis.zorroexpense.presentation.state.ListDetailMode
@@ -69,6 +74,8 @@ fun ExpenseListDetailScreen(
     onListDeleted: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val allCategories by viewModel.allCategories.collectAsState()
+    val categoryBottomSheetState = rememberModalBottomSheetState()
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
@@ -218,6 +225,20 @@ fun ExpenseListDetailScreen(
                         onDismiss = { viewModel.onEvent(ExpenseListDetailUiEvent.CancelDeleteMember) },
                     )
                 }
+
+                if (successState.showCategoryBottomSheet) {
+                    CategorySelectionMultiBottomSheet(
+                        categories = allCategories,
+                        selectedCategories = successState.editedCategories,
+                        onCategoryToggled = { category ->
+                            viewModel.onEvent(ExpenseListDetailUiEvent.CategoryToggled(category))
+                        },
+                        onDismiss = {
+                            viewModel.onEvent(ExpenseListDetailUiEvent.DismissCategoryBottomSheet)
+                        },
+                        bottomSheetState = categoryBottomSheetState,
+                    )
+                }
             }
             is ExpenseListDetailUiState.Deleted -> {
                 LaunchedEffect(Unit) {
@@ -275,7 +296,6 @@ private fun ExpenseListDetailContent(
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) {
-        // Name section - editable in EDIT/ADD modes
         if (isEditable) {
             OutlinedTextField(
                 value = editedName,
@@ -297,7 +317,6 @@ private fun ExpenseListDetailContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Categories section
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -324,7 +343,7 @@ private fun ExpenseListDetailContent(
                         item {
                             AddCategoryButton(
                                 onClick = onAddCategoryClick,
-                                label = "Add",
+                                label = "Modify",
                                 size = 48.dp,
                             )
                         }

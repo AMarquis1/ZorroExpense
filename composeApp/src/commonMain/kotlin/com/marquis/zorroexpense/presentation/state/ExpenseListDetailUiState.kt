@@ -28,6 +28,7 @@ sealed class ExpenseListDetailUiState {
         val showDeleteMemberDialog: Boolean = false,
         val memberToDelete: User? = null,
         val isSaving: Boolean = false,
+        val showCategoryBottomSheet: Boolean = false,
         // Editable fields for EDIT/ADD modes
         val editedName: String = expenseList.name,
         val editedCategories: List<Category> = expenseList.categories,
@@ -62,6 +63,12 @@ sealed class ExpenseListDetailUiEvent {
 
     /** Add a category */
     data object AddCategoryClicked : ExpenseListDetailUiEvent()
+
+    /** Toggle a category selection in the bottom sheet */
+    data class CategoryToggled(val category: Category) : ExpenseListDetailUiEvent()
+
+    /** Dismiss the category selection bottom sheet */
+    data object DismissCategoryBottomSheet : ExpenseListDetailUiEvent()
 
     /** Remove a category */
     data class RemoveCategory(val category: Category) : ExpenseListDetailUiEvent()

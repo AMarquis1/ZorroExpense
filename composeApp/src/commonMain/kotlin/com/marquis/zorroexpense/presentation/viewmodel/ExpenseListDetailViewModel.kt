@@ -7,6 +7,7 @@ import com.marquis.zorroexpense.domain.model.ExpenseList
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.usecase.CreateExpenseListUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseListUseCase
+import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpenseListByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseListUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListDetailUiEvent
@@ -27,6 +28,7 @@ class ExpenseListDetailViewModel(
     private val getExpenseListByIdUseCase: GetExpenseListByIdUseCase,
     private val updateExpenseListUseCase: UpdateExpenseListUseCase,
     private val createExpenseListUseCase: CreateExpenseListUseCase,
+    private val getCategoriesUseCase: GetCategoriesUseCase,
     private val onListDeleted: () -> Unit = {},
     private val onListSaved: (listId: String, listName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
@@ -38,8 +40,15 @@ class ExpenseListDetailViewModel(
     )
     val uiState: StateFlow<ExpenseListDetailUiState> = _uiState.asStateFlow()
 
+    private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
+    val allCategories: StateFlow<List<Category>> = _allCategories.asStateFlow()
+
     /** Exposes the current user ID to the UI for determining which members can be removed */
     val currentUserId: String get() = userId
+
+    init {
+        loadCategories()
+    }
 
     fun onEvent(event: ExpenseListDetailUiEvent) {
         when (event) {
@@ -51,6 +60,8 @@ class ExpenseListDetailViewModel(
             is ExpenseListDetailUiEvent.SaveChanges -> saveChanges()
             is ExpenseListDetailUiEvent.UpdateName -> updateName(event.name)
             is ExpenseListDetailUiEvent.AddCategoryClicked -> onAddCategoryClicked()
+            is ExpenseListDetailUiEvent.CategoryToggled -> toggleCategory(event.category)
+            is ExpenseListDetailUiEvent.DismissCategoryBottomSheet -> dismissCategoryBottomSheet()
             is ExpenseListDetailUiEvent.RemoveCategory -> removeCategory(event.category)
             is ExpenseListDetailUiEvent.RemoveMember -> showDeleteMemberConfirmation(event.member)
             is ExpenseListDetailUiEvent.ConfirmDeleteMember -> confirmDeleteMember()
@@ -120,7 +131,42 @@ class ExpenseListDetailViewModel(
     }
 
     private fun onAddCategoryClicked() {
-        // TODO: Will be implemented later - navigate to category picker
+        val currentState = _uiState.value
+        if (currentState is ExpenseListDetailUiState.Success) {
+            _uiState.update {
+                currentState.copy(showCategoryBottomSheet = true)
+            }
+        }
+    }
+
+    private fun toggleCategory(category: Category) {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListDetailUiState.Success) {
+            val isAlreadySelected = currentState.editedCategories.any {
+                it.documentId == category.documentId
+            }
+
+            val updatedCategories = if (isAlreadySelected) {
+                currentState.editedCategories.filter {
+                    it.documentId != category.documentId
+                }
+            } else {
+                currentState.editedCategories + category
+            }
+
+            _uiState.update {
+                currentState.copy(editedCategories = updatedCategories)
+            }
+        }
+    }
+
+    private fun dismissCategoryBottomSheet() {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListDetailUiState.Success) {
+            _uiState.update {
+                currentState.copy(showCategoryBottomSheet = false)
+            }
+        }
     }
 
     private fun removeCategory(category: Category) {
@@ -282,6 +328,19 @@ class ExpenseListDetailViewModel(
                     },
                 )
             }
+        }
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            getCategoriesUseCase().fold(
+                onSuccess = { categories ->
+                    _allCategories.value = categories
+                },
+                onFailure = {
+                    _allCategories.value = emptyList()
+                },
+            )
         }
     }
 }
