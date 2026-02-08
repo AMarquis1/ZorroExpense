@@ -21,8 +21,8 @@ import kotlinx.coroutines.launch
 class ExpenseListDetailViewModel(
     private val listId: String,
     private val userId: String,
-    private val initialExpenseList: ExpenseList,
-    private val initialMode: ListDetailMode,
+    initialExpenseList: ExpenseList,
+    initialMode: ListDetailMode,
     private val deleteExpenseListUseCase: DeleteExpenseListUseCase,
     private val getExpenseListByIdUseCase: GetExpenseListByIdUseCase,
     private val updateExpenseListUseCase: UpdateExpenseListUseCase,
@@ -52,7 +52,9 @@ class ExpenseListDetailViewModel(
             is ExpenseListDetailUiEvent.UpdateName -> updateName(event.name)
             is ExpenseListDetailUiEvent.AddCategoryClicked -> onAddCategoryClicked()
             is ExpenseListDetailUiEvent.RemoveCategory -> removeCategory(event.category)
-            is ExpenseListDetailUiEvent.RemoveMember -> removeMember(event.member)
+            is ExpenseListDetailUiEvent.RemoveMember -> showDeleteMemberConfirmation(event.member)
+            is ExpenseListDetailUiEvent.ConfirmDeleteMember -> confirmDeleteMember()
+            is ExpenseListDetailUiEvent.CancelDeleteMember -> cancelDeleteMember()
         }
     }
 
@@ -134,7 +136,7 @@ class ExpenseListDetailViewModel(
         }
     }
 
-    private fun removeMember(member: User) {
+    private fun showDeleteMemberConfirmation(member: User) {
         // Cannot remove yourself
         if (member.userId == userId) return
 
@@ -142,9 +144,36 @@ class ExpenseListDetailViewModel(
         if (currentState is ExpenseListDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(
+                    showDeleteMemberDialog = true,
+                    memberToDelete = member,
+                )
+            }
+        }
+    }
+
+    private fun confirmDeleteMember() {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListDetailUiState.Success && currentState.memberToDelete != null) {
+            val memberToRemove = currentState.memberToDelete
+            _uiState.update {
+                currentState.copy(
+                    showDeleteMemberDialog = false,
+                    memberToDelete = null,
                     editedMembers = currentState.editedMembers.filter {
-                        it.userId != member.userId
+                        it.userId != memberToRemove.userId
                     },
+                )
+            }
+        }
+    }
+
+    private fun cancelDeleteMember() {
+        val currentState = _uiState.value
+        if (currentState is ExpenseListDetailUiState.Success) {
+            _uiState.update {
+                currentState.copy(
+                    showDeleteMemberDialog = false,
+                    memberToDelete = null,
                 )
             }
         }

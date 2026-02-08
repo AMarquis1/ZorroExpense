@@ -25,6 +25,8 @@ sealed class ExpenseListDetailUiState {
         val expenseList: ExpenseList,
         val mode: ListDetailMode = ListDetailMode.VIEW,
         val showDeleteDialog: Boolean = false,
+        val showDeleteMemberDialog: Boolean = false,
+        val memberToDelete: User? = null,
         val isSaving: Boolean = false,
         // Editable fields for EDIT/ADD modes
         val editedName: String = expenseList.name,
@@ -66,4 +68,10 @@ sealed class ExpenseListDetailUiEvent {
 
     /** Remove a member */
     data class RemoveMember(val member: User) : ExpenseListDetailUiEvent()
+
+    /** Confirm member deletion */
+    data object ConfirmDeleteMember : ExpenseListDetailUiEvent()
+
+    /** Cancel member deletion */
+    data object CancelDeleteMember : ExpenseListDetailUiEvent()
 }

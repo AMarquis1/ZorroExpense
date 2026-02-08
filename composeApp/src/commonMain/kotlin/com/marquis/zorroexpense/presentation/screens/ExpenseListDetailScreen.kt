@@ -210,6 +210,14 @@ fun ExpenseListDetailScreen(
                         onDismiss = { viewModel.onEvent(ExpenseListDetailUiEvent.CancelDelete) },
                     )
                 }
+
+                if (successState.showDeleteMemberDialog && successState.memberToDelete != null) {
+                    DeleteMemberConfirmationDialog(
+                        memberName = successState.memberToDelete.name,
+                        onConfirm = { viewModel.onEvent(ExpenseListDetailUiEvent.ConfirmDeleteMember) },
+                        onDismiss = { viewModel.onEvent(ExpenseListDetailUiEvent.CancelDeleteMember) },
+                    )
+                }
             }
             is ExpenseListDetailUiState.Deleted -> {
                 LaunchedEffect(Unit) {
@@ -636,6 +644,52 @@ private fun DeleteListConfirmationDialog(
             ) {
                 Text(
                     text = "Delete",
+                    color = MaterialTheme.colorScheme.onError,
+                )
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text(
+                    text = "Cancel",
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun DeleteMemberConfirmationDialog(
+    memberName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Remove Member?",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            Text(
+                text = "Are you sure you want to remove \"$memberName\" from this list?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text(
+                    text = "Remove",
                     color = MaterialTheme.colorScheme.onError,
                 )
             }

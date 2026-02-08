@@ -25,7 +25,7 @@ class CreateExpenseListViewModel(
     private val expenseListRepository: ExpenseListRepository,
     private val onListCreated: (listId: String, listName: String) -> Unit = { _, _ -> },
     private val listIdToEdit: String? = null,
-    private val listNameToEdit: String? = null,
+    listNameToEdit: String? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<CreateExpenseListUiState>(CreateExpenseListUiState.Idle)
     val uiState: StateFlow<CreateExpenseListUiState> = _uiState.asStateFlow()
