@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +10,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,6 +37,10 @@ fun LoginScreen(
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val googleSignInTrigger by viewModel.googleSignInTrigger.collectAsState()
+
+    // Launch Google Sign-In when triggered (platform-specific implementation)
+    HandleGoogleSignInTrigger(googleSignInTrigger, viewModel)
 
     Column(
         modifier =
@@ -106,6 +113,36 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Divider with "OR" text
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            HorizontalDivider(modifier = Modifier.weight(1f))
+            Text(
+                "OR",
+                modifier = Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.labelMedium
+            )
+            HorizontalDivider(modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Google Sign-In button
+        OutlinedButton(
+            onClick = { viewModel.onEvent(AuthUiEvent.GoogleSignInClicked) },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+            enabled = uiState !is AuthUiState.Loading,
+        ) {
+            Text("Continue with Google")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         TextButton(
             onClick = onNavigateToSignUp,
             enabled = uiState !is AuthUiState.Loading,
@@ -114,3 +151,13 @@ fun LoginScreen(
         }
     }
 }
+
+/**
+ * Platform-specific handler for Google Sign-In trigger.
+ * Implemented separately for Android and other platforms.
+ */
+@Composable
+internal expect fun HandleGoogleSignInTrigger(
+    trigger: Boolean,
+    viewModel: AuthViewModel,
+)

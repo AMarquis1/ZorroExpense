@@ -5,6 +5,7 @@ import com.marquis.zorroexpense.domain.error.AuthError
 import com.marquis.zorroexpense.domain.error.toAuthError
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.FirebaseUser
+import dev.gitlive.firebase.auth.GoogleAuthProvider
 import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -70,6 +71,19 @@ actual class AuthService {
         }
 
     actual suspend fun isAuthenticated(): Boolean = firebaseAuth.currentUser != null
+
+    actual suspend fun signInWithGoogle(idToken: String): Result<AuthUserDto> =
+        try {
+            // Create Google credential from ID token
+            val credential = GoogleAuthProvider.credential(idToken, null)
+            // Sign in using GitLive SDK's native credential method
+            firebaseAuth.signInWithCredential(credential)
+            // Get the signed-in user from GitLive auth
+            val user = firebaseAuth.currentUser ?: return Result.failure(AuthError.UnknownError)
+            Result.success(user.toAuthUserDto())
+        } catch (e: Exception) {
+            Result.failure(e.toAuthError())
+        }
 
     private fun FirebaseUser.toAuthUserDto(): AuthUserDto =
         AuthUserDto(

@@ -46,4 +46,11 @@ interface AuthRepository {
      * Check if a user is currently authenticated.
      */
     suspend fun isAuthenticated(): Boolean
+
+    /**
+     * Sign in with Google ID token.
+     * Exchanges Google credential for Firebase authentication.
+     * Automatically creates user profile in Firestore for first-time users.
+     */
+    suspend fun signInWithGoogle(idToken: String): Result<AuthUser>
 }

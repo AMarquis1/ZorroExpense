@@ -71,6 +71,7 @@ kotlin {
             implementation(libs.firebase.auth.ktx)
             implementation(libs.compose.material3)
             implementation(libs.android.material)
+            implementation(libs.play.services.auth)
         }
 
         iosMain.dependencies {

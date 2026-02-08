@@ -32,6 +32,7 @@ import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUserGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
+import com.marquis.zorroexpense.domain.usecase.GoogleSignInUseCase
 import com.marquis.zorroexpense.domain.usecase.JoinGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.LoginUseCase
 import com.marquis.zorroexpense.domain.usecase.LogoutUseCase
@@ -144,6 +145,10 @@ object AppModule {
         ObserveAuthStateUseCase(authRepository)
     }
 
+    private val googleSignInUseCase: GoogleSignInUseCase by lazy {
+        GoogleSignInUseCase(authRepository)
+    }
+
     // Expense Use Cases
     private val getExpensesUseCase: GetExpensesUseCase by lazy {
         GetExpensesUseCase(expenseRepository)
@@ -231,6 +236,7 @@ object AppModule {
                 logoutUseCase = logoutUseCase,
                 getCurrentUserUseCase = getCurrentUserUseCase,
                 observeAuthStateUseCase = observeAuthStateUseCase,
+                googleSignInUseCase = googleSignInUseCase,
             ).also { authViewModel = it }
 
         return viewModel

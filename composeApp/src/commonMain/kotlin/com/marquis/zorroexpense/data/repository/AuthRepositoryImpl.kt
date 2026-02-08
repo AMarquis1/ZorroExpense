@@ -134,4 +134,43 @@ class AuthRepositoryImpl(
 
         return authService.isAuthenticated()
     }
+
+    override suspend fun signInWithGoogle(idToken: String): Result<AuthUser> =
+        cacheMutex.withLock {
+            try {
+                // Exchange Google credential for Firebase authentication
+                val authResult = authService.signInWithGoogle(idToken)
+                if (authResult.isFailure) {
+                    return authResult.mapCatching { it.toDomain() }
+                }
+
+                val authUser =
+                    authResult.getOrNull()?.toDomain()
+                        ?: return Result.failure(Exception("Auth user is null"))
+
+                // Create user profile in Firestore if not exists (first-time Google users)
+                val profileExists =
+                    firestoreService.getUserById(authUser.userId).getOrNull() != null
+                if (!profileExists) {
+                    val userProfile =
+                        UserProfile(
+                            userId = authUser.userId,
+                            email = authUser.email,
+                            name = authUser.displayName ?: "",
+                            createdAt = Clock.System.now().toString(),
+                        )
+                    firestoreService
+                        .createUserProfile(authUser.userId, userProfile)
+                        .onFailure { error ->
+                            // Log profile creation failure but don't fail auth
+                            println("Failed to create user profile: ${error.message}")
+                        }
+                }
+
+                cachedUser = authUser
+                Result.success(authUser)
+            } catch (e: Exception) {
+                Result.failure(e.toAuthError())
+            }
+        }
 }

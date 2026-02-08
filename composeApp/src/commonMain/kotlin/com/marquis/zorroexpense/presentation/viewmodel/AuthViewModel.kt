@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marquis.zorroexpense.domain.error.AuthError
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
+import com.marquis.zorroexpense.domain.usecase.GoogleSignInUseCase
 import com.marquis.zorroexpense.domain.usecase.LoginUseCase
 import com.marquis.zorroexpense.domain.usecase.LogoutUseCase
 import com.marquis.zorroexpense.domain.usecase.ObserveAuthStateUseCase
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel for authentication operations.
- * Manages login, signup, and logout flows with reactive state.
+ * Manages login, signup, logout, and Google Sign-In flows with reactive state.
  */
 class AuthViewModel(
     private val loginUseCase: LoginUseCase,
@@ -26,6 +27,7 @@ class AuthViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val observeAuthStateUseCase: ObserveAuthStateUseCase,
+    private val googleSignInUseCase: GoogleSignInUseCase,
 ) : ViewModel() {
     // Form state
     private val _email = MutableStateFlow("")
@@ -44,6 +46,10 @@ class AuthViewModel(
     // Global auth state for navigation
     private val _globalAuthState = MutableStateFlow<GlobalAuthState>(GlobalAuthState.Authenticating)
     val globalAuthState: StateFlow<GlobalAuthState> = _globalAuthState.asStateFlow()
+
+    // Google Sign-In trigger state - signals when to launch Google Sign-In intent
+    private val _googleSignInTrigger = MutableStateFlow(false)
+    val googleSignInTrigger: StateFlow<Boolean> = _googleSignInTrigger.asStateFlow()
 
     init {
         // Observe auth state changes
@@ -80,6 +86,7 @@ class AuthViewModel(
             is AuthUiEvent.DisplayNameChanged -> _displayName.value = event.displayName
             AuthUiEvent.LoginClicked -> login()
             AuthUiEvent.SignUpClicked -> signUp()
+            AuthUiEvent.GoogleSignInClicked -> triggerGoogleSignIn()
             AuthUiEvent.ClearError -> _uiState.value = AuthUiState.Idle
         }
     }
@@ -146,6 +153,43 @@ class AuthViewModel(
                     _uiState.value = AuthUiState.Error("Logout failed")
                 }
         }
+    }
+
+    private fun triggerGoogleSignIn() {
+        _googleSignInTrigger.value = true
+        _uiState.value = AuthUiState.Loading
+    }
+
+    /**
+     * Handle Google Sign-In result with ID token.
+     * Called after ActivityResultLauncher completes in the UI layer.
+     */
+    fun handleGoogleSignInResult(idToken: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+
+            googleSignInUseCase(idToken)
+                .onSuccess { user ->
+                    _uiState.value = AuthUiState.Success(user)
+                    _googleSignInTrigger.value = false
+                    clearForm()
+                }.onFailure { error ->
+                    val errorMessage =
+                        when (error) {
+                            is AuthError -> error.message
+                            else -> "Google sign-in failed"
+                        }
+                    _uiState.value = AuthUiState.Error(errorMessage)
+                    _googleSignInTrigger.value = false
+                }
+        }
+    }
+
+    /**
+     * Reset Google Sign-In trigger when user cancels or encounters error.
+     */
+    fun resetGoogleSignInTrigger() {
+        _googleSignInTrigger.value = false
     }
 
     private fun clearForm() {

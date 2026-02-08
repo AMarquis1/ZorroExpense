@@ -72,7 +72,6 @@ fun GroupDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val allCategories by viewModel.allCategories.collectAsState()
-    val categoryBottomSheetState = rememberModalBottomSheetState()
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
@@ -231,7 +230,6 @@ fun GroupDetailScreen(
                         onDismiss = {
                             viewModel.onEvent(GroupDetailUiEvent.DismissCategoryBottomSheet)
                         },
-                        bottomSheetState = categoryBottomSheetState,
                     )
                 }
             }

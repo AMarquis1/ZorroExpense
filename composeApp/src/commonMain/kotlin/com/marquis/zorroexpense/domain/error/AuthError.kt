@@ -23,6 +23,12 @@ sealed class AuthError : Exception() {
 
     object UnknownError : AuthError()
 
+    object GoogleSignInCancelled : AuthError()
+
+    object GoogleSignInFailed : AuthError()
+
+    object GooglePlayServicesUnavailable : AuthError()
+
     override val message: String
         get() =
             when (this) {
@@ -35,6 +41,9 @@ sealed class AuthError : Exception() {
                 AccountDisabled -> "User account has been disabled"
                 NetworkError -> "Network error. Please check your connection"
                 UnknownError -> "An unexpected error occurred"
+                GoogleSignInCancelled -> "Google sign-in was cancelled"
+                GoogleSignInFailed -> "Google sign-in failed. Please try again"
+                GooglePlayServicesUnavailable -> "Google Play Services is unavailable"
             }
 }
 

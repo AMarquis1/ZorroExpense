@@ -22,6 +22,7 @@ android-material = "1.14.0-alpha08"
 material-icons = "1.7.3"
 ktlint = "14.0.1"
 placeholder = "1.0.12"
+play-services-auth = "21.0.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -50,6 +51,7 @@ compose-material3 = { module = "androidx.compose.material3:material3", version.r
 android-material = { module = "com.google.android.material:material", version.ref = "android-material" }
 material-icons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons" }
 placeholder = { module = "com.eygraber:compose-placeholder-material3", version.ref = "placeholder" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "play-services-auth" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -44,11 +44,9 @@ fun CategorySelectionMultiBottomSheet(
     selectedCategories: List<Category>,
     onCategoryToggled: (Category) -> Unit,
     onDismiss: () -> Unit,
-    bottomSheetState: androidx.compose.material3.SheetState,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = bottomSheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(

@@ -45,6 +45,12 @@ expect class AuthService {
      */
     suspend fun isAuthenticated(): Boolean
 
+    /**
+     * Sign in with Google ID token.
+     * Exchanges Google credential for Firebase authentication.
+     */
+    suspend fun signInWithGoogle(idToken: String): Result<AuthUserDto>
+
     companion object {
         fun create(): AuthService
     }

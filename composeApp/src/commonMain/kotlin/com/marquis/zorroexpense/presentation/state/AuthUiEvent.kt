@@ -20,5 +20,7 @@ sealed class AuthUiEvent {
 
     object SignUpClicked : AuthUiEvent()
 
+    object GoogleSignInClicked : AuthUiEvent()
+
     object ClearError : AuthUiEvent()
 }
