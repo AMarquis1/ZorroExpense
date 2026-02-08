@@ -119,6 +119,17 @@ private fun isFutureExpense(expenseDate: String): Boolean =
         false
     }
 
+private fun sortExpensesByOption(expenses: List<Expense>, sortOption: SortOption): List<Expense> =
+    when (sortOption) {
+        SortOption.DATE_DESC -> expenses.sortedByDescending { it.date }
+        SortOption.DATE_ASC -> expenses.sortedBy { it.date }
+        SortOption.PRICE_DESC -> expenses.sortedByDescending { it.price }
+        SortOption.PRICE_ASC -> expenses.sortedBy { it.price }
+        SortOption.NAME_ASC -> expenses.sortedBy { it.name.lowercase() }
+        SortOption.NAME_DESC -> expenses.sortedByDescending { it.name.lowercase() }
+    }
+
+
 @Composable
 private fun UpcomingExpensesSeparator(
     showUpcomingExpenses: Boolean,
@@ -283,26 +294,26 @@ fun ExpenseListScreen(
         }
 
     val groupedCurrentExpenses =
-        remember(currentExpenses) {
+        remember(currentExpenses, sortBy) {
             currentExpenses
                 .groupBy { expense -> getMonthYear(expense.date) }
                 .toList()
                 .sortedByDescending { (_, expenses) ->
                     expenses.maxOfOrNull { it.date } ?: ""
                 }.associate { (monthYear, expenses) ->
-                    monthYear to expenses.sortedByDescending { it.date }
+                    monthYear to sortExpensesByOption(expenses, sortBy)
                 }
         }
 
     val groupedFutureExpenses =
-        remember(futureExpenses) {
+        remember(futureExpenses, sortBy) {
             futureExpenses
                 .groupBy { expense -> getMonthYear(expense.date) }
                 .toList()
                 .sortedBy { (_, expenses) ->
                     expenses.minOfOrNull { it.date } ?: ""
                 }.associate { (monthYear, expenses) ->
-                    monthYear to expenses.sortedBy { it.date }
+                    monthYear to sortExpensesByOption(expenses, sortBy)
                 }
         }
 

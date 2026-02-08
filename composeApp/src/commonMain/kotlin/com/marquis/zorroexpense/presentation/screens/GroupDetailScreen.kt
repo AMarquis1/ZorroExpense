@@ -101,7 +101,6 @@ fun GroupDetailScreen(
                         if (currentState is GroupDetailUiState.Success &&
                             currentState.mode == GroupDetailMode.EDIT
                         ) {
-                            // Cancel edit mode
                             viewModel.onEvent(GroupDetailUiEvent.CancelEdit)
                         } else {
                             onBackClick()
@@ -159,7 +158,8 @@ fun GroupDetailScreen(
                                         onClick = {
                                             viewModel.onEvent(GroupDetailUiEvent.SaveChanges)
                                         },
-                                        enabled = successState.editedName.isNotBlank(),
+                                        enabled = successState.editedName.isNotBlank() &&
+                                            (successState.mode != GroupDetailMode.ADD || successState.editedCategories.isNotEmpty()),
                                     ) {
                                         Icon(
                                             imageVector = Icons.Filled.Check,

@@ -103,11 +103,14 @@ fun AddExpenseScreen(
     var showDatePickerBottomSheet by remember { mutableStateOf(false) }
     var showRecurrenceTypeBottomSheet by remember { mutableStateOf(false) }
 
-    // Handle UI state changes
+    // Handle UI state changes - only trigger callback once when Success is reached
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is AddExpenseUiState.Success -> {
+                // Call the callback to trigger navigation
                 onExpenseSaved(state.savedExpenses)
+                // Reset form after callback is called to clear the success state
+                viewModel.onEvent(AddExpenseUiEvent.ResetForm)
             }
             is AddExpenseUiState.Error -> {
                 // Error message will be shown in the UI

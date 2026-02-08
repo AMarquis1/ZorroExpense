@@ -598,8 +598,9 @@ fun App() {
                                     // Set the name to trigger snackbar on ExpenseListScreen
                                     updatedExpenseName = savedExpense.name
                                 }
-                                // Navigate back to Group (pop both EditExpense and ExpenseDetail)
-                                navController.popBackStack(AppDestinations.ExpenseList(listId = editExpense.listId), inclusive = false)
+                                // Navigate back to ExpenseList, popping both EditExpense and ExpenseDetail screens
+                                navController.popBackStack()
+                                navController.popBackStack()
                             },
                         )
                     }

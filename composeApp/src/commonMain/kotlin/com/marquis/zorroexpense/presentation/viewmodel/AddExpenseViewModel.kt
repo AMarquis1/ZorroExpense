@@ -27,7 +27,6 @@ import kotlinx.datetime.number
 import kotlinx.datetime.plus
 
 class AddExpenseViewModel(
-    private val userId: String,
     private val listId: String,
     private val addExpenseUseCase: AddExpenseUseCase,
     private val updateExpenseUseCase: UpdateExpenseUseCase,
@@ -132,7 +131,6 @@ class AddExpenseViewModel(
                 isCategoryValid = true,
                 isPaidByValid = true,
                 isFormValid = true,
-                // Don't copy recurring settings - those are for new expenses only
                 isRecurring = false,
                 recurrenceType = RecurrenceType.NONE,
                 recurrenceDay = null,
@@ -224,10 +222,6 @@ class AddExpenseViewModel(
             addNewExpense()
         }
     }
-
-    /**
-     * Update an existing expense (edit mode)
-     */
     private fun updateExpense() {
         val currentFormState = _formState.value
 
@@ -343,7 +337,6 @@ class AddExpenseViewModel(
                             splitDetails = splitDetails,
                             isFromRecurring = currentFormState.isRecurring && expenseDates.size > 1,
                             listId = this@AddExpenseViewModel.listId,
-                            // Remove recurrence metadata - each expense is standalone
                             isRecurring = false,
                             recurrenceType = RecurrenceType.NONE,
                             recurrenceDay = null,

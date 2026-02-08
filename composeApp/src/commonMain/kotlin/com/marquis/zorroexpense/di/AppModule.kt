@@ -320,7 +320,6 @@ object AppModule {
         expenseToEdit: Expense? = null,
     ): AddExpenseViewModel =
         AddExpenseViewModel(
-            userId = userId,
             listId = listId,
             addExpenseUseCase = addExpenseUseCase,
             updateExpenseUseCase = updateExpenseUseCase,
