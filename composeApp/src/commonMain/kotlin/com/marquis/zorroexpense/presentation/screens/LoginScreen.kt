@@ -1,5 +1,8 @@
 package com.marquis.zorroexpense.presentation.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,9 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -22,11 +30,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
+import zorroexpense.composeapp.generated.resources.Res
 import com.marquis.zorroexpense.presentation.state.AuthUiEvent
 import com.marquis.zorroexpense.presentation.state.AuthUiState
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
+import zorroexpense.composeapp.generated.resources.google
+import zorroexpense.composeapp.generated.resources.zorro2
 
 @Composable
 fun LoginScreen(
@@ -39,21 +53,30 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val googleSignInTrigger by viewModel.googleSignInTrigger.collectAsState()
 
-    // Launch Google Sign-In when triggered (platform-specific implementation)
     HandleGoogleSignInTrigger(googleSignInTrigger, viewModel)
 
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
     ) {
+        Image(
+            painter = painterResource(Res.drawable.zorro2),
+            contentDescription = "Zorro Header",
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 24.dp)
+                .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)),
+        )
+
         Text(
             text = "Sign In",
             style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 32.dp),
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
         )
 
         OutlinedTextField(
@@ -122,7 +145,8 @@ fun LoginScreen(
             Text(
                 "OR",
                 modifier = Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onBackground
             )
             HorizontalDivider(modifier = Modifier.weight(1f))
         }
@@ -138,7 +162,19 @@ fun LoginScreen(
                     .height(48.dp),
             enabled = uiState !is AuthUiState.Loading,
         ) {
-            Text("Continue with Google")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.google),
+                    contentDescription = "Google Logo",
+                    modifier = Modifier.height(24.dp),
+                    tint = Color.Unspecified
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Continue with Google")
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))

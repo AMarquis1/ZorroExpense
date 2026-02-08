@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,12 +41,14 @@ import com.marquis.zorroexpense.domain.model.Category
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategorySelectionMultiBottomSheet(
+    sheetState: SheetState,
     categories: List<Category>,
     selectedCategories: List<Category>,
     onCategoryToggled: (Category) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
+        sheetState = sheetState,
         onDismissRequest = onDismiss,
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {

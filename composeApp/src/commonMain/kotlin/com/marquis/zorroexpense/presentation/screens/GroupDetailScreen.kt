@@ -46,6 +46,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +74,8 @@ fun GroupDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val allCategories by viewModel.allCategories.collectAsState()
+    val bottomSheetState = rememberModalBottomSheetState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
@@ -222,13 +226,17 @@ fun GroupDetailScreen(
 
                 if (successState.showCategoryBottomSheet) {
                     CategorySelectionMultiBottomSheet(
+                        sheetState = bottomSheetState,
                         categories = allCategories,
                         selectedCategories = successState.editedCategories,
                         onCategoryToggled = { category ->
                             viewModel.onEvent(GroupDetailUiEvent.CategoryToggled(category))
                         },
                         onDismiss = {
-                            viewModel.onEvent(GroupDetailUiEvent.DismissCategoryBottomSheet)
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+                                viewModel.onEvent(GroupDetailUiEvent.DismissCategoryBottomSheet)
+                            }
                         },
                     )
                 }
