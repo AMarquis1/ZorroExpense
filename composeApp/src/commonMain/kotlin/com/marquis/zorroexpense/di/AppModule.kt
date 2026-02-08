@@ -324,7 +324,6 @@ object AppModule {
             listId = listId,
             addExpenseUseCase = addExpenseUseCase,
             updateExpenseUseCase = updateExpenseUseCase,
-            getCategoriesUseCase = getCategoriesUseCase,
             getUsersUseCase = getUsersUseCase,
             groupRepository = groupRepository,
             expenseToEdit = expenseToEdit,

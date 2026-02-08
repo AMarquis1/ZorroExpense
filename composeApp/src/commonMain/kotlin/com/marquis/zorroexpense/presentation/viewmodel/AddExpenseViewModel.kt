@@ -10,7 +10,6 @@ import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
-import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.state.AddExpenseFormState
@@ -32,7 +31,6 @@ class AddExpenseViewModel(
     private val listId: String,
     private val addExpenseUseCase: AddExpenseUseCase,
     private val updateExpenseUseCase: UpdateExpenseUseCase,
-    private val getCategoriesUseCase: GetCategoriesUseCase,
     private val getUsersUseCase: GetUsersUseCase,
     private val groupRepository: GroupRepository,
     private val expenseToEdit: Expense? = null,
@@ -974,16 +972,19 @@ class AddExpenseViewModel(
 
     private fun loadCategories() {
         viewModelScope.launch {
-            getCategoriesUseCase().fold(
-                onSuccess = { categories ->
-                    _categories.value = categories
-                },
-                onFailure = { exception ->
+            groupRepository
+                .getGroup(listId)
+                .onSuccess { group ->
+                    group?.let { expenseList ->
+                        // Get categories from the group's categories field
+                        _categories.value = expenseList.categories
+                    } ?: run {
+                        _categories.value = emptyList()
+                    }
+                }.onFailure {
                     // Silently fail for categories loading, keep empty list
-                    // Could add error state later if needed
                     _categories.value = emptyList()
-                },
-            )
+                }
         }
     }
 
