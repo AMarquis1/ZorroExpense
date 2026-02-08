@@ -156,26 +156,47 @@ class GroupListViewModel(
             _uiState.value = GroupListUiState.Loading
             val result = joinGroupUseCase.invoke(userId, shareCode)
 
-            result.onSuccess { list ->
-                onListSelected(list.listId, list.name)
+            result.onSuccess { joinedGroup ->
+                // Fetch the updated groups list to show the newly joined group
+                getUserGroupUseCase.invoke(userId).onSuccess { groups ->
+                    val allUserIds = groups.flatMap { list -> list.members.map { "Users/${it.userId}" } }.distinct()
+
+                    if (allUserIds.isNotEmpty()) {
+                        getUsersUseCase.invoke(allUserIds).onSuccess { users ->
+                            val userMap = users.associateBy { it.userId }
+                            val enrichedLists = groups.map { list ->
+                                val enrichedMembers = list.members.map { member ->
+                                    userMap[member.userId]?.let {
+                                        member.copy(name = it.name, profileImage = it.profileImage)
+                                    } ?: member
+                                }
+                                list.copy(members = enrichedMembers)
+                            }.sortedByDescending { it.lastModified }
+
+                            cachedLists = enrichedLists
+                            _uiState.value = GroupListUiState.Success(enrichedLists)
+                            // Navigate to the newly joined group
+                            onListSelected(joinedGroup.listId, joinedGroup.name)
+                        }.onFailure {
+                            cachedLists = groups.sortedByDescending { it.lastModified }
+                            _uiState.value = GroupListUiState.Success(cachedLists!!)
+                            onListSelected(joinedGroup.listId, joinedGroup.name)
+                        }
+                    } else {
+                        val sortedLists = groups.sortedByDescending { it.lastModified }
+                        cachedLists = sortedLists
+                        _uiState.value = GroupListUiState.Success(sortedLists)
+                        onListSelected(joinedGroup.listId, joinedGroup.name)
+                    }
+                }.onFailure { error ->
+                    _uiState.value = GroupListUiState.Error(error.message ?: "Failed to refresh groups")
+                }
             }
 
             result.onFailure { error ->
-                // Show error but keep current lists visible
-                val currentState = _uiState.value
-                if (currentState is GroupListUiState.Success) {
-                    _uiState.value =
-                        GroupListUiState.Error(
-                            error.message ?: "Failed to join list",
-                        )
-                    // Reload lists after a moment
-                    loadLists()
-                } else {
-                    _uiState.value =
-                        GroupListUiState.Error(
-                            error.message ?: "Failed to join list",
-                        )
-                }
+                // Show error and reload groups to show latest state
+                _uiState.value = GroupListUiState.Error(error.message ?: "Failed to join list", cachedLists)
+                loadLists()
             }
         }
     }

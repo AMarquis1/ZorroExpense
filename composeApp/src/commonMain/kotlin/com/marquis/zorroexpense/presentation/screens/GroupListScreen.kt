@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -37,13 +39,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,6 +65,8 @@ import androidx.compose.ui.unit.sp
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.platform.pullToRefreshBox
+import com.marquis.zorroexpense.presentation.components.SpeedDialFab
+import com.marquis.zorroexpense.presentation.components.SpeedDialFabItem
 import com.marquis.zorroexpense.presentation.components.SwipeableGroupCard
 import com.marquis.zorroexpense.presentation.components.bottomsheets.formatDateForDisplay
 import com.marquis.zorroexpense.presentation.state.GroupListUiEvent
@@ -85,8 +88,20 @@ internal fun GroupListScreen(
 
     val listState = rememberLazyListState()
     var isFabExpanded by remember { mutableStateOf(true) }
+    var isFabMenuExpanded by remember { mutableStateOf(false) }
+    var showJoinGroupDialog by remember { mutableStateOf(false) }
+    var isJoiningGroup by remember { mutableStateOf(false) }
+
+    // Close dialog when join operation completes
+    LaunchedEffect(uiState) {
+        if (isJoiningGroup && uiState !is GroupListUiState.Loading) {
+            showJoinGroupDialog = false
+            isJoiningGroup = false
+        }
+    }
 
     // FAB scroll behavior: collapse when scrolling down, expand when near top or scrolling up
+    // Also auto-close the menu when scrolling
     LaunchedEffect(listState) {
         var previousFirstVisibleItemIndex = 0
         var previousFirstVisibleItemScrollOffset = 0
@@ -108,6 +123,11 @@ internal fun GroupListScreen(
                 !isScrollingDown
             }
 
+            // Auto-close menu when scrolling
+            if (isScrollingDown) {
+                isFabMenuExpanded = false
+            }
+
             // Update previous values for next iteration
             previousFirstVisibleItemIndex = currentIndex
             previousFirstVisibleItemScrollOffset = currentOffset
@@ -116,25 +136,24 @@ internal fun GroupListScreen(
 
     Scaffold(
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onCreateGroup() },
-                expanded = isFabExpanded,
-                icon = {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Add Group",
-                    )
-                },
-                text = {
-                    Text("Add Group")
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                elevation =
-                    FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 16.dp,
+            SpeedDialFab(
+                expanded = isFabMenuExpanded,
+                onExpandedChange = { isFabMenuExpanded = it },
+                items = listOf(
+                    SpeedDialFabItem(
+                        icon = Icons.Default.Share,
+                        label = "Join Group",
+                        contentDescription = "Join Group",
+                        onClick = { showJoinGroupDialog = true },
                     ),
+                    SpeedDialFabItem(
+                        icon = Icons.Default.Add,
+                        label = "Add Group",
+                        contentDescription = "Add Group",
+                        onClick = { onCreateGroup() },
+                    ),
+                ),
+                fabExpanded = isFabExpanded,
             )
         },
     ) { paddingValues ->
@@ -219,6 +238,23 @@ internal fun GroupListScreen(
                 }
             }
         }
+    }
+
+    if (showJoinGroupDialog) {
+        val errorMessage = (uiState as? GroupListUiState.Error)?.message ?: ""
+
+        JoinGroupDialog(
+            isLoading = uiState is GroupListUiState.Loading,
+            initialErrorMessage = errorMessage,
+            onJoin = { shareCode ->
+                isJoiningGroup = true
+                viewModel.onEvent(GroupListUiEvent.JoinGroup(shareCode))
+            },
+            onDismiss = {
+                showJoinGroupDialog = false
+                isJoiningGroup = false
+            },
+        )
     }
 
     if (showDeleteDialog && listToDelete != null) {
@@ -742,6 +778,100 @@ private fun ErrorState(
             Text("Retry")
         }
     }
+}
+
+@Composable
+private fun JoinGroupDialog(
+    isLoading: Boolean,
+    initialErrorMessage: String = "",
+    onJoin: (shareCode: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var shareCode by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf(initialErrorMessage) }
+
+    // Update error message when it changes from parent
+    LaunchedEffect(initialErrorMessage) {
+        if (initialErrorMessage.isNotEmpty()) {
+            errorMessage = initialErrorMessage
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Join Group")
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "Enter the share code to join an existing group.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                OutlinedTextField(
+                    value = shareCode,
+                    onValueChange = {
+                        shareCode = it
+                        errorMessage = ""
+                    },
+                    placeholder = {
+                        Text("Share code")
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = null,
+                        )
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                )
+
+                if (errorMessage.isNotEmpty()) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (shareCode.isNotBlank()) {
+                        onJoin(shareCode)
+                    } else {
+                        errorMessage = "Please enter a share code"
+                    }
+                },
+                enabled = shareCode.isNotBlank() && !isLoading,
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text("Join")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                enabled = !isLoading,
+            ) {
+                Text("Cancel")
+            }
+        },
+    )
 }
 
 @Composable
