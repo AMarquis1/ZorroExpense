@@ -5,6 +5,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -57,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +74,10 @@ import com.marquis.zorroexpense.presentation.components.bottomsheets.formatDateF
 import com.marquis.zorroexpense.presentation.state.GroupListUiEvent
 import com.marquis.zorroexpense.presentation.state.GroupListUiState
 import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
+import org.jetbrains.compose.resources.painterResource
+import zorroexpense.composeapp.generated.resources.Res
+import zorroexpense.composeapp.generated.resources.zorro2
+import zorroexpense.composeapp.generated.resources.zorro3
 
 @Composable
 internal fun GroupListScreen(
@@ -205,7 +211,10 @@ internal fun GroupListScreen(
                         }
 
                         is GroupListUiState.Empty -> {
-                            EmptyState(onCreateGroup = onCreateGroup)
+                            EmptyState(
+                                onCreateGroup = onCreateGroup,
+                                onRefresh = { viewModel.onEvent(GroupListUiEvent.RefreshGroups) },
+                            )
                         }
 
                         is GroupListUiState.Error -> {
@@ -544,7 +553,10 @@ internal fun ExpenseListCard(
 }
 
 @Composable
-fun EmptyState(onCreateGroup: () -> Unit) {
+fun EmptyState(
+    onCreateGroup: () -> Unit,
+    onRefresh: () -> Unit = {},
+) {
     Column(
         modifier =
             Modifier
@@ -564,36 +576,18 @@ fun EmptyState(onCreateGroup: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Folder icon with gradient
-        Box(
-            modifier =
-                Modifier
-                    .width(80.dp)
-                    .height(80.dp)
-                    .background(
-                        brush =
-                            Brush.linearGradient(
-                                colors =
-                                    listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-                                    ),
-                            ),
-                        shape = RoundedCornerShape(20.dp),
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.FolderOpen,
-                contentDescription = "No lists",
-                modifier = Modifier.scale(2f),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-            )
-        }
+        Image(
+            painter = painterResource(Res.drawable.zorro3),
+            contentDescription = "Zorro Header",
+            modifier = Modifier
+                .size(120.dp)
+                .clip(RoundedCornerShape(16.dp))
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "No Expense Lists Yet",
+            text = "No Group Yet",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.SemiBold,
@@ -602,7 +596,7 @@ fun EmptyState(onCreateGroup: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Create your first expense list to start tracking",
+            text = "Create your first group to start tracking",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -611,19 +605,14 @@ fun EmptyState(onCreateGroup: () -> Unit) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = onCreateGroup,
+            onClick = onRefresh,
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(32.dp),
             shape = RoundedCornerShape(12.dp),
         ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "Create new list",
-                modifier = Modifier.padding(end = 8.dp),
-            )
-            Text("Create New List")
+            Text("Refresh")
         }
     }
 }
