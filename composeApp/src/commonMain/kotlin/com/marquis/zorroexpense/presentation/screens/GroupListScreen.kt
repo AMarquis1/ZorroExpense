@@ -138,7 +138,7 @@ internal fun GroupListScreen(
         floatingActionButton = {
             SpeedDialFab(
                 expanded = isFabMenuExpanded,
-                onExpandedChange = {},
+                onExpandedChange = { isFabMenuExpanded = it },
                 items = listOf(
                     SpeedDialFabItem(
                         icon = Icons.Default.Share,
