@@ -34,10 +34,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,8 +78,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.marquis.zorroexpense.components.CategoryFilterRow
-import com.marquis.zorroexpense.components.CategoryFilterRowSkeleton
+import androidx.compose.ui.unit.sp
 import com.marquis.zorroexpense.components.EmptyState
 import com.marquis.zorroexpense.components.ErrorState
 import com.marquis.zorroexpense.components.ExpenseCardSkeleton
@@ -257,6 +258,7 @@ fun ExpenseListScreen(
     }
 
     var showConfigMenu by remember { mutableStateOf(false) }
+    var showCategoryFilterMenu by remember { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
 
     val listState = rememberLazyListState()
@@ -442,14 +444,13 @@ fun ExpenseListScreen(
                                 shape = RoundedCornerShape(25.dp),
                             )
                         } else {
-                            // Collapsed state: Back arrow + list title + search icon + filter icon
                             IconButton(
                                 onClick = onBackPressed,
                             ) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = androidx.compose.ui.graphics.Color.White,
+                                    tint = Color.White,
                                     modifier = Modifier.size(28.dp),
                                 )
                             }
@@ -457,12 +458,12 @@ fun ExpenseListScreen(
                             Text(
                                 text = listName,
                                 style = MaterialTheme.typography.headlineSmall,
+                                fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = androidx.compose.ui.graphics.Color.White,
+                                color = Color.White,
                                 modifier = Modifier.weight(1f),
                             )
 
-                            // Search icon button
                             IconButton(
                                 onClick = {
                                     viewModel.onEvent(ExpenseListUiEvent.SearchExpandedChanged(true))
@@ -476,14 +477,14 @@ fun ExpenseListScreen(
                                 )
                             }
 
-                            // Filter dropdown button
+                            // Sort dropdown button
                             Box {
                                 IconButton(
                                     onClick = { showConfigMenu = true },
                                 ) {
                                     Icon(
                                         Icons.Default.FilterList,
-                                        contentDescription = "Filter and sort",
+                                        contentDescription = "Sort expenses",
                                         tint = androidx.compose.ui.graphics.Color.White,
                                         modifier = Modifier.size(28.dp),
                                     )
@@ -516,6 +517,65 @@ fun ExpenseListScreen(
                                             onClick = {
                                                 viewModel.onEvent(ExpenseListUiEvent.SortOptionChanged(option))
                                                 showConfigMenu = false
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Category filter dropdown button
+                            Box {
+                                IconButton(
+                                    onClick = { showCategoryFilterMenu = true },
+                                ) {
+                                    Icon(
+                                        Icons.Default.Tune,
+                                        contentDescription = "Filter by category",
+                                        tint = androidx.compose.ui.graphics.Color.White,
+                                        modifier = Modifier.size(28.dp),
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = showCategoryFilterMenu,
+                                    onDismissRequest = { showCategoryFilterMenu = false },
+                                ) {
+                                    Text(
+                                        text = "Filter by category",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    )
+
+                                    availableCategories.forEach { category ->
+                                        val isSelected = selectedCategories.contains(category)
+
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                                ) {
+                                                    com.marquis.zorroexpense.components.CategoryIconCircle(
+                                                        category = category,
+                                                        size = 24.dp,
+                                                    )
+                                                    Text(
+                                                        text = category.name,
+                                                        modifier = Modifier.weight(1f),
+                                                    )
+                                                    if (isSelected) {
+                                                        Icon(
+                                                            Icons.Default.Check,
+                                                            contentDescription = "Selected",
+                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(20.dp),
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            onClick = {
+                                                viewModel.onEvent(ExpenseListUiEvent.CategoryToggled(category))
                                             },
                                         )
                                     }
@@ -595,10 +655,6 @@ fun ExpenseListScreen(
                         }
 
                         item {
-                            CategoryFilterRowSkeleton()
-                        }
-
-                        item {
                             MonthSeparatorSkeleton()
                         }
 
@@ -623,16 +679,6 @@ fun ExpenseListScreen(
                                     debtSummaries = currentState.debtSummaries,
                                 )
                             }
-                        }
-
-                        item {
-                            CategoryFilterRow(
-                                categories = availableCategories,
-                                selectedCategories = selectedCategories,
-                                onCategoryToggle = { category: Category ->
-                                    viewModel.onEvent(ExpenseListUiEvent.CategoryToggled(category))
-                                },
-                            )
                         }
 
                         item {
@@ -678,16 +724,6 @@ fun ExpenseListScreen(
                                     debtSummaries = currentState.debtSummaries,
                                 )
                             }
-                        }
-
-                        item {
-                            CategoryFilterRow(
-                                categories = availableCategories,
-                                selectedCategories = selectedCategories,
-                                onCategoryToggle = { category: Category ->
-                                    viewModel.onEvent(ExpenseListUiEvent.CategoryToggled(category))
-                                },
-                            )
                         }
 
                         if (searchQuery.isNotEmpty()) {
