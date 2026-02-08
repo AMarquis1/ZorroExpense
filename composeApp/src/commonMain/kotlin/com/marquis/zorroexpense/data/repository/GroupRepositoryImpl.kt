@@ -3,23 +3,23 @@ package com.marquis.zorroexpense.data.repository
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.toDomain
-import com.marquis.zorroexpense.domain.model.ExpenseList
-import com.marquis.zorroexpense.domain.repository.ExpenseListRepository
+import com.marquis.zorroexpense.domain.model.Group
+import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.repository.UserRepository
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class ExpenseListRepositoryImpl(
+class GroupRepositoryImpl(
     private val firestoreService: FirestoreService,
     private val userRepository: UserRepository,
-) : ExpenseListRepository {
+) : GroupRepository {
     private val mutex = Mutex()
-    private var cachedLists: Map<String, List<ExpenseList>> = emptyMap()
+    private var cachedLists: Map<String, List<Group>> = emptyMap()
 
     /**
      * Enrich expense list members with real user data (names, profile images)
      */
-    private suspend fun enrichListMembers(list: ExpenseList): ExpenseList {
+    private suspend fun enrichListMembers(list: Group): Group {
         val userIds = list.members.map { it.userId }.distinct()
         if (userIds.isEmpty()) return list
 
@@ -34,7 +34,7 @@ class ExpenseListRepositoryImpl(
         } ?: list
     }
 
-    override suspend fun refreshUserExpenseLists(userId: String): Result<List<ExpenseList>> =
+    override suspend fun refreshUserGroups(userId: String): Result<List<Group>> =
         mutex.withLock {
             firestoreService
                 .getUserExpenseLists(userId)
@@ -48,7 +48,7 @@ class ExpenseListRepositoryImpl(
                 }
         }
 
-    override suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseList>> =
+    override suspend fun getUserGroups(userId: String): Result<List<Group>> =
         mutex.withLock {
             firestoreService
                 .getUserExpenseLists(userId)
@@ -62,28 +62,28 @@ class ExpenseListRepositoryImpl(
                 }
         }
 
-    override suspend fun getExpenseListById(listId: String): Result<ExpenseList?> =
+    override suspend fun getGroup(listId: String): Result<Group?> =
         firestoreService
             .getExpenseListById(listId)
             .mapCatching { it?.toDomain(firestoreService) }
             .mapCatching { it?.let { enrichListMembers(it) } }
 
-    override suspend fun createExpenseList(list: ExpenseList): Result<String> =
+    override suspend fun createGroup(list: Group): Result<String> =
         mutex.withLock {
             val dto = list.toDto()
             firestoreService.createExpenseList(dto)
         }
 
-    override suspend fun updateExpenseList(
+    override suspend fun updateGroup(
         listId: String,
-        list: ExpenseList,
+        list: Group,
     ): Result<Unit> =
         mutex.withLock {
             val dto = list.toDto()
             firestoreService.updateExpenseList(listId, dto)
         }
 
-    override suspend fun deleteExpenseList(listId: String): Result<Unit> =
+    override suspend fun deleteGroup(listId: String): Result<Unit> =
         mutex.withLock {
             firestoreService
                 .deleteExpenseList(listId)
@@ -93,10 +93,10 @@ class ExpenseListRepositoryImpl(
                 }
         }
 
-    override suspend fun joinExpenseList(
+    override suspend fun joinGroup(
         userId: String,
         shareCode: String,
-    ): Result<ExpenseList> =
+    ): Result<Group> =
         mutex.withLock {
             firestoreService
                 .getExpenseListByShareCode(shareCode)
@@ -113,7 +113,7 @@ class ExpenseListRepositoryImpl(
                 .mapCatching { enrichListMembers(it) }
         }
 
-    override suspend fun removeMemberFromList(
+    override suspend fun removeMemberFromGroup(
         listId: String,
         userId: String,
     ): Result<Unit> =
@@ -128,4 +128,4 @@ class ExpenseListRepositoryImpl(
         }
 }
 
-expect fun ExpenseList.toDto(): ExpenseListDto
+expect fun Group.toDto(): ExpenseListDto

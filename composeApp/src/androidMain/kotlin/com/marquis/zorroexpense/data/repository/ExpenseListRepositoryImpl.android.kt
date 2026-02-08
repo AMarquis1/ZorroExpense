@@ -2,13 +2,13 @@ package com.marquis.zorroexpense.data.repository
 
 import com.marquis.zorroexpense.data.remote.dto.AndroidExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Timestamp
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.datetime.Clock
 
-actual fun ExpenseList.toDto(): ExpenseListDto {
+actual fun Group.toDto(): ExpenseListDto {
     val firestore = Firebase.firestore
     val memberRefs =
         members.map { member ->

@@ -5,7 +5,7 @@ package com.marquis.zorroexpense.domain.model
  * Multiple users can be members of the same list.
  * Each list has its own set of categories selected from the global Categories collection.
  */
-data class ExpenseList(
+data class Group(
     val listId: String = "",
     val name: String = "",
     val createdBy: String = "",

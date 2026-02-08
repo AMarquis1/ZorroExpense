@@ -17,9 +17,6 @@ sealed class AppDestinations {
     data object ExpenseLists : AppDestinations()
 
     @Serializable
-    data object CreateExpenseList : AppDestinations()
-
-    @Serializable
     data class EditExpenseList(
         val listId: String,
         val listName: String,

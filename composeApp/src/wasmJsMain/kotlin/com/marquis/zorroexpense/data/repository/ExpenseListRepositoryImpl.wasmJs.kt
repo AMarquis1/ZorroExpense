@@ -2,9 +2,9 @@ package com.marquis.zorroexpense.data.repository
 
 import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.WasmExpenseListDto
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 
-actual fun ExpenseList.toDto(): ExpenseListDto =
+actual fun Group.toDto(): ExpenseListDto =
     WasmExpenseListDto(
         listId = listId,
         name = name,

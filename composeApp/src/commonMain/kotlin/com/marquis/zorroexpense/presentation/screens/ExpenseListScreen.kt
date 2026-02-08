@@ -282,7 +282,6 @@ fun ExpenseListScreen(
 
     // Extract state values from the current UI state
     val currentState = uiState
-    val expenses = if (currentState is ExpenseListUiState.Success) currentState.expenses else emptyList()
     val filteredExpenses = if (currentState is ExpenseListUiState.Success) currentState.filteredExpenses else emptyList()
     val searchQuery = if (currentState is ExpenseListUiState.Success) currentState.searchQuery else ""
     val isSearchExpanded = if (currentState is ExpenseListUiState.Success) currentState.isSearchExpanded else false
@@ -334,6 +333,7 @@ fun ExpenseListScreen(
         }
     }
 
+    // FAB scroll behavior: collapse when scrolling down, expand when near top or scrolling up
     LaunchedEffect(listState) {
         var previousFirstVisibleItemIndex = 0
         var previousFirstVisibleItemScrollOffset = 0
@@ -348,10 +348,14 @@ fun ExpenseListScreen(
                     currentOffset > previousFirstVisibleItemScrollOffset
                 }
 
-            // Update FAB expanded state based on scroll direction
-            isFabExpanded = !isScrollingDown
+            // Auto-expand when near the top (within 5 items) for better UX
+            isFabExpanded = if (currentIndex <= 5) {
+                true
+            } else {
+                !isScrollingDown
+            }
 
-            // Update previous values
+            // Update previous values for next iteration
             previousFirstVisibleItemIndex = currentIndex
             previousFirstVisibleItemScrollOffset = currentOffset
         }

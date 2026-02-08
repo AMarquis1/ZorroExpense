@@ -27,19 +27,19 @@ import androidx.navigation.toRoute
 import com.marquis.zorroexpense.di.AppModule
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
-import com.marquis.zorroexpense.presentation.screens.CreateExpenseListScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
-import com.marquis.zorroexpense.presentation.screens.ExpenseListDetailScreen
+import com.marquis.zorroexpense.presentation.screens.GroupDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
-import com.marquis.zorroexpense.presentation.screens.ExpenseListsOverviewScreen
+import com.marquis.zorroexpense.presentation.screens.GroupListScreen
 import com.marquis.zorroexpense.presentation.screens.LoginScreen
 import com.marquis.zorroexpense.presentation.screens.SignUpScreen
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.GlobalAuthState
+import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.ui.theme.ZorroExpenseTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -123,54 +123,23 @@ fun App() {
                                     // The UI is already updated in the ViewModel
                                 },
                             )
-                        ExpenseListsOverviewScreen(
+                        GroupListScreen(
                             viewModel = viewModel,
                             onListSelected = { listId, listName ->
                                 navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName))
                             },
                             onCreateNewList = {
-                                navController.navigate(AppDestinations.CreateExpenseList)
-                            },
-                        )
-                    }
-
-                    composable<AppDestinations.CreateExpenseList> {
-                        // Auth guard: redirect to login if not authenticated
-                        LaunchedEffect(globalAuthState) {
-                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
-                                navController.navigate(AppDestinations.Login) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            }
-                        }
-
-                        val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
-                        val viewModel =
-                            AppModule.provideCreateExpenseListViewModel(
-                                userId = userId,
-                                onListCreated = { listId, listName ->
-                                    // Clear the ViewModel cache before navigation
-                                    AppModule.clearCreateExpenseListViewModel()
-                                    // Navigate directly to the newly created expense list
-                                    navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
-                                        popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
-                                    }
-                                },
-                            )
-                        CreateExpenseListScreen(
-                            viewModel = viewModel,
-                            onBackClick = {
-                                // Clear cache when user navigates back without creating
-                                AppModule.clearCreateExpenseListViewModel()
-                                navController.popBackStack()
-                            },
-                            onListCreated = { listId, listName ->
-                                // Clear the ViewModel cache before navigation
-                                AppModule.clearCreateExpenseListViewModel()
-                                // Navigate directly to the newly created expense list
-                                navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName)) {
-                                    popUpTo(AppDestinations.CreateExpenseList) { inclusive = true }
-                                }
+                                // Navigate to ExpenseListDetail with ADD mode to create a new list
+                                navController.navigate(AppDestinations.ExpenseListDetail(
+                                    listId = "",
+                                    listName = "",
+                                    shareCode = "",
+                                    createdBy = "",
+                                    createdAt = "",
+                                    lastModified = "",
+                                    membersJson = AppDestinations.ExpenseListDetail.createMembersJson(emptyList()),
+                                    categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(emptyList()),
+                                ))
                             },
                         )
                     }
@@ -257,7 +226,7 @@ fun App() {
                                 navController.popBackStack()
                             },
                             onSettingsClick = {
-                                val expenseList = viewModel.expenseListMetadata.value
+                                val expenseList = viewModel.groupMetadata.value
                                 if (expenseList != null) {
                                     navController.navigate(
                                         AppDestinations.ExpenseListDetail(
@@ -305,8 +274,8 @@ fun App() {
 
                         val listDetailRoute = backStackEntry.toRoute<AppDestinations.ExpenseListDetail>()
 
-                        // Reconstruct ExpenseList from navigation params
-                        val expenseList = ExpenseList(
+                        // Reconstruct Group from navigation params
+                        val group = Group(
                             listId = listDetailRoute.listId,
                             name = listDetailRoute.listName,
                             shareCode = listDetailRoute.shareCode,
@@ -331,17 +300,34 @@ fun App() {
                         )
 
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
+
+                        // Determine if this is ADD mode (creating new list) or VIEW mode
+                        val initialMode = if (listDetailRoute.listId.isEmpty()) {
+                            GroupDetailMode.ADD
+                        } else {
+                            GroupDetailMode.VIEW
+                        }
+
                         val viewModel = AppModule.provideExpenseListDetailViewModel(
                             listId = listDetailRoute.listId,
                             userId = userId,
-                            initialExpenseList = expenseList,
+                            initialGroup = group,
+                            initialMode = initialMode,
                             onListDeleted = {
                                 // Navigate back to the lists overview after deletion
                                 navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
                             },
+                            onListSaved = { newListId, listName ->
+                                // For ADD mode, navigate to the newly created list
+                                if (initialMode == GroupDetailMode.ADD) {
+                                    navController.navigate(AppDestinations.ExpenseList(listId = newListId, listName = listName)) {
+                                        popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
+                                    }
+                                }
+                            },
                         )
 
-                        ExpenseListDetailScreen(
+                        GroupDetailScreen(
                             viewModel = viewModel,
                             onBackClick = {
                                 navController.popBackStack()
@@ -556,7 +542,7 @@ fun App() {
                                     // Set the name to trigger snackbar on ExpenseListScreen
                                     updatedExpenseName = savedExpense.name
                                 }
-                                // Navigate back to ExpenseList (pop both EditExpense and ExpenseDetail)
+                                // Navigate back to Group (pop both EditExpense and ExpenseDetail)
                                 navController.popBackStack(AppDestinations.ExpenseList(listId = editExpense.listId), inclusive = false)
                             },
                         )

@@ -3,7 +3,7 @@ package com.marquis.zorroexpense.data.remote.dto
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.SplitDetail
 import com.marquis.zorroexpense.domain.model.User
 
@@ -69,13 +69,13 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
     )
 }
 
-suspend fun ExpenseListDto.toDomain(firestoreService: FirestoreService): ExpenseList {
+suspend fun ExpenseListDto.toDomain(firestoreService: FirestoreService): Group {
     val resolvedCategories =
         categories.getCategoryPaths().mapNotNull { categoryPath ->
             firestoreService.getCategoryById(categoryPath).getOrNull()?.toDomain()
         }
 
-    return ExpenseList(
+    return Group(
         listId = listId,
         name = name,
         createdBy = createdBy,

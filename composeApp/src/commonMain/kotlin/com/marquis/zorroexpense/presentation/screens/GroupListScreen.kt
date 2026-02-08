@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,7 +37,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -45,9 +47,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -56,41 +62,84 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.marquis.zorroexpense.components.ProfileAvatar
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.platform.pullToRefreshBox
 import com.marquis.zorroexpense.presentation.components.SwipeableExpenseListCard
 import com.marquis.zorroexpense.presentation.components.bottomsheets.formatDateForDisplay
-import com.marquis.zorroexpense.presentation.state.ExpenseListsUiEvent
-import com.marquis.zorroexpense.presentation.state.ExpenseListsUiState
-import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsOverviewViewModel
+import com.marquis.zorroexpense.presentation.state.GroupListUiEvent
+import com.marquis.zorroexpense.presentation.state.GroupListUiState
+import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
 
 @Composable
-internal fun ExpenseListsOverviewScreen(
-    viewModel: ExpenseListsOverviewViewModel,
+internal fun GroupListScreen(
+    viewModel: GroupListViewModel,
     onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     onCreateNewList: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Pull-to-refresh state
-    val isRefreshing = (uiState as? ExpenseListsUiState.Success)?.isRefreshing ?: false
-    val showDeleteDialog = (uiState as? ExpenseListsUiState.Success)?.showDeleteDialog ?: false
-    val listToDelete = (uiState as? ExpenseListsUiState.Success)?.listToDelete
+    val isRefreshing = (uiState as? GroupListUiState.Success)?.isRefreshing ?: false
+    val showDeleteDialog = (uiState as? GroupListUiState.Success)?.showDeleteDialog ?: false
+    val listToDelete = (uiState as? GroupListUiState.Success)?.listToDelete
+
+    val listState = rememberLazyListState()
+    var isFabExpanded by remember { mutableStateOf(true) }
+
+    // FAB scroll behavior: collapse when scrolling down, expand when near top or scrolling up
+    LaunchedEffect(listState) {
+        var previousFirstVisibleItemIndex = 0
+        var previousFirstVisibleItemScrollOffset = 0
+
+        snapshotFlow {
+            listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+        }.collect { (currentIndex, currentOffset) ->
+            val isScrollingDown =
+                if (currentIndex != previousFirstVisibleItemIndex) {
+                    currentIndex > previousFirstVisibleItemIndex
+                } else {
+                    currentOffset > previousFirstVisibleItemScrollOffset
+                }
+
+            // Auto-expand when near the top (within 3 items) for better UX
+            isFabExpanded = if (currentIndex <= 3) {
+                true
+            } else {
+                !isScrollingDown
+            }
+
+            // Update previous values for next iteration
+            previousFirstVisibleItemIndex = currentIndex
+            previousFirstVisibleItemScrollOffset = currentOffset
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateNewList,
+            ExtendedFloatingActionButton(
+                onClick = { onCreateNewList() },
+                expanded = isFabExpanded,
+                icon = {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add Group",
+                    )
+                },
+                text = {
+                    Text("Add Group")
+                },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Create new list")
-            }
+                elevation =
+                    FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 16.dp,
+                    ),
+            )
         },
     ) { paddingValues ->
         pullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = { viewModel.onEvent(ExpenseListsUiEvent.RefreshLists) },
+            onRefresh = { viewModel.onEvent(GroupListUiEvent.RefreshGroups) },
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -101,21 +150,17 @@ internal fun ExpenseListsOverviewScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
             ) {
-                // Modern gradient header
                 ModernHeader()
 
-
-                // Content based on state
                 Box(modifier = Modifier.fillMaxSize()) {
                     when (uiState) {
-                        is ExpenseListsUiState.Loading -> {
+                        is GroupListUiState.Loading -> {
                             LoadingState()
                         }
 
-                        is ExpenseListsUiState.Success -> {
-                            val successState = uiState as ExpenseListsUiState.Success
+                        is GroupListUiState.Success -> {
+                            val successState = uiState as GroupListUiState.Success
                             Column(modifier = Modifier.fillMaxSize()) {
-                                // Show refresh indicator when refreshing
                                 if (successState.isRefreshing) {
                                     LinearProgressIndicator(
                                         modifier = Modifier.fillMaxWidth(),
@@ -124,41 +169,42 @@ internal fun ExpenseListsOverviewScreen(
                                 }
                                 SuccessState(
                                     lists = successState.lists,
+                                    listState = listState,
                                     onListSelected = { list ->
-                                        viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
+                                        viewModel.onEvent(GroupListUiEvent.SelectGroup(list.listId))
                                         onListSelected(list.listId, list.name)
                                     },
                                     onDeleteList = { list ->
-                                        viewModel.onEvent(ExpenseListsUiEvent.DeleteList(list))
+                                        viewModel.onEvent(GroupListUiEvent.DeleteGroup(list))
                                     },
                                 )
                             }
                         }
 
-                        is ExpenseListsUiState.Empty -> {
+                        is GroupListUiState.Empty -> {
                             EmptyState(onCreateNewList = onCreateNewList)
                         }
 
-                        is ExpenseListsUiState.Error -> {
-                            val errorState = uiState as ExpenseListsUiState.Error
+                        is GroupListUiState.Error -> {
+                            val errorState = uiState as GroupListUiState.Error
                             if (errorState.cachedLists != null) {
-                                // Show cached lists with error message
                                 ErrorStateWithCache(
                                     message = errorState.message,
                                     lists = errorState.cachedLists,
-                                    onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
+                                    listState = listState,
+                                    onRetry = { viewModel.onEvent(GroupListUiEvent.RetryLoad) },
                                     onListSelected = { list ->
-                                        viewModel.onEvent(ExpenseListsUiEvent.SelectList(list.listId))
+                                        viewModel.onEvent(GroupListUiEvent.SelectGroup(list.listId))
                                         onListSelected(list.listId, list.name)
                                     },
                                     onDeleteList = { list ->
-                                        viewModel.onEvent(ExpenseListsUiEvent.DeleteList(list))
+                                        viewModel.onEvent(GroupListUiEvent.DeleteGroup(list))
                                     },
                                 )
                             } else {
                                 ErrorState(
                                     message = errorState.message,
-                                    onRetry = { viewModel.onEvent(ExpenseListsUiEvent.RetryLoad) },
+                                    onRetry = { viewModel.onEvent(GroupListUiEvent.RetryLoad) },
                                 )
                             }
                         }
@@ -173,10 +219,10 @@ internal fun ExpenseListsOverviewScreen(
         DeleteExpenseListDialog(
             listName = listToDelete.name,
             onConfirm = {
-                viewModel.onEvent(ExpenseListsUiEvent.ConfirmDelete)
+                viewModel.onEvent(GroupListUiEvent.ConfirmDelete)
             },
             onDismiss = {
-                viewModel.onEvent(ExpenseListsUiEvent.CancelDelete)
+                viewModel.onEvent(GroupListUiEvent.CancelDelete)
             },
         )
     }
@@ -212,7 +258,7 @@ private fun ModernHeader() {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Manage your expense lists",
+            text = "Manage your groups",
             style = MaterialTheme.typography.bodyLarge,
             color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
         )
@@ -248,11 +294,13 @@ private fun LoadingState() {
 
 @Composable
 private fun SuccessState(
-    lists: List<ExpenseList>,
-    onListSelected: (ExpenseList) -> Unit,
-    onDeleteList: (ExpenseList) -> Unit = {},
+    lists: List<Group>,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    onListSelected: (Group) -> Unit,
+    onDeleteList: (Group) -> Unit = {},
 ) {
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -285,7 +333,7 @@ private fun SuccessState(
 
 @Composable
 internal fun ExpenseListCard(
-    list: ExpenseList,
+    list: Group,
     onClick: () -> Unit,
     onDelete: () -> Unit = {},
     isSwipeable: Boolean = false,
@@ -542,10 +590,11 @@ fun EmptyState(onCreateNewList: () -> Unit) {
 @Composable
 private fun ErrorStateWithCache(
     message: String,
-    lists: List<ExpenseList>,
+    lists: List<Group>,
+    listState: androidx.compose.foundation.lazy.LazyListState,
     onRetry: () -> Unit,
-    onListSelected: (ExpenseList) -> Unit,
-    onDeleteList: (ExpenseList) -> Unit = {},
+    onListSelected: (Group) -> Unit,
+    onDeleteList: (Group) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Error banner at the top
@@ -599,6 +648,7 @@ private fun ErrorStateWithCache(
         // Show cached lists below the error banner
         SuccessState(
             lists = lists,
+            listState = listState,
             onListSelected = onListSelected,
             onDeleteList = onDeleteList,
         )

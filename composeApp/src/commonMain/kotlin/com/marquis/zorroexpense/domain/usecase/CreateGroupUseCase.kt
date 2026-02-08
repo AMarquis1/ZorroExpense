@@ -2,13 +2,13 @@ package com.marquis.zorroexpense.domain.usecase
 
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.toDomain
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
-import com.marquis.zorroexpense.domain.repository.ExpenseListRepository
+import com.marquis.zorroexpense.domain.repository.GroupRepository
 import kotlinx.datetime.Clock
 
-class CreateExpenseListUseCase(
-    private val expenseListRepository: ExpenseListRepository,
+class CreateGroupUseCase(
+    private val groupRepository: GroupRepository,
     private val firestoreService: FirestoreService,
     private val getUsersUseCase: GetUsersUseCase,
 ) {
@@ -29,8 +29,8 @@ class CreateExpenseListUseCase(
         val creatorUser = getUsersUseCase.invoke(listOf(userId)).getOrNull()?.firstOrNull()
             ?: User(userId = userId, name = "", profileImage = "")
 
-        val expenseList =
-            ExpenseList(
+        val group =
+            Group(
                 name = name,
                 createdBy = userId,
                 members = listOf(creatorUser),
@@ -39,7 +39,7 @@ class CreateExpenseListUseCase(
                 categories = categories,
             )
 
-        val result = expenseListRepository.createExpenseList(expenseList)
+        val result = groupRepository.createGroup(group)
 
         // Add ExpenseListReference for the creator
         result.onSuccess { listId ->

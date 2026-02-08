@@ -1,7 +1,7 @@
 package com.marquis.zorroexpense.presentation.components
 
 import androidx.compose.runtime.Composable
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 
 /**
  * Cross-platform swipeable expense list card wrapper
@@ -10,7 +10,7 @@ import com.marquis.zorroexpense.domain.model.ExpenseList
  */
 @Composable
 expect fun SwipeableExpenseListCard(
-    list: ExpenseList,
+    list: Group,
     onClick: () -> Unit,
     onDelete: () -> Unit,
 )

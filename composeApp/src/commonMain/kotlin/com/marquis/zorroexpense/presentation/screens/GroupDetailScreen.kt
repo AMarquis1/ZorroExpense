@@ -46,9 +46,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -57,19 +54,19 @@ import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.Category
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.presentation.components.AddCategoryButton
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionMultiBottomSheet
-import com.marquis.zorroexpense.presentation.state.ExpenseListDetailUiEvent
-import com.marquis.zorroexpense.presentation.state.ExpenseListDetailUiState
-import com.marquis.zorroexpense.presentation.state.ListDetailMode
-import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListDetailViewModel
+import com.marquis.zorroexpense.presentation.state.GroupDetailUiEvent
+import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
+import com.marquis.zorroexpense.presentation.state.GroupDetailMode
+import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExpenseListDetailScreen(
-    viewModel: ExpenseListDetailViewModel,
+fun GroupDetailScreen(
+    viewModel: GroupDetailViewModel,
     onBackClick: () -> Unit,
     onListDeleted: () -> Unit = {},
 ) {
@@ -83,14 +80,14 @@ fun ExpenseListDetailScreen(
             TopAppBar(
                 title = {
                     val title = when (uiState) {
-                        is ExpenseListDetailUiState.Success -> {
-                            when ((uiState as ExpenseListDetailUiState.Success).mode) {
-                                ListDetailMode.VIEW -> "List Details"
-                                ListDetailMode.EDIT -> "Edit List"
-                                ListDetailMode.ADD -> "New List"
+                        is GroupDetailUiState.Success -> {
+                            when ((uiState as GroupDetailUiState.Success).mode) {
+                                GroupDetailMode.VIEW -> "Group Details"
+                                GroupDetailMode.EDIT -> "Edit group"
+                                GroupDetailMode.ADD -> "New Group"
                             }
                         }
-                        else -> "List Details"
+                        else -> "Group Details"
                     }
                     Text(
                         text = title,
@@ -101,17 +98,17 @@ fun ExpenseListDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = {
                         val currentState = uiState
-                        if (currentState is ExpenseListDetailUiState.Success &&
-                            currentState.mode == ListDetailMode.EDIT
+                        if (currentState is GroupDetailUiState.Success &&
+                            currentState.mode == GroupDetailMode.EDIT
                         ) {
                             // Cancel edit mode
-                            viewModel.onEvent(ExpenseListDetailUiEvent.CancelEdit)
+                            viewModel.onEvent(GroupDetailUiEvent.CancelEdit)
                         } else {
                             onBackClick()
                         }
                     }) {
-                        val icon = if (uiState is ExpenseListDetailUiState.Success &&
-                            (uiState as ExpenseListDetailUiState.Success).mode != ListDetailMode.VIEW
+                        val icon = if (uiState is GroupDetailUiState.Success &&
+                            (uiState as GroupDetailUiState.Success).mode != GroupDetailMode.VIEW
                         ) {
                             Icons.Default.Close
                         } else {
@@ -124,35 +121,33 @@ fun ExpenseListDetailScreen(
                     }
                 },
                 actions = {
-                    if (uiState is ExpenseListDetailUiState.Success) {
-                        val successState = uiState as ExpenseListDetailUiState.Success
+                    if (uiState is GroupDetailUiState.Success) {
+                        val successState = uiState as GroupDetailUiState.Success
 
                         when (successState.mode) {
-                            ListDetailMode.VIEW -> {
-                                // Edit button
+                            GroupDetailMode.VIEW -> {
                                 IconButton(
                                     onClick = {
-                                        viewModel.onEvent(ExpenseListDetailUiEvent.EnterEditMode)
+                                        viewModel.onEvent(GroupDetailUiEvent.EnterEditMode)
                                     },
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Edit,
-                                        contentDescription = "Edit List",
+                                        contentDescription = "Edit groups",
                                     )
                                 }
-                                // Delete button
                                 IconButton(
                                     onClick = {
-                                        viewModel.onEvent(ExpenseListDetailUiEvent.DeleteList)
+                                        viewModel.onEvent(GroupDetailUiEvent.DeleteGroup)
                                     },
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Delete,
-                                        contentDescription = "Delete List",
+                                        contentDescription = "Delete Group",
                                     )
                                 }
                             }
-                            ListDetailMode.EDIT, ListDetailMode.ADD -> {
+                            GroupDetailMode.EDIT, GroupDetailMode.ADD -> {
                                 // Save button
                                 if (successState.isSaving) {
                                     CircularProgressIndicator(
@@ -162,7 +157,7 @@ fun ExpenseListDetailScreen(
                                 } else {
                                     IconButton(
                                         onClick = {
-                                            viewModel.onEvent(ExpenseListDetailUiEvent.SaveChanges)
+                                            viewModel.onEvent(GroupDetailUiEvent.SaveChanges)
                                         },
                                         enabled = successState.editedName.isNotBlank(),
                                     ) {
@@ -186,7 +181,7 @@ fun ExpenseListDetailScreen(
         },
     ) { paddingValues ->
         when (uiState) {
-            is ExpenseListDetailUiState.Loading -> {
+            is GroupDetailUiState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -194,35 +189,35 @@ fun ExpenseListDetailScreen(
                     CircularProgressIndicator()
                 }
             }
-            is ExpenseListDetailUiState.Success -> {
-                val successState = uiState as ExpenseListDetailUiState.Success
+            is GroupDetailUiState.Success -> {
+                val successState = uiState as GroupDetailUiState.Success
                 ExpenseListDetailContent(
-                    expenseList = successState.expenseList,
+                    group = successState.group,
                     mode = successState.mode,
                     editedName = successState.editedName,
                     editedCategories = successState.editedCategories,
                     editedMembers = successState.editedMembers,
                     currentUserId = viewModel.currentUserId,
-                    onNameChange = { viewModel.onEvent(ExpenseListDetailUiEvent.UpdateName(it)) },
-                    onAddCategoryClick = { viewModel.onEvent(ExpenseListDetailUiEvent.AddCategoryClicked) },
-                    onRemoveCategory = { viewModel.onEvent(ExpenseListDetailUiEvent.RemoveCategory(it)) },
-                    onRemoveMember = { viewModel.onEvent(ExpenseListDetailUiEvent.RemoveMember(it)) },
+                    onNameChange = { viewModel.onEvent(GroupDetailUiEvent.UpdateName(it)) },
+                    onAddCategoryClick = { viewModel.onEvent(GroupDetailUiEvent.AddCategoryClicked) },
+                    onRemoveCategory = { viewModel.onEvent(GroupDetailUiEvent.RemoveCategory(it)) },
+                    onRemoveMember = { viewModel.onEvent(GroupDetailUiEvent.RemoveMember(it)) },
                     modifier = Modifier.padding(paddingValues),
                 )
 
                 if (successState.showDeleteDialog) {
                     DeleteListConfirmationDialog(
-                        listName = successState.expenseList.name,
-                        onConfirm = { viewModel.onEvent(ExpenseListDetailUiEvent.ConfirmDelete) },
-                        onDismiss = { viewModel.onEvent(ExpenseListDetailUiEvent.CancelDelete) },
+                        groupName = successState.group.name,
+                        onConfirm = { viewModel.onEvent(GroupDetailUiEvent.ConfirmDelete) },
+                        onDismiss = { viewModel.onEvent(GroupDetailUiEvent.CancelDelete) },
                     )
                 }
 
                 if (successState.showDeleteMemberDialog && successState.memberToDelete != null) {
                     DeleteMemberConfirmationDialog(
                         memberName = successState.memberToDelete.name,
-                        onConfirm = { viewModel.onEvent(ExpenseListDetailUiEvent.ConfirmDeleteMember) },
-                        onDismiss = { viewModel.onEvent(ExpenseListDetailUiEvent.CancelDeleteMember) },
+                        onConfirm = { viewModel.onEvent(GroupDetailUiEvent.ConfirmDeleteMember) },
+                        onDismiss = { viewModel.onEvent(GroupDetailUiEvent.CancelDeleteMember) },
                     )
                 }
 
@@ -231,16 +226,16 @@ fun ExpenseListDetailScreen(
                         categories = allCategories,
                         selectedCategories = successState.editedCategories,
                         onCategoryToggled = { category ->
-                            viewModel.onEvent(ExpenseListDetailUiEvent.CategoryToggled(category))
+                            viewModel.onEvent(GroupDetailUiEvent.CategoryToggled(category))
                         },
                         onDismiss = {
-                            viewModel.onEvent(ExpenseListDetailUiEvent.DismissCategoryBottomSheet)
+                            viewModel.onEvent(GroupDetailUiEvent.DismissCategoryBottomSheet)
                         },
                         bottomSheetState = categoryBottomSheetState,
                     )
                 }
             }
-            is ExpenseListDetailUiState.Deleted -> {
+            is GroupDetailUiState.Deleted -> {
                 LaunchedEffect(Unit) {
                     onListDeleted()
                 }
@@ -256,8 +251,8 @@ fun ExpenseListDetailScreen(
                     )
                 }
             }
-            is ExpenseListDetailUiState.Error -> {
-                val errorState = uiState as ExpenseListDetailUiState.Error
+            is GroupDetailUiState.Error -> {
+                val errorState = uiState as GroupDetailUiState.Error
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -274,8 +269,8 @@ fun ExpenseListDetailScreen(
 
 @Composable
 private fun ExpenseListDetailContent(
-    expenseList: ExpenseList,
-    mode: ListDetailMode,
+    group: Group,
+    mode: GroupDetailMode,
     editedName: String,
     editedCategories: List<Category>,
     editedMembers: List<User>,
@@ -286,9 +281,9 @@ private fun ExpenseListDetailContent(
     onRemoveMember: (User) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isEditable = mode != ListDetailMode.VIEW
-    val displayCategories = if (isEditable) editedCategories else expenseList.categories
-    val displayMembers = if (isEditable) editedMembers else expenseList.members
+    val isEditable = mode != GroupDetailMode.VIEW
+    val displayCategories = if (isEditable) editedCategories else group.categories
+    val displayMembers = if (isEditable) editedMembers else group.members
 
     Column(
         modifier = modifier
@@ -308,7 +303,7 @@ private fun ExpenseListDetailContent(
             )
         } else {
             Text(
-                text = expenseList.name.ifEmpty { "Unnamed List" },
+                text = group.name.ifEmpty { "Unnamed List" },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -338,7 +333,6 @@ private fun ExpenseListDetailContent(
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // Add button first (only in EDIT/ADD mode)
                     if (isEditable) {
                         item {
                             AddCategoryButton(
@@ -349,7 +343,6 @@ private fun ExpenseListDetailContent(
                         }
                     }
 
-                    // Categories
                     items(displayCategories) { category ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -469,7 +462,7 @@ private fun ExpenseListDetailContent(
         }
 
         // Share code section (only in VIEW mode and when available)
-        if (mode == ListDetailMode.VIEW && expenseList.shareCode.isNotEmpty()) {
+        if (mode == GroupDetailMode.VIEW && group.shareCode.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -511,7 +504,7 @@ private fun ExpenseListDetailContent(
                         shape = RoundedCornerShape(8.dp),
                     ) {
                         Text(
-                            text = expenseList.shareCode,
+                            text = group.shareCode,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary,
@@ -525,7 +518,7 @@ private fun ExpenseListDetailContent(
         }
 
         // Metadata section (only in VIEW mode)
-        if (mode == ListDetailMode.VIEW) {
+        if (mode == GroupDetailMode.VIEW) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -545,28 +538,28 @@ private fun ExpenseListDetailContent(
                     )
 
                     // Created by
-                    if (expenseList.createdBy.isNotEmpty()) {
+                    if (group.createdBy.isNotEmpty()) {
                         MetadataRow(
                             label = "Created by",
-                            value = findMemberName(expenseList, expenseList.createdBy),
+                            value = findMemberName(group, group.createdBy),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     // Created at
-                    if (expenseList.createdAt.isNotEmpty()) {
+                    if (group.createdAt.isNotEmpty()) {
                         MetadataRow(
                             label = "Created",
-                            value = formatTimestamp(expenseList.createdAt),
+                            value = formatTimestamp(group.createdAt),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     // Last modified
-                    if (expenseList.lastModified.isNotEmpty()) {
+                    if (group.lastModified.isNotEmpty()) {
                         MetadataRow(
                             label = "Last modified",
-                            value = formatTimestamp(expenseList.lastModified),
+                            value = formatTimestamp(group.lastModified),
                         )
                     }
                 }
@@ -599,8 +592,8 @@ private fun MetadataRow(
     }
 }
 
-private fun findMemberName(expenseList: ExpenseList, userId: String): String {
-    val member = expenseList.members.find { it.userId == userId }
+private fun findMemberName(group: Group, userId: String): String {
+    val member = group.members.find { it.userId == userId }
     return member?.name?.ifEmpty { "Unknown" } ?: "Unknown"
 }
 
@@ -634,7 +627,7 @@ private fun formatTimestamp(timestamp: String): String {
 
 @Composable
 private fun DeleteListConfirmationDialog(
-    listName: String,
+    groupName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -642,14 +635,14 @@ private fun DeleteListConfirmationDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Delete List?",
+                text = "Delete Group?",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
             )
         },
         text = {
             Text(
-                text = "Are you sure you want to delete \"$listName\"? This will also delete all expenses in this list. This action cannot be undone.",
+                text = "Are you sure you want to delete \"$groupName\"? This will also delete all expenses in this group. This action cannot be undone.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

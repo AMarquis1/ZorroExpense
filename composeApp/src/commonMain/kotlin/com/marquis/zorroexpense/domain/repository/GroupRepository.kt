@@ -1,57 +1,57 @@
 package com.marquis.zorroexpense.domain.repository
 
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 
 /**
  * Repository interface for expense list operations.
  */
-interface ExpenseListRepository {
+interface GroupRepository {
     /**
      * Force refresh all expense lists for a user, bypassing cache
      * Always fetches from remote data source
      */
-    suspend fun refreshUserExpenseLists(userId: String): Result<List<ExpenseList>>
+    suspend fun refreshUserGroups(userId: String): Result<List<Group>>
 
     /**
      * Get all expense lists for a user (lists they own or are members of)
      */
-    suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseList>>
+    suspend fun getUserGroups(userId: String): Result<List<Group>>
 
     /**
      * Get a specific expense list by ID
      */
-    suspend fun getExpenseListById(listId: String): Result<ExpenseList?>
+    suspend fun getGroup(listId: String): Result<Group?>
 
     /**
      * Create a new expense list
      */
-    suspend fun createExpenseList(list: ExpenseList): Result<String>
+    suspend fun createGroup(list: Group): Result<String>
 
     /**
      * Update an expense list
      */
-    suspend fun updateExpenseList(
+    suspend fun updateGroup(
         listId: String,
-        list: ExpenseList,
+        list: Group,
     ): Result<Unit>
 
     /**
      * Delete an expense list
      */
-    suspend fun deleteExpenseList(listId: String): Result<Unit>
+    suspend fun deleteGroup(listId: String): Result<Unit>
 
     /**
      * Join a list using share code
      */
-    suspend fun joinExpenseList(
+    suspend fun joinGroup(
         userId: String,
         shareCode: String,
-    ): Result<ExpenseList>
+    ): Result<Group>
 
     /**
      * Remove a member from a list
      */
-    suspend fun removeMemberFromList(
+    suspend fun removeMemberFromGroup(
         listId: String,
         userId: String,
     ): Result<Unit>

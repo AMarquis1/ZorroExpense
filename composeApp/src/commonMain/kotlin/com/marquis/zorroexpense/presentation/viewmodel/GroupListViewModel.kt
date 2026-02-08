@@ -2,15 +2,14 @@ package com.marquis.zorroexpense.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marquis.zorroexpense.data.remote.dto.toDateString
-import com.marquis.zorroexpense.domain.model.ExpenseList
-import com.marquis.zorroexpense.domain.usecase.DeleteExpenseListUseCase
-import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
+import com.marquis.zorroexpense.domain.model.Group
+import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
+import com.marquis.zorroexpense.domain.usecase.GetUserGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
-import com.marquis.zorroexpense.domain.usecase.JoinExpenseListUseCase
-import com.marquis.zorroexpense.domain.usecase.RefreshUserExpenseListsUseCase
-import com.marquis.zorroexpense.presentation.state.ExpenseListsUiEvent
-import com.marquis.zorroexpense.presentation.state.ExpenseListsUiState
+import com.marquis.zorroexpense.domain.usecase.JoinGroupUseCase
+import com.marquis.zorroexpense.domain.usecase.RefreshUserGroupUseCase
+import com.marquis.zorroexpense.presentation.state.GroupListUiEvent
+import com.marquis.zorroexpense.presentation.state.GroupListUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,37 +18,37 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel for managing expense lists selection
  */
-class ExpenseListsOverviewViewModel(
+class GroupListViewModel(
     private val userId: String,
-    private val getUserExpenseListsUseCase: GetUserExpenseListsUseCase,
-    private val refreshUserExpenseListsUseCase: RefreshUserExpenseListsUseCase,
-    private val joinExpenseListUseCase: JoinExpenseListUseCase,
-    private val deleteExpenseListUseCase: DeleteExpenseListUseCase,
+    private val getUserGroupUseCase: GetUserGroupUseCase,
+    private val refreshUserGroupUseCase: RefreshUserGroupUseCase,
+    private val joinGroupUseCase: JoinGroupUseCase,
+    private val deleteExpenseListUseCase: DeleteGroupUseCase,
     private val getUsersUseCase: GetUsersUseCase,
     private val onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     private val onListDeleted: (listId: String) -> Unit = { _ -> },
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<ExpenseListsUiState>(ExpenseListsUiState.Loading)
-    val uiState: StateFlow<ExpenseListsUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<GroupListUiState>(GroupListUiState.Loading)
+    val uiState: StateFlow<GroupListUiState> = _uiState.asStateFlow()
 
-    private var cachedLists: List<ExpenseList>? = null
+    private var cachedLists: List<Group>? = null
 
     init {
         loadLists()
     }
 
-    fun onEvent(event: ExpenseListsUiEvent) {
+    fun onEvent(event: GroupListUiEvent) {
         when (event) {
-            is ExpenseListsUiEvent.LoadLists -> loadLists()
-            is ExpenseListsUiEvent.RefreshLists -> refreshLists()
-            is ExpenseListsUiEvent.CreateNewList -> {}
-            is ExpenseListsUiEvent.SelectList -> selectList(event.listId)
-            is ExpenseListsUiEvent.JoinList -> joinList(event.shareCode)
-            is ExpenseListsUiEvent.DeleteList -> showDeleteConfirmation(event.list)
-            is ExpenseListsUiEvent.ConfirmDelete -> confirmDelete()
-            is ExpenseListsUiEvent.CancelDelete -> cancelDelete()
-            is ExpenseListsUiEvent.EditList -> editList(event.list)
-            is ExpenseListsUiEvent.RetryLoad -> loadLists()
+            is GroupListUiEvent.LoadGroups -> loadLists()
+            is GroupListUiEvent.RefreshGroups -> refreshLists()
+            is GroupListUiEvent.CreateNewGroup -> {}
+            is GroupListUiEvent.SelectGroup -> selectList(event.listId)
+            is GroupListUiEvent.JoinGroup -> joinList(event.shareCode)
+            is GroupListUiEvent.DeleteGroup -> showDeleteConfirmation(event.list)
+            is GroupListUiEvent.ConfirmDelete -> confirmDelete()
+            is GroupListUiEvent.CancelDelete -> cancelDelete()
+            is GroupListUiEvent.EditGroup -> editList(event.list)
+            is GroupListUiEvent.RetryLoad -> loadLists()
         }
     }
 
@@ -65,21 +64,21 @@ class ExpenseListsOverviewViewModel(
         viewModelScope.launch {
             // Check if we should show cache immediately
             val currentState = _uiState.value
-            val shouldShowCacheImmediately = showCacheImmediately || (currentState is ExpenseListsUiState.Success)
+            val shouldShowCacheImmediately = showCacheImmediately || (currentState is GroupListUiState.Success)
 
             // If we have cached data and should show it immediately, do so
-            if (shouldShowCacheImmediately && (cachedLists != null || currentState is ExpenseListsUiState.Success)) {
-                val listsToShow = cachedLists ?: (currentState as? ExpenseListsUiState.Success)?.lists ?: emptyList()
-                _uiState.value = ExpenseListsUiState.Success(listsToShow, isRefreshing = true)
+            if (shouldShowCacheImmediately && (cachedLists != null || currentState is GroupListUiState.Success)) {
+                val listsToShow = cachedLists ?: (currentState as? GroupListUiState.Success)?.lists ?: emptyList()
+                _uiState.value = GroupListUiState.Success(listsToShow, isRefreshing = true)
             } else {
-                _uiState.value = ExpenseListsUiState.Loading
+                _uiState.value = GroupListUiState.Loading
             }
 
             // Use refresh use case for force refresh (pull-to-refresh), otherwise use normal get
             val result = if (forceRefresh) {
-                refreshUserExpenseListsUseCase.invoke(userId)
+                refreshUserGroupUseCase.invoke(userId)
             } else {
-                getUserExpenseListsUseCase.invoke(userId)
+                getUserGroupUseCase.invoke(userId)
             }
 
             result.onSuccess { lists ->
@@ -102,9 +101,9 @@ class ExpenseListsOverviewViewModel(
 
                         _uiState.value =
                             if (enrichedLists.isEmpty()) {
-                                ExpenseListsUiState.Empty
+                                GroupListUiState.Empty
                             } else {
-                                ExpenseListsUiState.Success(enrichedLists)
+                                GroupListUiState.Success(enrichedLists)
                             }
                     }.onFailure {
                         val sortedLists = lists.sortedByDescending { it.lastModified }
@@ -112,9 +111,9 @@ class ExpenseListsOverviewViewModel(
 
                         _uiState.value =
                             if (sortedLists.isEmpty()) {
-                                ExpenseListsUiState.Empty
+                                GroupListUiState.Empty
                             } else {
-                                ExpenseListsUiState.Success(sortedLists)
+                                GroupListUiState.Success(sortedLists)
                             }
                     }
                 } else {
@@ -123,9 +122,9 @@ class ExpenseListsOverviewViewModel(
 
                     _uiState.value =
                         if (sortedLists.isEmpty()) {
-                            ExpenseListsUiState.Empty
+                            GroupListUiState.Empty
                         } else {
-                            ExpenseListsUiState.Success(sortedLists)
+                            GroupListUiState.Success(sortedLists)
                         }
                 }
             }
@@ -133,7 +132,7 @@ class ExpenseListsOverviewViewModel(
             result.onFailure { error ->
                 // Show error but keep cached data visible if available
                 _uiState.value =
-                    ExpenseListsUiState.Error(
+                    GroupListUiState.Error(
                         error.message ?: "Failed to load expense lists",
                         cachedLists,
                     )
@@ -143,7 +142,7 @@ class ExpenseListsOverviewViewModel(
 
     private fun selectList(listId: String) {
         val currentState = _uiState.value
-        if (currentState is ExpenseListsUiState.Success) {
+        if (currentState is GroupListUiState.Success) {
             val selectedList = currentState.lists.find { it.listId == listId }
             selectedList?.let {
                 onListSelected(it.listId, it.name)
@@ -153,8 +152,8 @@ class ExpenseListsOverviewViewModel(
 
     private fun joinList(shareCode: String) {
         viewModelScope.launch {
-            _uiState.value = ExpenseListsUiState.Loading
-            val result = joinExpenseListUseCase.invoke(userId, shareCode)
+            _uiState.value = GroupListUiState.Loading
+            val result = joinGroupUseCase.invoke(userId, shareCode)
 
             result.onSuccess { list ->
                 onListSelected(list.listId, list.name)
@@ -163,16 +162,16 @@ class ExpenseListsOverviewViewModel(
             result.onFailure { error ->
                 // Show error but keep current lists visible
                 val currentState = _uiState.value
-                if (currentState is ExpenseListsUiState.Success) {
+                if (currentState is GroupListUiState.Success) {
                     _uiState.value =
-                        ExpenseListsUiState.Error(
+                        GroupListUiState.Error(
                             error.message ?: "Failed to join list",
                         )
                     // Reload lists after a moment
                     loadLists()
                 } else {
                     _uiState.value =
-                        ExpenseListsUiState.Error(
+                        GroupListUiState.Error(
                             error.message ?: "Failed to join list",
                         )
                 }
@@ -180,9 +179,9 @@ class ExpenseListsOverviewViewModel(
         }
     }
 
-    private fun showDeleteConfirmation(list: ExpenseList) {
+    private fun showDeleteConfirmation(list: Group) {
         val currentState = _uiState.value
-        if (currentState is ExpenseListsUiState.Success) {
+        if (currentState is GroupListUiState.Success) {
             _uiState.value =
                 currentState.copy(
                     showDeleteDialog = true,
@@ -193,7 +192,7 @@ class ExpenseListsOverviewViewModel(
 
     private fun cancelDelete() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListsUiState.Success) {
+        if (currentState is GroupListUiState.Success) {
             _uiState.value =
                 currentState.copy(
                     showDeleteDialog = false,
@@ -204,7 +203,7 @@ class ExpenseListsOverviewViewModel(
 
     private fun confirmDelete() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListsUiState.Success) {
+        if (currentState is GroupListUiState.Success) {
             val listToDelete = currentState.listToDelete
             if (listToDelete != null) {
                 viewModelScope.launch {
@@ -217,9 +216,9 @@ class ExpenseListsOverviewViewModel(
 
                         _uiState.value =
                             if (updatedLists.isEmpty()) {
-                                ExpenseListsUiState.Empty
+                                GroupListUiState.Empty
                             } else {
-                                ExpenseListsUiState.Success(updatedLists)
+                                GroupListUiState.Success(updatedLists)
                             }
 
                         // Notify parent that list was deleted
@@ -234,7 +233,7 @@ class ExpenseListsOverviewViewModel(
                                 listToDelete = null,
                             )
                         _uiState.value =
-                            ExpenseListsUiState.Error(
+                            GroupListUiState.Error(
                                 error.message ?: "Failed to delete list",
                                 cachedLists,
                             )
@@ -244,7 +243,7 @@ class ExpenseListsOverviewViewModel(
         }
     }
 
-    private fun editList(list: ExpenseList) {
+    private fun editList(list: Group) {
         // Callback will be handled by the screen to navigate to edit
         // This is a placeholder - the screen will handle navigation
     }

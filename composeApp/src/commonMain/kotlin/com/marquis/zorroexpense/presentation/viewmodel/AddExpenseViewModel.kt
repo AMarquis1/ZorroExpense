@@ -8,7 +8,7 @@ import com.marquis.zorroexpense.domain.model.RecurrenceType
 import com.marquis.zorroexpense.domain.model.SplitDetail
 import com.marquis.zorroexpense.domain.model.SplitMethod
 import com.marquis.zorroexpense.domain.model.User
-import com.marquis.zorroexpense.domain.repository.ExpenseListRepository
+import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
@@ -34,7 +34,7 @@ class AddExpenseViewModel(
     private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val getUsersUseCase: GetUsersUseCase,
-    private val expenseListRepository: ExpenseListRepository,
+    private val groupRepository: GroupRepository,
     private val expenseToEdit: Expense? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AddExpenseUiState>(AddExpenseUiState.Idle)
@@ -63,8 +63,8 @@ class AddExpenseViewModel(
 
     private fun loadAvailableUsers() {
         viewModelScope.launch {
-            expenseListRepository
-                .getExpenseListById(listId)
+            groupRepository
+                .getGroup(listId)
                 .onSuccess { list ->
                     list?.let { expenseList ->
                         // Extract all unique user IDs from members

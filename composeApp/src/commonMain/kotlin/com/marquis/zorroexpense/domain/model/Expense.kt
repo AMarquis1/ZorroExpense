@@ -2,7 +2,7 @@ package com.marquis.zorroexpense.domain.model
 
 data class Expense(
     val documentId: String = "",
-    val listId: String = "", // Reference to ExpenseList
+    val listId: String = "", // Reference to Group
     val description: String = "",
     val name: String = "",
     val price: Double = 0.0,

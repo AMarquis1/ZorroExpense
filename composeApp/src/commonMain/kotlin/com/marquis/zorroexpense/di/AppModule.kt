@@ -9,7 +9,7 @@ import com.marquis.zorroexpense.data.remote.AuthService
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.repository.AuthRepositoryImpl
 import com.marquis.zorroexpense.data.repository.CategoryRepositoryImpl
-import com.marquis.zorroexpense.data.repository.ExpenseListRepositoryImpl
+import com.marquis.zorroexpense.data.repository.GroupRepositoryImpl
 import com.marquis.zorroexpense.data.repository.ExpenseRepositoryImpl
 import com.marquis.zorroexpense.data.repository.UserRepositoryImpl
 import com.marquis.zorroexpense.domain.cache.CacheManager
@@ -17,37 +17,36 @@ import com.marquis.zorroexpense.domain.cache.InMemoryCacheManager
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.repository.AuthRepository
 import com.marquis.zorroexpense.domain.repository.CategoryRepository
-import com.marquis.zorroexpense.domain.repository.ExpenseListRepository
+import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 import com.marquis.zorroexpense.domain.repository.UserRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
-import com.marquis.zorroexpense.domain.usecase.CreateExpenseListUseCase
-import com.marquis.zorroexpense.domain.usecase.DeleteExpenseListUseCase
+import com.marquis.zorroexpense.domain.usecase.CreateGroupUseCase
+import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
-import com.marquis.zorroexpense.domain.usecase.GetExpenseListByIdUseCase
+import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
-import com.marquis.zorroexpense.domain.usecase.GetUserExpenseListsUseCase
+import com.marquis.zorroexpense.domain.usecase.GetUserGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
-import com.marquis.zorroexpense.domain.usecase.JoinExpenseListUseCase
+import com.marquis.zorroexpense.domain.usecase.JoinGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.LoginUseCase
 import com.marquis.zorroexpense.domain.usecase.LogoutUseCase
 import com.marquis.zorroexpense.domain.usecase.ObserveAuthStateUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
-import com.marquis.zorroexpense.domain.usecase.RefreshUserExpenseListsUseCase
+import com.marquis.zorroexpense.domain.usecase.RefreshUserGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.SignUpUseCase
-import com.marquis.zorroexpense.domain.usecase.UpdateExpenseListUseCase
+import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
-import com.marquis.zorroexpense.presentation.viewmodel.CreateExpenseListViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
-import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListDetailViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
-import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListsOverviewViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
 
 /**
  * Clean dependency injection module following KMP and Clean Architecture standards
@@ -112,8 +111,8 @@ object AppModule {
         CategoryRepositoryImpl(firestoreService)
     }
 
-    private val expenseListRepository: ExpenseListRepository by lazy {
-        ExpenseListRepositoryImpl(firestoreService, userRepository)
+    private val groupRepository: GroupRepository by lazy {
+        GroupRepositoryImpl(firestoreService, userRepository)
     }
 
     private val userRepository: UserRepository by lazy {
@@ -187,32 +186,32 @@ object AppModule {
     }
 
     // List-based Use Cases
-    private val getUserExpenseListsUseCase: GetUserExpenseListsUseCase by lazy {
-        GetUserExpenseListsUseCase(expenseListRepository)
+    private val getUserGroupUseCase: GetUserGroupUseCase by lazy {
+        GetUserGroupUseCase(groupRepository)
     }
 
-    private val createExpenseListUseCase: CreateExpenseListUseCase by lazy {
-        CreateExpenseListUseCase(expenseListRepository, firestoreService, getUsersUseCase)
+    private val createExpenseListUseCase: CreateGroupUseCase by lazy {
+        CreateGroupUseCase(groupRepository, firestoreService, getUsersUseCase)
     }
 
-    private val joinExpenseListUseCase: JoinExpenseListUseCase by lazy {
-        JoinExpenseListUseCase(expenseListRepository)
+    private val joinGroupUseCase: JoinGroupUseCase by lazy {
+        JoinGroupUseCase(groupRepository)
     }
 
-    private val refreshUserExpenseListsUseCase: RefreshUserExpenseListsUseCase by lazy {
-        RefreshUserExpenseListsUseCase(expenseListRepository)
+    private val refreshUserGroupUseCase: RefreshUserGroupUseCase by lazy {
+        RefreshUserGroupUseCase(groupRepository)
     }
 
-    private val deleteExpenseListUseCase: DeleteExpenseListUseCase by lazy {
-        DeleteExpenseListUseCase(expenseListRepository)
+    private val deleteExpenseListUseCase: DeleteGroupUseCase by lazy {
+        DeleteGroupUseCase(groupRepository)
     }
 
-    private val updateExpenseListUseCase: UpdateExpenseListUseCase by lazy {
-        UpdateExpenseListUseCase(expenseListRepository)
+    private val updateExpenseListUseCase: UpdateGroupUseCase by lazy {
+        UpdateGroupUseCase(groupRepository)
     }
 
-    private val getExpenseListByIdUseCase: GetExpenseListByIdUseCase by lazy {
-        GetExpenseListByIdUseCase(expenseListRepository)
+    private val getExpenseListByIdUseCase: GetGroupByIdUseCase by lazy {
+        GetGroupByIdUseCase(groupRepository)
     }
 
     // =================
@@ -237,71 +236,30 @@ object AppModule {
         return viewModel
     }
 
-    private var expenseListsOverviewViewModel: ExpenseListsOverviewViewModel? = null
+    private var groupListViewModel: GroupListViewModel? = null
 
     /**
-     * Provide ExpenseListsOverviewViewModel for list selection
+     * Provide GroupListViewModel for list selection
      * Cached as singleton to preserve state when navigating back
      */
     fun provideExpenseListsViewModel(
         userId: String,
         onListSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
         onListDeleted: (listId: String) -> Unit = { _ -> },
-    ): ExpenseListsOverviewViewModel {
+    ): GroupListViewModel {
         val viewModel =
-            expenseListsOverviewViewModel ?: ExpenseListsOverviewViewModel(
+            groupListViewModel ?: GroupListViewModel(
                 userId = userId,
-                getUserExpenseListsUseCase = getUserExpenseListsUseCase,
-                refreshUserExpenseListsUseCase = refreshUserExpenseListsUseCase,
-                joinExpenseListUseCase = joinExpenseListUseCase,
+                getUserGroupUseCase = getUserGroupUseCase,
+                refreshUserGroupUseCase = refreshUserGroupUseCase,
+                joinGroupUseCase = joinGroupUseCase,
                 deleteExpenseListUseCase = deleteExpenseListUseCase,
                 getUsersUseCase = getUsersUseCase,
                 onListSelected = onListSelected,
                 onListDeleted = onListDeleted,
-            ).also { expenseListsOverviewViewModel = it }
+            ).also { groupListViewModel = it }
 
         return viewModel
-    }
-
-    private val createExpenseListViewModels = mutableMapOf<String, CreateExpenseListViewModel>()
-
-    /**
-     * Provide CreateExpenseListViewModel with proper caching
-     * - For create mode: uses "create" as cache key
-     * - For edit mode: uses listId as cache key
-     * This prevents multiple loadCategories() calls on recomposition
-     */
-    fun provideCreateExpenseListViewModel(
-        userId: String,
-        onListCreated: (listId: String, listName: String) -> Unit = { _, _ -> },
-        listIdToEdit: String? = null,
-        listNameToEdit: String? = null,
-    ): CreateExpenseListViewModel {
-        val cacheKey = listIdToEdit ?: "create"
-
-        return createExpenseListViewModels.getOrPut(cacheKey) {
-            CreateExpenseListViewModel(
-                userId = userId,
-                createExpenseListUseCase = createExpenseListUseCase,
-                updateExpenseListUseCase = updateExpenseListUseCase,
-                getCategoriesUseCase = getCategoriesUseCase,
-                expenseListRepository = expenseListRepository,
-                onListCreated = onListCreated,
-                listIdToEdit = listIdToEdit,
-                listNameToEdit = listNameToEdit,
-            )
-        }
-    }
-
-    /**
-     * Clear CreateExpenseListViewModel cache - call after successful creation/update
-     */
-    fun clearCreateExpenseListViewModel(listId: String? = null) {
-        if (listId != null) {
-            createExpenseListViewModels.remove(listId)
-        } else {
-            createExpenseListViewModels.remove("create")
-        }
     }
 
     private val expenseListViewModels = mutableMapOf<String, ExpenseListViewModel>()
@@ -358,7 +316,6 @@ object AppModule {
      */
     fun clearAllViewModels() {
         expenseListViewModels.clear()
-        createExpenseListViewModels.clear()
     }
 
     fun provideAddExpenseViewModel(
@@ -373,51 +330,51 @@ object AppModule {
             updateExpenseUseCase = updateExpenseUseCase,
             getCategoriesUseCase = getCategoriesUseCase,
             getUsersUseCase = getUsersUseCase,
-            expenseListRepository = expenseListRepository,
+            groupRepository = groupRepository,
             expenseToEdit = expenseToEdit,
         )
 
     fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel =
         ExpenseDetailViewModel(expense)
 
-    private val expenseListDetailViewModels = mutableMapOf<String, ExpenseListDetailViewModel>()
+    private val groupDetailViewModels = mutableMapOf<String, GroupDetailViewModel>()
 
     fun provideExpenseListDetailViewModel(
         listId: String,
         userId: String,
-        initialExpenseList: com.marquis.zorroexpense.domain.model.ExpenseList,
-        initialMode: com.marquis.zorroexpense.presentation.state.ListDetailMode =
-            com.marquis.zorroexpense.presentation.state.ListDetailMode.VIEW,
+        initialGroup: com.marquis.zorroexpense.domain.model.Group,
+        initialMode: com.marquis.zorroexpense.presentation.state.GroupDetailMode =
+            com.marquis.zorroexpense.presentation.state.GroupDetailMode.VIEW,
         onListDeleted: () -> Unit = {},
         onListSaved: (listId: String, listName: String) -> Unit = { _, _ -> },
-    ): ExpenseListDetailViewModel {
+    ): GroupDetailViewModel {
         // For ADD mode, always create a new ViewModel (no caching)
-        if (initialMode == com.marquis.zorroexpense.presentation.state.ListDetailMode.ADD) {
-            return ExpenseListDetailViewModel(
+        if (initialMode == com.marquis.zorroexpense.presentation.state.GroupDetailMode.ADD) {
+            return GroupDetailViewModel(
                 listId = listId,
                 userId = userId,
-                initialExpenseList = initialExpenseList,
+                initialGroup = initialGroup,
                 initialMode = initialMode,
-                deleteExpenseListUseCase = deleteExpenseListUseCase,
-                getExpenseListByIdUseCase = getExpenseListByIdUseCase,
-                updateExpenseListUseCase = updateExpenseListUseCase,
-                createExpenseListUseCase = createExpenseListUseCase,
+                deleteGroupUseCase = deleteExpenseListUseCase,
+                getGroupByIdUseCase = getExpenseListByIdUseCase,
+                updateGroupUseCase = updateExpenseListUseCase,
+                createGroupUseCase = createExpenseListUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
             )
         }
 
-        return expenseListDetailViewModels.getOrPut(listId) {
-            ExpenseListDetailViewModel(
+        return groupDetailViewModels.getOrPut(listId) {
+            GroupDetailViewModel(
                 listId = listId,
                 userId = userId,
-                initialExpenseList = initialExpenseList,
+                initialGroup = initialGroup,
                 initialMode = initialMode,
-                deleteExpenseListUseCase = deleteExpenseListUseCase,
-                getExpenseListByIdUseCase = getExpenseListByIdUseCase,
-                updateExpenseListUseCase = updateExpenseListUseCase,
-                createExpenseListUseCase = createExpenseListUseCase,
+                deleteGroupUseCase = deleteExpenseListUseCase,
+                getGroupByIdUseCase = getExpenseListByIdUseCase,
+                updateGroupUseCase = updateExpenseListUseCase,
+                createGroupUseCase = createExpenseListUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
@@ -426,11 +383,11 @@ object AppModule {
     }
 
     fun clearExpenseListDetailViewModel(listId: String) {
-        expenseListDetailViewModels.remove(listId)
+        groupDetailViewModels.remove(listId)
     }
 
     fun refreshExpenseListDetailViewModel(listId: String) {
-        expenseListDetailViewModels[listId]?.refreshData()
+        groupDetailViewModels[listId]?.refreshData()
     }
 
     // =================
@@ -441,7 +398,7 @@ object AppModule {
 
     fun provideCategoryRepository(): CategoryRepository = categoryRepository
 
-    fun provideExpenseListRepository(): ExpenseListRepository = expenseListRepository
+    fun provideExpenseListRepository(): GroupRepository = groupRepository
 
     fun provideGetExpensesUseCase(): GetExpensesUseCase = getExpensesUseCase
 
@@ -470,7 +427,7 @@ object AppModule {
      */
     fun clearAuthenticatedData() {
         authViewModel = null
-        expenseListsOverviewViewModel = null
+        groupListViewModel = null
         clearAllViewModels()
         clearAllCaches()
     }
@@ -480,7 +437,7 @@ object AppModule {
      */
     fun resetForTesting() {
         authViewModel = null
-        expenseListsOverviewViewModel = null
+        groupListViewModel = null
         clearAllViewModels()
         clearAllCaches()
     }

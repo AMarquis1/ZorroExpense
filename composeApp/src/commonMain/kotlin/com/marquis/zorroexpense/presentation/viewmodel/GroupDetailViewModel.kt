@@ -3,42 +3,42 @@ package com.marquis.zorroexpense.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marquis.zorroexpense.domain.model.Category
-import com.marquis.zorroexpense.domain.model.ExpenseList
+import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
-import com.marquis.zorroexpense.domain.usecase.CreateExpenseListUseCase
-import com.marquis.zorroexpense.domain.usecase.DeleteExpenseListUseCase
+import com.marquis.zorroexpense.domain.usecase.CreateGroupUseCase
+import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
-import com.marquis.zorroexpense.domain.usecase.GetExpenseListByIdUseCase
-import com.marquis.zorroexpense.domain.usecase.UpdateExpenseListUseCase
-import com.marquis.zorroexpense.presentation.state.ExpenseListDetailUiEvent
-import com.marquis.zorroexpense.presentation.state.ExpenseListDetailUiState
-import com.marquis.zorroexpense.presentation.state.ListDetailMode
+import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
+import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
+import com.marquis.zorroexpense.presentation.state.GroupDetailUiEvent
+import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
+import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ExpenseListDetailViewModel(
+class GroupDetailViewModel(
     private val listId: String,
     private val userId: String,
-    initialExpenseList: ExpenseList,
-    initialMode: ListDetailMode,
-    private val deleteExpenseListUseCase: DeleteExpenseListUseCase,
-    private val getExpenseListByIdUseCase: GetExpenseListByIdUseCase,
-    private val updateExpenseListUseCase: UpdateExpenseListUseCase,
-    private val createExpenseListUseCase: CreateExpenseListUseCase,
+    initialGroup: Group,
+    initialMode: GroupDetailMode,
+    private val deleteGroupUseCase: DeleteGroupUseCase,
+    private val getGroupByIdUseCase: GetGroupByIdUseCase,
+    private val updateGroupUseCase: UpdateGroupUseCase,
+    private val createGroupUseCase: CreateGroupUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val onListDeleted: () -> Unit = {},
     private val onListSaved: (listId: String, listName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<ExpenseListDetailUiState>(
-        ExpenseListDetailUiState.Success(
-            expenseList = initialExpenseList,
+    private val _uiState = MutableStateFlow<GroupDetailUiState>(
+        GroupDetailUiState.Success(
+            group = initialGroup,
             mode = initialMode,
         ),
     )
-    val uiState: StateFlow<ExpenseListDetailUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<GroupDetailUiState> = _uiState.asStateFlow()
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
     val allCategories: StateFlow<List<Category>> = _allCategories.asStateFlow()
@@ -50,22 +50,22 @@ class ExpenseListDetailViewModel(
         loadCategories()
     }
 
-    fun onEvent(event: ExpenseListDetailUiEvent) {
+    fun onEvent(event: GroupDetailUiEvent) {
         when (event) {
-            is ExpenseListDetailUiEvent.DeleteList -> showDeleteConfirmation()
-            is ExpenseListDetailUiEvent.ConfirmDelete -> confirmDelete()
-            is ExpenseListDetailUiEvent.CancelDelete -> cancelDelete()
-            is ExpenseListDetailUiEvent.EnterEditMode -> enterEditMode()
-            is ExpenseListDetailUiEvent.CancelEdit -> cancelEdit()
-            is ExpenseListDetailUiEvent.SaveChanges -> saveChanges()
-            is ExpenseListDetailUiEvent.UpdateName -> updateName(event.name)
-            is ExpenseListDetailUiEvent.AddCategoryClicked -> onAddCategoryClicked()
-            is ExpenseListDetailUiEvent.CategoryToggled -> toggleCategory(event.category)
-            is ExpenseListDetailUiEvent.DismissCategoryBottomSheet -> dismissCategoryBottomSheet()
-            is ExpenseListDetailUiEvent.RemoveCategory -> removeCategory(event.category)
-            is ExpenseListDetailUiEvent.RemoveMember -> showDeleteMemberConfirmation(event.member)
-            is ExpenseListDetailUiEvent.ConfirmDeleteMember -> confirmDeleteMember()
-            is ExpenseListDetailUiEvent.CancelDeleteMember -> cancelDeleteMember()
+            is GroupDetailUiEvent.DeleteGroup -> showDeleteConfirmation()
+            is GroupDetailUiEvent.ConfirmDelete -> confirmDelete()
+            is GroupDetailUiEvent.CancelDelete -> cancelDelete()
+            is GroupDetailUiEvent.EnterEditMode -> enterEditMode()
+            is GroupDetailUiEvent.CancelEdit -> cancelEdit()
+            is GroupDetailUiEvent.SaveChanges -> saveChanges()
+            is GroupDetailUiEvent.UpdateName -> updateName(event.name)
+            is GroupDetailUiEvent.AddCategoryClicked -> onAddCategoryClicked()
+            is GroupDetailUiEvent.CategoryToggled -> toggleCategory(event.category)
+            is GroupDetailUiEvent.DismissCategoryBottomSheet -> dismissCategoryBottomSheet()
+            is GroupDetailUiEvent.RemoveCategory -> removeCategory(event.category)
+            is GroupDetailUiEvent.RemoveMember -> showDeleteMemberConfirmation(event.member)
+            is GroupDetailUiEvent.ConfirmDeleteMember -> confirmDeleteMember()
+            is GroupDetailUiEvent.CancelDeleteMember -> cancelDeleteMember()
         }
     }
 
@@ -75,18 +75,18 @@ class ExpenseListDetailViewModel(
      */
     fun refreshData() {
         viewModelScope.launch {
-            getExpenseListByIdUseCase(listId).onSuccess { expenseList ->
+            getGroupByIdUseCase(listId).onSuccess { expenseList ->
                 if (expenseList != null) {
                     val currentState = _uiState.value
-                    if (currentState is ExpenseListDetailUiState.Success) {
+                    if (currentState is GroupDetailUiState.Success) {
                         _uiState.value = currentState.copy(
-                            expenseList = expenseList,
+                            group = expenseList,
                             editedName = expenseList.name,
                             editedCategories = expenseList.categories,
                             editedMembers = expenseList.members,
                         )
                     } else {
-                        _uiState.value = ExpenseListDetailUiState.Success(expenseList)
+                        _uiState.value = GroupDetailUiState.Success(expenseList)
                     }
                 }
             }
@@ -95,13 +95,13 @@ class ExpenseListDetailViewModel(
 
     private fun enterEditMode() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(
-                    mode = ListDetailMode.EDIT,
-                    editedName = currentState.expenseList.name,
-                    editedCategories = currentState.expenseList.categories,
-                    editedMembers = currentState.expenseList.members,
+                    mode = GroupDetailMode.EDIT,
+                    editedName = currentState.group.name,
+                    editedCategories = currentState.group.categories,
+                    editedMembers = currentState.group.members,
                 )
             }
         }
@@ -109,13 +109,13 @@ class ExpenseListDetailViewModel(
 
     private fun cancelEdit() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(
-                    mode = ListDetailMode.VIEW,
-                    editedName = currentState.expenseList.name,
-                    editedCategories = currentState.expenseList.categories,
-                    editedMembers = currentState.expenseList.members,
+                    mode = GroupDetailMode.VIEW,
+                    editedName = currentState.group.name,
+                    editedCategories = currentState.group.categories,
+                    editedMembers = currentState.group.members,
                 )
             }
         }
@@ -123,7 +123,7 @@ class ExpenseListDetailViewModel(
 
     private fun updateName(name: String) {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(editedName = name)
             }
@@ -132,7 +132,7 @@ class ExpenseListDetailViewModel(
 
     private fun onAddCategoryClicked() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(showCategoryBottomSheet = true)
             }
@@ -141,7 +141,7 @@ class ExpenseListDetailViewModel(
 
     private fun toggleCategory(category: Category) {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             val isAlreadySelected = currentState.editedCategories.any {
                 it.documentId == category.documentId
             }
@@ -162,7 +162,7 @@ class ExpenseListDetailViewModel(
 
     private fun dismissCategoryBottomSheet() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(showCategoryBottomSheet = false)
             }
@@ -171,7 +171,7 @@ class ExpenseListDetailViewModel(
 
     private fun removeCategory(category: Category) {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(
                     editedCategories = currentState.editedCategories.filter {
@@ -187,7 +187,7 @@ class ExpenseListDetailViewModel(
         if (member.userId == userId) return
 
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(
                     showDeleteMemberDialog = true,
@@ -199,7 +199,7 @@ class ExpenseListDetailViewModel(
 
     private fun confirmDeleteMember() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success && currentState.memberToDelete != null) {
+        if (currentState is GroupDetailUiState.Success && currentState.memberToDelete != null) {
             val memberToRemove = currentState.memberToDelete
             _uiState.update {
                 currentState.copy(
@@ -215,7 +215,7 @@ class ExpenseListDetailViewModel(
 
     private fun cancelDeleteMember() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(
                     showDeleteMemberDialog = false,
@@ -228,19 +228,19 @@ class ExpenseListDetailViewModel(
     private fun saveChanges() {
         viewModelScope.launch {
             val currentState = _uiState.value
-            if (currentState is ExpenseListDetailUiState.Success) {
+            if (currentState is GroupDetailUiState.Success) {
                 _uiState.update { currentState.copy(isSaving = true) }
 
-                val updatedList = currentState.expenseList.copy(
+                val updatedList = currentState.group.copy(
                     name = currentState.editedName,
                     categories = currentState.editedCategories,
                     members = currentState.editedMembers,
                 )
 
                 when (currentState.mode) {
-                    ListDetailMode.ADD -> {
+                    GroupDetailMode.ADD -> {
                         val categoryIds = currentState.editedCategories.map { it.documentId }
-                        createExpenseListUseCase(
+                        createGroupUseCase(
                             userId = userId,
                             name = currentState.editedName,
                             categoryIds = categoryIds,
@@ -249,39 +249,39 @@ class ExpenseListDetailViewModel(
                                 _uiState.update {
                                     currentState.copy(
                                         isSaving = false,
-                                        expenseList = updatedList.copy(listId = newListId),
-                                        mode = ListDetailMode.VIEW,
+                                        group = updatedList.copy(listId = newListId),
+                                        mode = GroupDetailMode.VIEW,
                                     )
                                 }
                                 onListSaved(newListId, updatedList.name)
                             },
                             onFailure = { error ->
-                                _uiState.value = ExpenseListDetailUiState.Error(
+                                _uiState.value = GroupDetailUiState.Error(
                                     error.message ?: "Failed to create list",
                                 )
                             },
                         )
                     }
-                    ListDetailMode.EDIT -> {
-                        updateExpenseListUseCase(listId, updatedList).fold(
+                    GroupDetailMode.EDIT -> {
+                        updateGroupUseCase(listId, updatedList).fold(
                             onSuccess = {
                                 _uiState.update {
                                     currentState.copy(
                                         isSaving = false,
-                                        expenseList = updatedList,
-                                        mode = ListDetailMode.VIEW,
+                                        group = updatedList,
+                                        mode = GroupDetailMode.VIEW,
                                     )
                                 }
                                 onListSaved(listId, updatedList.name)
                             },
                             onFailure = { error ->
-                                _uiState.value = ExpenseListDetailUiState.Error(
+                                _uiState.value = GroupDetailUiState.Error(
                                     error.message ?: "Failed to update list",
                                 )
                             },
                         )
                     }
-                    ListDetailMode.VIEW -> {
+                    GroupDetailMode.VIEW -> {
                         // Should not happen
                         _uiState.update { currentState.copy(isSaving = false) }
                     }
@@ -292,7 +292,7 @@ class ExpenseListDetailViewModel(
 
     private fun showDeleteConfirmation() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(showDeleteDialog = true)
             }
@@ -301,7 +301,7 @@ class ExpenseListDetailViewModel(
 
     private fun cancelDelete() {
         val currentState = _uiState.value
-        if (currentState is ExpenseListDetailUiState.Success) {
+        if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(showDeleteDialog = false)
             }
@@ -311,18 +311,18 @@ class ExpenseListDetailViewModel(
     private fun confirmDelete() {
         viewModelScope.launch {
             val currentState = _uiState.value
-            if (currentState is ExpenseListDetailUiState.Success) {
+            if (currentState is GroupDetailUiState.Success) {
                 _uiState.update {
                     currentState.copy(showDeleteDialog = false)
                 }
 
-                deleteExpenseListUseCase(listId).fold(
+                deleteGroupUseCase(listId).fold(
                     onSuccess = {
-                        _uiState.value = ExpenseListDetailUiState.Deleted
+                        _uiState.value = GroupDetailUiState.Deleted
                         onListDeleted()
                     },
                     onFailure = { error ->
-                        _uiState.value = ExpenseListDetailUiState.Error(
+                        _uiState.value = GroupDetailUiState.Error(
                             error.message ?: "Failed to delete list",
                         )
                     },
