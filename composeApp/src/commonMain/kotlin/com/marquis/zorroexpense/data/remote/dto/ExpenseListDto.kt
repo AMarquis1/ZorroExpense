@@ -11,11 +11,8 @@ interface ExpenseListDto {
     val shareCode: String
     val createdAt: String
     val lastModified: Any
-    val categories: List<Any>
 }
 
 expect fun List<Any>.getMemberIds(): List<String>
 
 expect fun List<Any>.getMemberUsers(): List<User>
-
-expect fun List<Any>.getCategoryPaths(): List<String>

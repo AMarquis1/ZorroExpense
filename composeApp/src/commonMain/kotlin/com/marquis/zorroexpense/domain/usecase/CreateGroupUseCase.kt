@@ -1,7 +1,6 @@
 package com.marquis.zorroexpense.domain.usecase
 
-import com.marquis.zorroexpense.data.remote.FirestoreService
-import com.marquis.zorroexpense.data.remote.dto.toDomain
+import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.repository.GroupRepository
@@ -9,21 +8,14 @@ import kotlinx.datetime.Clock
 
 class CreateGroupUseCase(
     private val groupRepository: GroupRepository,
-    private val firestoreService: FirestoreService,
     private val getUsersUseCase: GetUsersUseCase,
 ) {
     suspend operator fun invoke(
         userId: String,
         name: String,
-        categoryIds: List<String> = emptyList(),
+        categories: List<Category> = emptyList(),
     ): Result<String> {
         val shareCode = generateShareCode()
-
-        // Fetch category objects for the provided category IDs
-        val categories =
-            categoryIds.mapNotNull { categoryId ->
-                firestoreService.getCategoryById("Categories/$categoryId").getOrNull()?.toDomain()
-            }
 
         // Fetch the creator's user data
         val creatorUser = getUsersUseCase.invoke(listOf(userId)).getOrNull()?.firstOrNull()
@@ -39,14 +31,7 @@ class CreateGroupUseCase(
                 categories = categories,
             )
 
-        val result = groupRepository.createGroup(group)
-
-        // Add ExpenseListReference for the creator
-        result.onSuccess { listId ->
-            firestoreService.addExpenseListReferenceForUser(userId, listId)
-        }
-
-        return result
+        return groupRepository.createGroup(group)
     }
 
     private fun generateShareCode(): String {

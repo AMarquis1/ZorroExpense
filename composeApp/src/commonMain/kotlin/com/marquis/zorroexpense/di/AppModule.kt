@@ -196,7 +196,7 @@ object AppModule {
     }
 
     private val createExpenseListUseCase: CreateGroupUseCase by lazy {
-        CreateGroupUseCase(groupRepository, firestoreService, getUsersUseCase)
+        CreateGroupUseCase(groupRepository, getUsersUseCase)
     }
 
     private val joinGroupUseCase: JoinGroupUseCase by lazy {

@@ -3,6 +3,7 @@ package com.marquis.zorroexpense.data.repository
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
 import com.marquis.zorroexpense.data.remote.dto.toDomain
+import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.repository.UserRepository
@@ -40,7 +41,7 @@ class GroupRepositoryImpl(
                 .getUserExpenseLists(userId)
                 .mapCatching { dtos ->
                     dtos
-                        .map { it.toDomain(firestoreService) }
+                        .map { it.toDomain() }
                         .map { enrichListMembers(it) }
                         .also { lists ->
                             cachedLists = cachedLists + (userId to lists)
@@ -54,7 +55,7 @@ class GroupRepositoryImpl(
                 .getUserExpenseLists(userId)
                 .mapCatching { dtos ->
                     dtos
-                        .map { it.toDomain(firestoreService) }
+                        .map { it.toDomain() }
                         .map { enrichListMembers(it) }
                         .also { lists ->
                             cachedLists = cachedLists + (userId to lists)
@@ -65,13 +66,23 @@ class GroupRepositoryImpl(
     override suspend fun getGroup(listId: String): Result<Group?> =
         firestoreService
             .getExpenseListById(listId)
-            .mapCatching { it?.toDomain(firestoreService) }
+            .mapCatching { dto ->
+                dto?.let {
+                    val categories = firestoreService.getGroupCategories(listId).getOrElse { emptyList() }
+                    it.toDomain(categories)
+                }
+            }
             .mapCatching { it?.let { enrichListMembers(it) } }
 
     override suspend fun createGroup(list: Group): Result<String> =
         mutex.withLock {
             val dto = list.toDto()
-            firestoreService.createExpenseList(dto)
+            firestoreService.createExpenseList(dto).mapCatching { listId ->
+                val categoryDtos = list.categories.map { it.toDto() }
+                firestoreService.addGroupToUser(list.members.first().userId, listId)
+                firestoreService.setGroupCategories(listId, categoryDtos)
+                listId
+            }
         }
 
     override suspend fun updateGroup(
@@ -80,7 +91,21 @@ class GroupRepositoryImpl(
     ): Result<Unit> =
         mutex.withLock {
             val dto = list.toDto()
-            firestoreService.updateExpenseList(listId, dto)
+            firestoreService.updateExpenseList(listId, dto).mapCatching {
+                // Sync categories subcollection
+                val currentCategories = firestoreService.getGroupCategories(listId).getOrElse { emptyList() }
+                val newCategoryIds = list.categories.map { it.documentId }.toSet()
+                val currentCategoryIds = currentCategories.map { it.documentId }.toSet()
+
+                // Delete removed categories
+                (currentCategoryIds - newCategoryIds).forEach { removedId ->
+                    firestoreService.deleteGroupCategory(listId, removedId).getOrThrow()
+                }
+
+                // Add/update categories
+                val categoryDtos = list.categories.map { it.toDto() }
+                firestoreService.setGroupCategories(listId, categoryDtos).getOrThrow()
+            }
         }
 
     override suspend fun deleteGroup(listId: String): Result<Unit> =
@@ -109,7 +134,10 @@ class GroupRepositoryImpl(
                     firestoreService.addExpenseListReferenceForUser(userId, listDto.listId).getOrThrow()
                     // Clear cache
                     cachedLists = emptyMap()
-                }.mapCatching { it.toDomain(firestoreService) }
+                }.mapCatching { dto ->
+                    val categories = firestoreService.getGroupCategories(dto.listId).getOrElse { emptyList() }
+                    dto.toDomain(categories)
+                }
                 .mapCatching { enrichListMembers(it) }
         }
 

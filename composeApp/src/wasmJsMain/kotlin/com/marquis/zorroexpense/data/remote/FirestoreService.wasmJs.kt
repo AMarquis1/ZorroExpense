@@ -260,4 +260,19 @@ actual class FirestoreService actual constructor() {
     actual suspend fun updateExpenseListLastModified(listId: String): Result<Unit> {
         TODO("Not yet implemented")
     }
+
+    actual suspend fun getGroupCategories(listId: String): Result<List<CategoryDto>> =
+        Result.success(emptyList())
+
+    actual suspend fun setGroupCategories(
+        listId: String,
+        categories: List<CategoryDto>,
+    ): Result<Unit> =
+        Result.success(Unit)
+
+    actual suspend fun deleteGroupCategory(
+        listId: String,
+        categoryId: String,
+    ): Result<Unit> =
+        Result.success(Unit)
 }

@@ -239,11 +239,10 @@ class GroupDetailViewModel(
 
                 when (currentState.mode) {
                     GroupDetailMode.ADD -> {
-                        val categoryIds = currentState.editedCategories.map { it.documentId }
                         createGroupUseCase(
                             userId = userId,
                             name = currentState.editedName,
-                            categoryIds = categoryIds,
+                            categories = currentState.editedCategories,
                         ).fold(
                             onSuccess = { newListId ->
                                 _uiState.update {

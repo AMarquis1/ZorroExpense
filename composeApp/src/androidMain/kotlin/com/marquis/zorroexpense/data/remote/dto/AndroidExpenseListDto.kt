@@ -22,11 +22,8 @@ data class AndroidExpenseListDto(
     override val createdAt: String = "",
     @SerialName("lastModified")
     override val lastModified: Timestamp,
-    @SerialName("categories")
-    val categoriesRef: List<DocumentReference> = emptyList(),
 ) : ExpenseListDto {
     override val members: List<Any> get() = memberRefs
-    override val categories: List<Any> get() = categoriesRef
 }
 
 actual fun List<Any>.getMemberIds(): List<String> =

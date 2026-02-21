@@ -22,6 +22,14 @@ fun CategoryDto.toDomain(): Category =
         color = color,
     )
 
+fun Category.toDto(): CategoryDto =
+    CategoryDto(
+        documentId = documentId,
+        name = name,
+        icon = icon,
+        color = color,
+    )
+
 expect fun Any?.toDateString(): String
 
 expect fun Any?.getReferencePath(): String?
@@ -69,11 +77,8 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
     )
 }
 
-suspend fun ExpenseListDto.toDomain(firestoreService: FirestoreService): Group {
-    val resolvedCategories =
-        categories.getCategoryPaths().mapNotNull { categoryPath ->
-            firestoreService.getCategoryById(categoryPath).getOrNull()?.toDomain()
-        }
+fun ExpenseListDto.toDomain(categories: List<CategoryDto> = emptyList()): Group {
+    val resolvedCategories = categories.map { it.toDomain() }
 
     return Group(
         listId = listId,

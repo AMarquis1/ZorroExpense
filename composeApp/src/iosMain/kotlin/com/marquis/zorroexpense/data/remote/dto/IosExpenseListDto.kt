@@ -22,11 +22,8 @@ data class IosExpenseListDto(
     override val createdAt: String = "",
     @SerialName("lastModified")
     override val lastModified: Timestamp,
-    @SerialName("categories")
-    val categoryRefs: List<DocumentReference> = emptyList(),
 ) : ExpenseListDto {
     override val members: List<Any> get() = memberRefs
-    override val categories: List<Any> get() = categoryRefs
 }
 
 actual fun List<Any>.getMemberIds(): List<String> =

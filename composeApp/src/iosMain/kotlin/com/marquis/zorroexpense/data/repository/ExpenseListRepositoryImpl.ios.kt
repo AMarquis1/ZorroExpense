@@ -13,11 +13,6 @@ actual fun Group.toDto(): ExpenseListDto {
             firestore.collection("Users").document(memberId)
         }
 
-    val categoryRefs =
-        categories.map { category ->
-            firestore.collection("Categories").document(category.documentId)
-        }
-
     return IosExpenseListDto(
         listId = listId,
         name = name,
@@ -26,6 +21,5 @@ actual fun Group.toDto(): ExpenseListDto {
         shareCode = shareCode,
         createdAt = createdAt,
         lastModified = lastModified,
-        categoryRefs = categoryRefs,
     )
 }

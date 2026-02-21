@@ -40,6 +40,11 @@ expect class FirestoreService() {
         userId: String,
     ): Result<Unit>
 
+    suspend fun addGroupToUser(
+        userId: String,
+        listId: String,
+    ): Result<Unit>
+
     suspend fun removeUserFromExpenseListMembers(
         listId: String,
         userId: String,
@@ -79,4 +84,17 @@ expect class FirestoreService() {
     ): Result<Unit>
 
     suspend fun updateExpenseListLastModified(listId: String): Result<Unit>
+
+    // Group categories subcollection operations
+    suspend fun getGroupCategories(listId: String): Result<List<CategoryDto>>
+
+    suspend fun setGroupCategories(
+        listId: String,
+        categories: List<CategoryDto>,
+    ): Result<Unit>
+
+    suspend fun deleteGroupCategory(
+        listId: String,
+        categoryId: String,
+    ): Result<Unit>
 }

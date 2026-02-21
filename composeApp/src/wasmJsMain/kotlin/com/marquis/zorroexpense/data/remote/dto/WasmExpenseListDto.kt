@@ -20,11 +20,8 @@ data class WasmExpenseListDto(
     override val createdAt: String = "",
     @SerialName("lastModified")
     override val lastModified: String = "",
-    @SerialName("categories")
-    val categoryIds: List<String> = emptyList(),
 ) : ExpenseListDto {
     override val members: List<Any> get() = memberIds
-    override val categories: List<Any> get() = categoryIds
 }
 
 actual fun List<Any>.getMemberIds(): List<String> = filterIsInstance<String>()

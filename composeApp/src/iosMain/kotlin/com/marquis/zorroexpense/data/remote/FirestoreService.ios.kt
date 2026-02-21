@@ -391,4 +391,56 @@ actual class FirestoreService {
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    actual suspend fun getGroupCategories(listId: String): Result<List<CategoryDto>> =
+        try {
+            val snapshot =
+                firestore
+                    .collection("ExpenseLists")
+                    .document(listId)
+                    .collection("categories")
+                    .get()
+            val categories =
+                snapshot.documents.map { document ->
+                    document.data<CategoryDto>().copy(documentId = document.id)
+                }
+
+            Result.success(categories)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun setGroupCategories(
+        listId: String,
+        categories: List<CategoryDto>,
+    ): Result<Unit> =
+        try {
+            for (category in categories) {
+                firestore
+                    .collection("ExpenseLists")
+                    .document(listId)
+                    .collection("categories")
+                    .document(category.documentId)
+                    .set(category)
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun deleteGroupCategory(
+        listId: String,
+        categoryId: String,
+    ): Result<Unit> =
+        try {
+            firestore
+                .collection("ExpenseLists")
+                .document(listId)
+                .collection("categories")
+                .document(categoryId)
+                .delete()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 }

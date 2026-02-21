@@ -15,11 +15,6 @@ actual fun Group.toDto(): ExpenseListDto {
             firestore.collection("Users").document(member.userId)
         }
 
-    val categoryRefs =
-        categories.map { category ->
-            firestore.collection("Categories").document(category.documentId)
-        }
-
     val now = Clock.System.now()
     val lastModifiedTimestamp = Timestamp(now.epochSeconds, now.nanosecondsOfSecond)
 
@@ -31,6 +26,5 @@ actual fun Group.toDto(): ExpenseListDto {
         shareCode = shareCode,
         createdAt = createdAt,
         lastModified = lastModifiedTimestamp,
-        categoriesRef = categoryRefs,
     )
 }

@@ -25,4 +25,4 @@ actual fun List<Any>.getSplitDetailData(): List<Pair<String, Double>> =
         }
     }
 
-actual fun List<Any>.getCategoryPaths(): List<String> = filterIsInstance<String>()
+actual fun Any?.getListIdPath(): String = this as? String ?: ""

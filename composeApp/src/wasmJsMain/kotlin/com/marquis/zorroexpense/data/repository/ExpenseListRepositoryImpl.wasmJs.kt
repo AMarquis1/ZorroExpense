@@ -13,5 +13,4 @@ actual fun Group.toDto(): ExpenseListDto =
         shareCode = shareCode,
         createdAt = createdAt,
         lastModified = lastModified,
-        categoryIds = categories.map { it.documentId },
     )

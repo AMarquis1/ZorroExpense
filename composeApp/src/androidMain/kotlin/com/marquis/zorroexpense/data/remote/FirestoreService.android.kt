@@ -201,6 +201,35 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
+    actual suspend fun addGroupToUser(
+        userId: String,
+        listId: String,
+    ): Result<Unit> =
+        try {
+            val userDoc = firestore.collection("Users").document(userId)
+            val userSnapshot = userDoc.get()
+
+            @Suppress("UNCHECKED_CAST")
+            val currentReferences =
+                (userSnapshot.get("ExpenseListReferences") as? List<DocumentReference>)
+                    ?.toMutableList() ?: mutableListOf()
+
+            val newReference = firestore.collection("ExpenseLists").document(listId)
+            val alreadyExists = currentReferences.any { ref ->
+                ref.path.endsWith(listId)
+            }
+
+            if (!alreadyExists) {
+                currentReferences.add(newReference)
+                @Suppress("DEPRECATION")
+                userDoc.update("ExpenseListReferences" to currentReferences)
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
     actual suspend fun removeUserFromExpenseListMembers(
         listId: String,
         userId: String,
@@ -378,6 +407,58 @@ actual class FirestoreService {
                 .collection("ExpenseLists")
                 .document(listId)
                 .update("lastModified" to dev.gitlive.firebase.firestore.Timestamp.now())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun getGroupCategories(listId: String): Result<List<CategoryDto>> =
+        try {
+            val snapshot =
+                firestore
+                    .collection("ExpenseLists")
+                    .document(listId)
+                    .collection("categories")
+                    .get()
+            val categories =
+                snapshot.documents.map { document ->
+                    document.data<CategoryDto>().copy(documentId = document.id)
+                }
+
+            Result.success(categories)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun setGroupCategories(
+        listId: String,
+        categories: List<CategoryDto>,
+    ): Result<Unit> =
+        try {
+            for (category in categories) {
+                firestore
+                    .collection("ExpenseLists")
+                    .document(listId)
+                    .collection("categories")
+                    .document(category.documentId)
+                    .set(category)
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun deleteGroupCategory(
+        listId: String,
+        categoryId: String,
+    ): Result<Unit> =
+        try {
+            firestore
+                .collection("ExpenseLists")
+                .document(listId)
+                .collection("categories")
+                .document(categoryId)
+                .delete()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
