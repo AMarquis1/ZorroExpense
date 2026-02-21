@@ -211,10 +211,7 @@ internal fun GroupListScreen(
                         }
 
                         is GroupListUiState.Empty -> {
-                            EmptyState(
-                                onCreateGroup = onCreateGroup,
-                                onRefresh = { viewModel.onEvent(GroupListUiEvent.RefreshGroups) },
-                            )
+                            EmptyState()
                         }
 
                         is GroupListUiState.Error -> {
@@ -553,10 +550,7 @@ internal fun ExpenseListCard(
 }
 
 @Composable
-fun EmptyState(
-    onCreateGroup: () -> Unit,
-    onRefresh: () -> Unit = {},
-) {
+fun EmptyState() {
     Column(
         modifier =
             Modifier
@@ -601,19 +595,6 @@ fun EmptyState(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = onRefresh,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(32.dp),
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Text("Refresh")
-        }
     }
 }
 

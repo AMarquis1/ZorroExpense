@@ -50,6 +50,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -290,6 +291,7 @@ private fun ExpenseListDetailContent(
     val isEditable = mode != GroupDetailMode.VIEW
     val displayCategories = if (isEditable) editedCategories else group.categories
     val displayMembers = if (isEditable) editedMembers else group.members
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
 
     Column(
         modifier = modifier
@@ -342,7 +344,10 @@ private fun ExpenseListDetailContent(
                     if (isEditable) {
                         item {
                             AddCategoryButton(
-                                onClick = onAddCategoryClick,
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    onAddCategoryClick()
+                                },
                                 label = "Modify",
                                 size = 48.dp,
                             )
