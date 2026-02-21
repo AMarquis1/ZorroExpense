@@ -1,8 +1,6 @@
 package com.marquis.zorroexpense.navigation
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -148,4 +146,14 @@ sealed class AppDestinations {
             fun createSplitDetailsJson(splitDetails: List<SplitDetailNavigation>): String = Json.encodeToString(splitDetails)
         }
     }
+
+    @Serializable
+    data class CategoryDetail(
+        val categoryId: String = "",
+        val categoryName: String = "",
+        val categoryIcon: String = "",
+        val categoryColor: String = "",
+        val mode: String = "ADD",
+        val groupId: String = "",
+    ) : AppDestinations()
 }

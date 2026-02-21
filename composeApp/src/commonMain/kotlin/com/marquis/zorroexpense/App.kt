@@ -31,12 +31,14 @@ import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
+import com.marquis.zorroexpense.presentation.screens.CategoryDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.GroupDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
 import com.marquis.zorroexpense.presentation.screens.GroupListScreen
 import com.marquis.zorroexpense.presentation.screens.LoginScreen
 import com.marquis.zorroexpense.presentation.screens.SignUpScreen
+import com.marquis.zorroexpense.presentation.state.CategoryDetailMode
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.GlobalAuthState
 import com.marquis.zorroexpense.presentation.state.GroupDetailMode
@@ -395,6 +397,80 @@ fun App() {
                             onListDeleted = {
                                 // Navigate back to the lists overview after deletion
                                 navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                            },
+                            onCreateCategoryClick = {
+                                navController.navigate(AppDestinations.CategoryDetail(
+                                    categoryId = "",
+                                    categoryName = "",
+                                    categoryIcon = "",
+                                    categoryColor = "",
+                                    mode = "ADD",
+                                    groupId = listDetailRoute.listId,
+                                ))
+                            },
+                            onCategoryClick = { category ->
+                                navController.navigate(AppDestinations.CategoryDetail(
+                                    categoryId = category.documentId,
+                                    categoryName = category.name,
+                                    categoryIcon = category.icon,
+                                    categoryColor = category.color,
+                                    mode = "VIEW",
+                                    groupId = listDetailRoute.listId,
+                                ))
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.CategoryDetail> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val categoryRoute = backStackEntry.toRoute<AppDestinations.CategoryDetail>()
+
+                        // Reconstruct Category from route params
+                        val category = Category(
+                            documentId = categoryRoute.categoryId,
+                            name = categoryRoute.categoryName,
+                            icon = categoryRoute.categoryIcon,
+                            color = categoryRoute.categoryColor,
+                        )
+
+                        // Determine initial mode from route parameter
+                        val initialMode = when {
+                            categoryRoute.categoryId.isEmpty() -> CategoryDetailMode.ADD
+                            categoryRoute.mode == "EDIT" -> CategoryDetailMode.EDIT
+                            else -> CategoryDetailMode.VIEW
+                        }
+
+                        val viewModel = AppModule.provideCategoryDetailViewModel(
+                            groupId = categoryRoute.groupId,
+                            category = category,
+                            initialMode = initialMode,
+                            onCategorySaved = {
+                                // Pop back stack and refresh group categories if listId is provided
+                                navController.popBackStack()
+                                if (categoryRoute.groupId.isNotEmpty()) {
+                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)?.loadCategories()
+                                }
+                            },
+                            onCategoryDeleted = {
+                                navController.popBackStack()
+                            },
+                        )
+
+                        CategoryDetailScreen(
+                            viewModel = viewModel,
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            onCategoryDeleted = {
+                                navController.popBackStack()
                             },
                         )
                     }

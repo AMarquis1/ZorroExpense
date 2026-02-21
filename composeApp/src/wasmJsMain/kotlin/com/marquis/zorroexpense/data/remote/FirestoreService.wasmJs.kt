@@ -2,7 +2,7 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
-import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
+import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.domain.model.UserProfile
 import io.ktor.client.HttpClient
@@ -10,7 +10,6 @@ import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -176,42 +175,42 @@ actual class FirestoreService actual constructor() {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseListDto>> {
+    actual suspend fun getUserGroups(userId: String): Result<List<GroupDto>> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun getExpenseListById(listId: String): Result<ExpenseListDto?> {
+    actual suspend fun getGroupById(listId: String): Result<GroupDto?> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun createExpenseList(list: ExpenseListDto): Result<String> {
+    actual suspend fun createGroup(group: GroupDto): Result<String> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun updateExpenseList(
+    actual suspend fun updateGroup(
         listId: String,
-        list: ExpenseListDto,
+        list: GroupDto,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun deleteExpenseList(listId: String): Result<Unit> {
+    actual suspend fun deleteGroup(groupId: String): Result<Unit> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun getExpenseListByShareCode(shareCode: String): Result<ExpenseListDto?> {
+    actual suspend fun getGroupByShareCode(shareCode: String): Result<GroupDto?> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun addUserToExpenseListMembers(
-        listId: String,
+        groupId: String,
         userId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun removeUserFromExpenseListMembers(
-        listId: String,
+        groupId: String,
         userId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
@@ -219,31 +218,31 @@ actual class FirestoreService actual constructor() {
 
     actual suspend fun addExpenseListReferenceForUser(
         userId: String,
-        listId: String,
+        groupId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun removeExpenseListReferenceForUser(
         userId: String,
-        listId: String,
+        groupId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun getExpensesByListId(listId: String): Result<List<ExpenseDto>> {
+    actual suspend fun getExpensesByListId(groupId: String): Result<List<ExpenseDto>> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun addExpenseToList(
-        listId: String,
+        groupId: String,
         expense: ExpenseDto,
     ): Result<String> {
         TODO("Not yet implemented")
     }
 
     actual suspend fun updateExpenseInList(
-        listId: String,
+        groupId: String,
         expenseId: String,
         expense: ExpenseDto,
     ): Result<Unit> {
@@ -251,17 +250,17 @@ actual class FirestoreService actual constructor() {
     }
 
     actual suspend fun deleteExpenseFromList(
-        listId: String,
+        groupId: String,
         expenseId: String,
     ): Result<Unit> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun updateExpenseListLastModified(listId: String): Result<Unit> {
+    actual suspend fun updateExpenseListLastModified(groupId: String): Result<Unit> {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun getGroupCategories(listId: String): Result<List<CategoryDto>> =
+    actual suspend fun getGroupCategories(groupId: String): Result<List<CategoryDto>> =
         Result.success(emptyList())
 
     actual suspend fun setGroupCategories(
@@ -275,4 +274,25 @@ actual class FirestoreService actual constructor() {
         categoryId: String,
     ): Result<Unit> =
         Result.success(Unit)
+
+    actual suspend fun createCategory(
+        groupId: String,
+        category: CategoryDto
+    ): Result<String> {
+        TODO("Not yet implemented for WASM")
+    }
+
+    actual suspend fun updateCategory(
+        groupId: String,
+        category: CategoryDto
+    ): Result<Unit> {
+        TODO("Not yet implemented for WASM")
+    }
+
+    actual suspend fun deleteCategory(
+        groupId: String,
+        categoryId: String
+    ): Result<Unit> {
+        TODO("Not yet implemented for WASM")
+    }
 }

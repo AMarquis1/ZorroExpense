@@ -4,17 +4,22 @@ import com.marquis.zorroexpense.AppConfig
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.toDomain
+import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.repository.CategoryRepository
 
 class CategoryRepositoryImpl(
     private val firestoreService: FirestoreService,
 ) : CategoryRepository {
+    companion object {
+        private val mockCategories = MockExpenseData.allCategories.toMutableList()
+    }
+
     override suspend fun getCategories(): Result<List<Category>> =
         try {
             if (AppConfig.USE_MOCK_DATA) {
                 // Use mock data for development/testing
-                Result.success(MockExpenseData.allCategories)
+                Result.success(mockCategories.toList())
             } else {
                 // Use Firestore for production
                 firestoreService

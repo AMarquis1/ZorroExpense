@@ -22,10 +22,32 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.FlightTakeoff
+import androidx.compose.material.icons.outlined.Inbox
+import androidx.compose.material.icons.outlined.LocalCafe
+import androidx.compose.material.icons.outlined.LocalDining
+import androidx.compose.material.icons.outlined.LocalFlorist
+import androidx.compose.material.icons.outlined.LocalGasStation
+import androidx.compose.material.icons.outlined.LocalHospital
+import androidx.compose.material.icons.outlined.LocalLaundryService
+import androidx.compose.material.icons.outlined.LocalMovies
+import androidx.compose.material.icons.outlined.LocalOffer
+import androidx.compose.material.icons.outlined.LocalParking
+import androidx.compose.material.icons.outlined.LocalPharmacy
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.outlined.QuestionMark
 import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.Sports
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -733,10 +755,31 @@ fun CategoryIconCircle(
  */
 private fun getCategoryIcon(iconName: String): ImageVector =
     when (iconName) {
-        "Home" -> Icons.Outlined.Home
+        "Others" -> Icons.Outlined.QuestionMark
         "ShoppingCart" -> Icons.Outlined.ShoppingCart
         "Pets" -> Icons.Outlined.Pets
-        else -> Icons.Outlined.Home // Default fallback
+        "Restaurant" -> Icons.Outlined.Restaurant
+        "DirectionsCar" -> Icons.Outlined.DirectionsCar
+        "Work" -> Icons.Outlined.Work
+        "Movie" -> Icons.Outlined.Movie
+        "FitnessCenter" -> Icons.Outlined.FitnessCenter
+        "LocalDining" -> Icons.Outlined.LocalDining
+        "School" -> Icons.Outlined.School
+        "LocalCafe" -> Icons.Outlined.LocalCafe
+        "Book" -> Icons.Outlined.Book
+        "MusicNote" -> Icons.Outlined.MusicNote
+        "LocalMovies" -> Icons.Outlined.LocalMovies
+        "Sports" -> Icons.Outlined.Sports
+        "FlightTakeoff" -> Icons.Outlined.FlightTakeoff
+        "LocalParking" -> Icons.Outlined.LocalParking
+        "LocalGasStation" -> Icons.Outlined.LocalGasStation
+        "LocalPharmacy" -> Icons.Outlined.LocalPharmacy
+        "LocalHospital" -> Icons.Outlined.LocalHospital
+        "LocalFlorist" -> Icons.Outlined.LocalFlorist
+        "LocalLaundryService" -> Icons.Outlined.LocalLaundryService
+        "LocalShipping" -> Icons.Outlined.LocalShipping
+        "LocalOffer" -> Icons.Outlined.LocalOffer
+        else -> Icons.Outlined.QuestionMark
     }
 
 /**

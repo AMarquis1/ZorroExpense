@@ -1,39 +1,32 @@
 package com.marquis.zorroexpense.data.remote.dto
 
 import com.marquis.zorroexpense.domain.model.User
-import dev.gitlive.firebase.firestore.DocumentReference
-import dev.gitlive.firebase.firestore.Timestamp
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AndroidExpenseListDto(
+data class WasmGroupDto(
     @SerialName("listId")
-    override val listId: String = "",
+    override val groupId: String = "",
     @SerialName("name")
     override val name: String = "",
     @SerialName("createdBy")
     override val createdBy: String = "",
     @SerialName("members")
-    val memberRefs: List<DocumentReference> = emptyList(),
+    val memberIds: List<String> = emptyList(),
     @SerialName("shareCode")
     override val shareCode: String = "",
     @SerialName("createdAt")
     override val createdAt: String = "",
     @SerialName("lastModified")
-    override val lastModified: Timestamp,
-) : ExpenseListDto {
-    override val members: List<Any> get() = memberRefs
+    override val lastModified: String = "",
+) : GroupDto {
+    override val members: List<Any> get() = memberIds
 }
 
-actual fun List<Any>.getMemberIds(): List<String> =
-    filterIsInstance<DocumentReference>().map { ref ->
-        ref.path
-    }
+actual fun List<Any>.getMemberIds(): List<String> = filterIsInstance<String>()
 
 actual fun List<Any>.getMemberUsers(): List<User> =
-    filterIsInstance<DocumentReference>().map { ref ->
-        // Extract user ID from the reference path (e.g., "users/userId")
-        val userId = ref.path.substringAfterLast("/")
+    filterIsInstance<String>().map { userId ->
         User(userId = userId, name = "", profileImage = "")
     }

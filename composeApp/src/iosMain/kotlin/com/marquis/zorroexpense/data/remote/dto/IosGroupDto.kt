@@ -7,9 +7,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class IosExpenseListDto(
+data class IosGroupDto(
     @SerialName("listId")
-    override val listId: String = "",
+    override val groupId: String = "",
     @SerialName("name")
     override val name: String = "",
     @SerialName("createdBy")
@@ -22,7 +22,7 @@ data class IosExpenseListDto(
     override val createdAt: String = "",
     @SerialName("lastModified")
     override val lastModified: Timestamp,
-) : ExpenseListDto {
+) : GroupDto {
     override val members: List<Any> get() = memberRefs
 }
 

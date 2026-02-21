@@ -3,8 +3,8 @@ package com.marquis.zorroexpense.data.remote.dto
 import com.marquis.zorroexpense.domain.model.User
 
 // Common interface for platform-specific ExpenseListDto implementations
-interface ExpenseListDto {
-    val listId: String
+interface GroupDto {
+    val groupId: String
     val name: String
     val createdBy: String
     val members: List<Any>

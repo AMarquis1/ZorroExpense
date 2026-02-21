@@ -22,10 +22,13 @@ import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 import com.marquis.zorroexpense.domain.repository.UserRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
+import com.marquis.zorroexpense.domain.usecase.CreateCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.CreateGroupUseCase
+import com.marquis.zorroexpense.domain.usecase.DeleteCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
+import com.marquis.zorroexpense.domain.usecase.UpdateCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
@@ -44,6 +47,7 @@ import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.CategoryDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
@@ -168,6 +172,18 @@ object AppModule {
 
     private val getCategoriesUseCase: GetCategoriesUseCase by lazy {
         GetCategoriesUseCase(categoryRepository)
+    }
+
+    private val createCategoryUseCase: CreateCategoryUseCase by lazy {
+        CreateCategoryUseCase(groupRepository)
+    }
+
+    private val updateCategoryUseCase: UpdateCategoryUseCase by lazy {
+        UpdateCategoryUseCase(groupRepository)
+    }
+
+    private val deleteCategoryUseCase: DeleteCategoryUseCase by lazy {
+        DeleteCategoryUseCase(groupRepository)
     }
 
     private val getUsersUseCase: GetUsersUseCase by lazy {
@@ -389,6 +405,28 @@ object AppModule {
     fun refreshExpenseListDetailViewModel(listId: String) {
         groupDetailViewModels[listId]?.refreshData()
     }
+
+    fun provideCategoryDetailViewModel(
+        groupId: String,
+        category: com.marquis.zorroexpense.domain.model.Category,
+        initialMode: com.marquis.zorroexpense.presentation.state.CategoryDetailMode =
+            com.marquis.zorroexpense.presentation.state.CategoryDetailMode.VIEW,
+        onCategorySaved: () -> Unit = {},
+        onCategoryDeleted: () -> Unit = {},
+    ): CategoryDetailViewModel =
+        CategoryDetailViewModel(
+            groupId = groupId,
+            category = category,
+            initialMode = initialMode,
+            createCategoryUseCase = createCategoryUseCase,
+            updateCategoryUseCase = updateCategoryUseCase,
+            deleteCategoryUseCase = deleteCategoryUseCase,
+            onCategorySaved = onCategorySaved,
+            onCategoryDeleted = onCategoryDeleted,
+        )
+
+    fun getGroupDetailViewModel(groupId: String): GroupDetailViewModel? =
+        groupDetailViewModels[groupId]
 
     // =================
     // Public API for Testing and Direct Access

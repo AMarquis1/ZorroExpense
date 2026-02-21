@@ -1,5 +1,6 @@
 package com.marquis.zorroexpense.domain.repository
 
+import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 
 /**
@@ -54,5 +55,20 @@ interface GroupRepository {
     suspend fun removeMemberFromGroup(
         listId: String,
         userId: String,
+    ): Result<Unit>
+
+    suspend fun createCategory(
+        groupId: String,
+        category: Category
+    ): Result<String>
+
+    suspend fun updateCategory(
+        groupId: String,
+        category: Category
+    ): Result<Unit>
+
+    suspend fun deleteCategory(
+        groupId: String,
+        categoryId: String
     ): Result<Unit>
 }

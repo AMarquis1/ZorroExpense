@@ -330,7 +330,7 @@ class GroupDetailViewModel(
         }
     }
 
-    private fun loadCategories() {
+    fun loadCategories() {
         viewModelScope.launch {
             getCategoriesUseCase().fold(
                 onSuccess = { categories ->

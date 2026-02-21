@@ -77,11 +77,11 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
     )
 }
 
-fun ExpenseListDto.toDomain(categories: List<CategoryDto> = emptyList()): Group {
+fun GroupDto.toDomain(categories: List<CategoryDto> = emptyList()): Group {
     val resolvedCategories = categories.map { it.toDomain() }
 
     return Group(
-        listId = listId,
+        listId = groupId,
         name = name,
         createdBy = createdBy,
         members = members.getMemberUsers(),

@@ -1,5 +1,6 @@
 package com.marquis.zorroexpense.presentation.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,6 +73,8 @@ fun GroupDetailScreen(
     viewModel: GroupDetailViewModel,
     onBackClick: () -> Unit,
     onListDeleted: () -> Unit = {},
+    onCreateCategoryClick: () -> Unit = {},
+    onCategoryClick: (Category) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val allCategories by viewModel.allCategories.collectAsState()
@@ -206,6 +209,8 @@ fun GroupDetailScreen(
                     onAddCategoryClick = { viewModel.onEvent(GroupDetailUiEvent.AddCategoryClicked) },
                     onRemoveCategory = { viewModel.onEvent(GroupDetailUiEvent.RemoveCategory(it)) },
                     onRemoveMember = { viewModel.onEvent(GroupDetailUiEvent.RemoveMember(it)) },
+                    onCreateCategoryClick = onCreateCategoryClick,
+                    onCategoryClick = onCategoryClick,
                     modifier = Modifier.padding(paddingValues),
                 )
 
@@ -286,6 +291,8 @@ private fun ExpenseListDetailContent(
     onAddCategoryClick: () -> Unit,
     onRemoveCategory: (Category) -> Unit,
     onRemoveMember: (User) -> Unit,
+    onCreateCategoryClick: () -> Unit = {},
+    onCategoryClick: (Category) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isEditable = mode != GroupDetailMode.VIEW
@@ -352,26 +359,43 @@ private fun ExpenseListDetailContent(
                                 size = 48.dp,
                             )
                         }
+                        item {
+                            AddCategoryButton(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    onCreateCategoryClick()
+                                },
+                                label = "Create",
+                                size = 48.dp,
+                            )
+                        }
                     }
 
                     items(displayCategories) { category ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                        Box(
+                            modifier = Modifier.clickable(
+                                enabled = !isEditable,
+                                onClick = { onCategoryClick(category) },
+                            ),
                         ) {
-                            CategoryIconCircle(
-                                category = category,
-                                size = 48.dp,
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                CategoryIconCircle(
+                                    category = category,
+                                    size = 48.dp,
+                                )
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                            Text(
-                                text = category.name,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center,
-                            )
+                                Text(
+                                    text = category.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
                     }
                 }

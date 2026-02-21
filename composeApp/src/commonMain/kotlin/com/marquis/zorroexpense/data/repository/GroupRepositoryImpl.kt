@@ -1,9 +1,10 @@
 package com.marquis.zorroexpense.data.repository
 
 import com.marquis.zorroexpense.data.remote.FirestoreService
-import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
+import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.toDomain
 import com.marquis.zorroexpense.data.remote.dto.toDto
+import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.repository.UserRepository
@@ -38,7 +39,7 @@ class GroupRepositoryImpl(
     override suspend fun refreshUserGroups(userId: String): Result<List<Group>> =
         mutex.withLock {
             firestoreService
-                .getUserExpenseLists(userId)
+                .getUserGroups(userId)
                 .mapCatching { dtos ->
                     dtos
                         .map { it.toDomain() }
@@ -52,7 +53,7 @@ class GroupRepositoryImpl(
     override suspend fun getUserGroups(userId: String): Result<List<Group>> =
         mutex.withLock {
             firestoreService
-                .getUserExpenseLists(userId)
+                .getUserGroups(userId)
                 .mapCatching { dtos ->
                     dtos
                         .map { it.toDomain() }
@@ -65,7 +66,7 @@ class GroupRepositoryImpl(
 
     override suspend fun getGroup(listId: String): Result<Group?> =
         firestoreService
-            .getExpenseListById(listId)
+            .getGroupById(listId)
             .mapCatching { dto ->
                 dto?.let {
                     val categories = firestoreService.getGroupCategories(listId).getOrElse { emptyList() }
@@ -77,7 +78,7 @@ class GroupRepositoryImpl(
     override suspend fun createGroup(list: Group): Result<String> =
         mutex.withLock {
             val dto = list.toDto()
-            firestoreService.createExpenseList(dto).mapCatching { listId ->
+            firestoreService.createGroup(dto).mapCatching { listId ->
                 val categoryDtos = list.categories.map { it.toDto() }
                 firestoreService.addGroupToUser(list.members.first().userId, listId)
                 firestoreService.setGroupCategories(listId, categoryDtos)
@@ -91,7 +92,7 @@ class GroupRepositoryImpl(
     ): Result<Unit> =
         mutex.withLock {
             val dto = list.toDto()
-            firestoreService.updateExpenseList(listId, dto).mapCatching {
+            firestoreService.updateGroup(listId, dto).mapCatching {
                 // Sync categories subcollection
                 val currentCategories = firestoreService.getGroupCategories(listId).getOrElse { emptyList() }
                 val newCategoryIds = list.categories.map { it.documentId }.toSet()
@@ -111,7 +112,7 @@ class GroupRepositoryImpl(
     override suspend fun deleteGroup(listId: String): Result<Unit> =
         mutex.withLock {
             firestoreService
-                .deleteExpenseList(listId)
+                .deleteGroup(listId)
                 .onSuccess {
                     // Clear cache for all users
                     cachedLists = emptyMap()
@@ -124,18 +125,18 @@ class GroupRepositoryImpl(
     ): Result<Group> =
         mutex.withLock {
             firestoreService
-                .getExpenseListByShareCode(shareCode)
+                .getGroupByShareCode(shareCode)
                 .mapCatching { listDto ->
                     listDto ?: throw IllegalArgumentException("List with share code not found")
                 }.onSuccess { listDto ->
                     // Add user to list members
-                    firestoreService.addUserToExpenseListMembers(listDto.listId, userId).getOrThrow()
+                    firestoreService.addUserToExpenseListMembers(listDto.groupId, userId).getOrThrow()
                     // Add list reference to user
-                    firestoreService.addExpenseListReferenceForUser(userId, listDto.listId).getOrThrow()
+                    firestoreService.addExpenseListReferenceForUser(userId, listDto.groupId).getOrThrow()
                     // Clear cache
                     cachedLists = emptyMap()
                 }.mapCatching { dto ->
-                    val categories = firestoreService.getGroupCategories(dto.listId).getOrElse { emptyList() }
+                    val categories = firestoreService.getGroupCategories(dto.groupId).getOrElse { emptyList() }
                     dto.toDomain(categories)
                 }
                 .mapCatching { enrichListMembers(it) }
@@ -154,6 +155,41 @@ class GroupRepositoryImpl(
                     cachedLists = emptyMap()
                 }
         }
+
+    override suspend fun createCategory(
+        groupId: String,
+        category: Category
+    ): Result<String> =
+        mutex.withLock {
+            firestoreService.createCategory(
+                groupId,
+                category.toDto()
+            )
+        }
+
+
+    override suspend fun updateCategory(
+        groupId: String,
+        category: Category
+    ): Result<Unit> =
+        mutex.withLock {
+            firestoreService.updateCategory(
+                groupId,
+                category.toDto()
+            )
+        }
+
+
+    override suspend fun deleteCategory(
+        groupId: String,
+        categoryId: String
+    ): Result<Unit> =
+        mutex.withLock {
+            firestoreService.deleteCategory(
+                groupId,
+                categoryId
+            )
+        }
 }
 
-expect fun Group.toDto(): ExpenseListDto
+expect fun Group.toDto(): GroupDto

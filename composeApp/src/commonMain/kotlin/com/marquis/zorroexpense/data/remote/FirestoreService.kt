@@ -2,7 +2,7 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
-import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
+import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.domain.model.UserProfile
 
@@ -20,73 +20,73 @@ expect class FirestoreService() {
     ): Result<Unit>
 
     // List-based expense operations
-    suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseListDto>>
+    suspend fun getUserGroups(userId: String): Result<List<GroupDto>>
 
-    suspend fun getExpenseListById(listId: String): Result<ExpenseListDto?>
+    suspend fun getGroupById(listId: String): Result<GroupDto?>
 
-    suspend fun createExpenseList(list: ExpenseListDto): Result<String>
+    suspend fun createGroup(group: GroupDto): Result<String>
 
-    suspend fun updateExpenseList(
+    suspend fun updateGroup(
         listId: String,
-        list: ExpenseListDto,
+        list: GroupDto,
     ): Result<Unit>
 
-    suspend fun deleteExpenseList(listId: String): Result<Unit>
+    suspend fun deleteGroup(groupId: String): Result<Unit>
 
-    suspend fun getExpenseListByShareCode(shareCode: String): Result<ExpenseListDto?>
+    suspend fun getGroupByShareCode(shareCode: String): Result<GroupDto?>
 
     suspend fun addUserToExpenseListMembers(
-        listId: String,
+        groupId: String,
         userId: String,
     ): Result<Unit>
 
     suspend fun addGroupToUser(
         userId: String,
-        listId: String,
+        groupId: String,
     ): Result<Unit>
 
     suspend fun removeUserFromExpenseListMembers(
-        listId: String,
+        groupId: String,
         userId: String,
     ): Result<Unit>
 
     suspend fun addExpenseListReferenceForUser(
         userId: String,
-        listId: String,
+        groupId: String,
     ): Result<Unit>
 
     suspend fun removeExpenseListReferenceForUser(
         userId: String,
-        listId: String,
+        groupId: String,
     ): Result<Unit>
 
-    suspend fun getExpensesByListId(listId: String): Result<List<ExpenseDto>>
+    suspend fun getExpensesByListId(groupId: String): Result<List<ExpenseDto>>
 
     suspend fun getExpenseById(
-        listId: String,
+        groupId: String,
         expenseId: String,
     ): Result<ExpenseDto?>
 
     suspend fun addExpenseToList(
-        listId: String,
+        groupId: String,
         expense: ExpenseDto,
     ): Result<String>
 
     suspend fun updateExpenseInList(
-        listId: String,
+        groupId: String,
         expenseId: String,
         expense: ExpenseDto,
     ): Result<Unit>
 
     suspend fun deleteExpenseFromList(
-        listId: String,
+        groupId: String,
         expenseId: String,
     ): Result<Unit>
 
-    suspend fun updateExpenseListLastModified(listId: String): Result<Unit>
+    suspend fun updateExpenseListLastModified(groupId: String): Result<Unit>
 
     // Group categories subcollection operations
-    suspend fun getGroupCategories(listId: String): Result<List<CategoryDto>>
+    suspend fun getGroupCategories(groupId: String): Result<List<CategoryDto>>
 
     suspend fun setGroupCategories(
         listId: String,
@@ -96,5 +96,21 @@ expect class FirestoreService() {
     suspend fun deleteGroupCategory(
         listId: String,
         categoryId: String,
+    ): Result<Unit>
+
+    // Global category operations
+    suspend fun createCategory(
+        groupId: String,
+        category: CategoryDto
+    ): Result<String>
+
+    suspend fun updateCategory(
+        groupId: String,
+        category: CategoryDto
+    ): Result<Unit>
+
+    suspend fun deleteCategory(
+        groupId: String,
+        categoryId: String
     ): Result<Unit>
 }

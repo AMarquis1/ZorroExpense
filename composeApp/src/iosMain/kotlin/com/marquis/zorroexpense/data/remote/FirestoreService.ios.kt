@@ -2,9 +2,9 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
-import com.marquis.zorroexpense.data.remote.dto.ExpenseListDto
+import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.IosExpenseDto
-import com.marquis.zorroexpense.data.remote.dto.IosExpenseListDto
+import com.marquis.zorroexpense.data.remote.dto.IosGroupDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.UserProfile
@@ -87,7 +87,7 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun getUserExpenseLists(userId: String): Result<List<ExpenseListDto>> =
+    actual suspend fun getUserGroups(userId: String): Result<List<GroupDto>> =
         try {
             val userSnapshot =
                 firestore
@@ -101,7 +101,7 @@ actual class FirestoreService {
                 (userSnapshot.get("ExpenseListReferences") as? List<Any>)
                     ?: emptyList()
 
-            val lists = mutableListOf<ExpenseListDto>()
+            val lists = mutableListOf<GroupDto>()
             for (reference in expenseListReferences) {
                 // Extract document ID from reference path
                 // Path format: "projects/zorro-expense/databases/(default)/documents/ExpenseLists/FXeLk3GspKd1fDqWJM8b"
@@ -114,7 +114,7 @@ actual class FirestoreService {
                         .document(listId)
                         .get()
                 if (listSnapshot.exists) {
-                    val listDto = listSnapshot.data<IosExpenseListDto>()
+                    val listDto = listSnapshot.data<IosGroupDto>()
                     lists.add(listDto)
                 }
             }
@@ -124,22 +124,22 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun getExpenseListById(listId: String): Result<ExpenseListDto?> =
+    actual suspend fun getGroupById(listId: String): Result<GroupDto?> =
         try {
             val snapshot =
                 firestore
                     .collection("ExpenseLists")
                     .document(listId)
                     .get()
-            val list = if (snapshot.exists) snapshot.data<IosExpenseListDto>() else null
+            val list = if (snapshot.exists) snapshot.data<IosGroupDto>() else null
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
         }
 
-    actual suspend fun createExpenseList(list: ExpenseListDto): Result<String> =
+    actual suspend fun createGroup(group: GroupDto): Result<String> =
         try {
-            val iosExpenseListDto = list as IosExpenseListDto
+            val iosExpenseListDto = group as IosGroupDto
             val docRef =
                 firestore
                     .collection("ExpenseLists")
@@ -156,12 +156,12 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun updateExpenseList(
+    actual suspend fun updateGroup(
         listId: String,
-        list: ExpenseListDto,
+        list: GroupDto,
     ): Result<Unit> =
         try {
-            val iosExpenseListDto = list as IosExpenseListDto
+            val iosExpenseListDto = list as IosGroupDto
             firestore
                 .collection("ExpenseLists")
                 .document(listId)
@@ -171,18 +171,18 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun deleteExpenseList(listId: String): Result<Unit> =
+    actual suspend fun deleteGroup(groupId: String): Result<Unit> =
         try {
             firestore
                 .collection("ExpenseLists")
-                .document(listId)
+                .document(groupId)
                 .delete()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
 
-    actual suspend fun getExpenseListByShareCode(shareCode: String): Result<ExpenseListDto?> =
+    actual suspend fun getGroupByShareCode(shareCode: String): Result<GroupDto?> =
         try {
             val snapshot =
                 firestore
@@ -191,7 +191,7 @@ actual class FirestoreService {
                     .get()
             val list =
                 if (snapshot.documents.isNotEmpty()) {
-                    snapshot.documents.first().data<IosExpenseListDto>()
+                    snapshot.documents.first().data<IosGroupDto>()
                 } else {
                     null
                 }
@@ -201,21 +201,21 @@ actual class FirestoreService {
         }
 
     actual suspend fun addUserToExpenseListMembers(
-        listId: String,
+        groupId: String,
         userId: String,
     ): Result<Unit> =
         try {
             val listSnapshot =
                 firestore
                     .collection("ExpenseLists")
-                    .document(listId)
+                    .document(groupId)
                     .get()
-            val list = listSnapshot.data<IosExpenseListDto>()
+            val list = listSnapshot.data<IosGroupDto>()
             val userRef = firestore.collection("Users").document(userId)
             val updatedMembers = (list.memberRefs + userRef).distinctBy { it.path }
             firestore
                 .collection("ExpenseLists")
-                .document(listId)
+                .document(groupId)
                 .update("members" to updatedMembers)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -223,23 +223,23 @@ actual class FirestoreService {
         }
 
     actual suspend fun removeUserFromExpenseListMembers(
-        listId: String,
+        groupId: String,
         userId: String,
     ): Result<Unit> =
         try {
             val listSnapshot =
                 firestore
                     .collection("ExpenseLists")
-                    .document(listId)
+                    .document(groupId)
                     .get()
-            val list = listSnapshot.data<IosExpenseListDto>()
+            val list = listSnapshot.data<IosGroupDto>()
             val updatedMembers =
                 list.memberRefs.filter { ref ->
                     !ref.path.endsWith(userId)
                 }
             firestore
                 .collection("ExpenseLists")
-                .document(listId)
+                .document(groupId)
                 .update("members" to updatedMembers)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -248,7 +248,7 @@ actual class FirestoreService {
 
     actual suspend fun addExpenseListReferenceForUser(
         userId: String,
-        listId: String,
+        groupId: String,
     ): Result<Unit> =
         try {
             val userDoc = firestore.collection("Users").document(userId)
@@ -262,10 +262,10 @@ actual class FirestoreService {
             // Add the reference if not already present
             val alreadyExists =
                 currentReferences.any {
-                    it.toString().substringAfterLast("/") == listId
+                    it.toString().substringAfterLast("/") == groupId
                 }
             if (!alreadyExists) {
-                val newReference = firestore.collection("ExpenseLists").document(listId)
+                val newReference = firestore.collection("ExpenseLists").document(groupId)
                 currentReferences.add(newReference)
             }
 
@@ -277,7 +277,7 @@ actual class FirestoreService {
 
     actual suspend fun removeExpenseListReferenceForUser(
         userId: String,
-        listId: String,
+        groupId: String,
     ): Result<Unit> =
         try {
             val userDoc = firestore.collection("Users").document(userId)
@@ -290,7 +290,7 @@ actual class FirestoreService {
 
             // Remove the reference with matching listId
             currentReferences.removeAll { reference ->
-                reference.toString().substringAfterLast("/") == listId
+                reference.toString().substringAfterLast("/") == groupId
             }
 
             userDoc.update("ExpenseListReferences" to currentReferences)
@@ -299,12 +299,12 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun getExpensesByListId(listId: String): Result<List<ExpenseDto>> =
+    actual suspend fun getExpensesByListId(groupId: String): Result<List<ExpenseDto>> =
         try {
             val snapshot =
                 firestore
                     .collection("Expenses")
-                    .where { "listId" equalTo listId }
+                    .where { "listId" equalTo groupId }
                     .get()
             val expenses =
                 snapshot.documents.map { document ->
@@ -316,7 +316,7 @@ actual class FirestoreService {
         }
 
     actual suspend fun getExpenseById(
-        listId: String,
+        groupId: String,
         expenseId: String,
     ): Result<ExpenseDto?> =
         try {
@@ -337,7 +337,7 @@ actual class FirestoreService {
         }
 
     actual suspend fun addExpenseToList(
-        listId: String,
+        groupId: String,
         expense: ExpenseDto,
     ): Result<String> =
         try {
@@ -352,7 +352,7 @@ actual class FirestoreService {
         }
 
     actual suspend fun updateExpenseInList(
-        listId: String,
+        groupId: String,
         expenseId: String,
         expense: ExpenseDto,
     ): Result<Unit> =
@@ -368,7 +368,7 @@ actual class FirestoreService {
         }
 
     actual suspend fun deleteExpenseFromList(
-        listId: String,
+        groupId: String,
         expenseId: String,
     ): Result<Unit> =
         try {
@@ -381,23 +381,23 @@ actual class FirestoreService {
             Result.failure(e)
         }
 
-    actual suspend fun updateExpenseListLastModified(listId: String): Result<Unit> =
+    actual suspend fun updateExpenseListLastModified(groupId: String): Result<Unit> =
         try {
             firestore
                 .collection("ExpenseLists")
-                .document(listId)
+                .document(groupId)
                 .update("lastModified" to dev.gitlive.firebase.firestore.Timestamp.now())
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
 
-    actual suspend fun getGroupCategories(listId: String): Result<List<CategoryDto>> =
+    actual suspend fun getGroupCategories(groupId: String): Result<List<CategoryDto>> =
         try {
             val snapshot =
                 firestore
                     .collection("ExpenseLists")
-                    .document(listId)
+                    .document(groupId)
                     .collection("categories")
                     .get()
             val categories =
@@ -436,6 +436,53 @@ actual class FirestoreService {
             firestore
                 .collection("ExpenseLists")
                 .document(listId)
+                .collection("categories")
+                .document(categoryId)
+                .delete()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun createCategory(
+        groupId: String,
+        category: CategoryDto
+    ): Result<String> =
+        try {
+            val docRef = firestore
+                .collection("ExpenseLists")
+                .document(groupId)
+                .collection("categories")
+                .add(category)
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun updateCategory(
+        groupId: String,
+        category: CategoryDto
+    ): Result<Unit> =
+        try {
+            firestore
+                .collection("ExpenseLists")
+                .document(groupId)
+                .collection("categories")
+                .document(category.documentId)
+                .set(category)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun deleteCategory(
+        groupId: String,
+        categoryId: String
+    ): Result<Unit> =
+        try {
+            firestore
+                .collection("ExpenseLists")
+                .document(groupId)
                 .collection("categories")
                 .document(categoryId)
                 .delete()
