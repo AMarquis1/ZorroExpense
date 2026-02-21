@@ -20,6 +20,7 @@ fun CategoryDto.toDomain(): Category =
         name = name,
         icon = icon,
         color = color,
+        active = active,
     )
 
 fun Category.toDto(): CategoryDto =
@@ -28,6 +29,7 @@ fun Category.toDto(): CategoryDto =
         name = name,
         icon = icon,
         color = color,
+        active = active,
     )
 
 expect fun Any?.toDateString(): String

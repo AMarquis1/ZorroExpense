@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -67,7 +70,7 @@ import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
 import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun GroupDetailScreen(
     viewModel: GroupDetailViewModel,
@@ -208,6 +211,7 @@ fun GroupDetailScreen(
                     onNameChange = { viewModel.onEvent(GroupDetailUiEvent.UpdateName(it)) },
                     onAddCategoryClick = { viewModel.onEvent(GroupDetailUiEvent.AddCategoryClicked) },
                     onRemoveCategory = { viewModel.onEvent(GroupDetailUiEvent.RemoveCategory(it)) },
+                    onReactivateCategory = { viewModel.onEvent(GroupDetailUiEvent.CategoryToggled(it)) },
                     onRemoveMember = { viewModel.onEvent(GroupDetailUiEvent.RemoveMember(it)) },
                     onCreateCategoryClick = onCreateCategoryClick,
                     onCategoryClick = onCategoryClick,
@@ -290,15 +294,22 @@ private fun ExpenseListDetailContent(
     onNameChange: (String) -> Unit,
     onAddCategoryClick: () -> Unit,
     onRemoveCategory: (Category) -> Unit,
+    onReactivateCategory: (Category) -> Unit,
     onRemoveMember: (User) -> Unit,
     onCreateCategoryClick: () -> Unit = {},
     onCategoryClick: (Category) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isEditable = mode != GroupDetailMode.VIEW
-    val displayCategories = if (isEditable) editedCategories else group.categories
+    val displayCategories = if (isEditable) {
+        // In edit mode, show all categories (active and inactive) so user can reactivate
+        editedCategories
+    } else {
+        // In view mode, only show active categories
+        group.categories.filter { it.active }
+    }
     val displayMembers = if (isEditable) editedMembers else group.members
-    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = modifier
@@ -345,68 +356,195 @@ private fun ExpenseListDetailContent(
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
 
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (isEditable) {
-                        item {
-                            AddCategoryButton(
-                                onClick = {
-                                    focusManager.clearFocus()
-                                    onAddCategoryClick()
-                                },
-                                label = "Modify",
-                                size = 48.dp,
-                            )
+                if (isEditable) {
+                    // Edit mode: Show active and inactive categories in sections
+                    val activeCategories = editedCategories.filter { it.active }
+                    val inactiveCategories = editedCategories.filter { !it.active }
+
+                    // Active categories section
+                    if (activeCategories.isNotEmpty()) {
+                        Text(
+                            text = "Active",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(bottom = 16.dp),
+                        ) {
+                            activeCategories.forEach { category ->
+                                Box {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        CategoryIconCircle(
+                                            category = category,
+                                            size = 48.dp,
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Text(
+                                            text = category.name,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center,
+                                        )
+                                    }
+
+                                    // Remove (X) badge
+                                    Card(
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .align(Alignment.TopEnd),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.error,
+                                        ),
+                                        shape = CircleShape,
+                                        onClick = { onRemoveCategory(category) },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = "Remove ${category.name}",
+                                                tint = MaterialTheme.colorScheme.onError,
+                                                modifier = Modifier.size(12.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        item {
-                            AddCategoryButton(
-                                onClick = {
-                                    focusManager.clearFocus()
-                                    onCreateCategoryClick()
-                                },
-                                label = "Create",
-                                size = 48.dp,
-                            )
-                        }
+                    } else {
+                        Text(
+                            text = "No active categories",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(bottom = 16.dp),
+                        )
                     }
 
-                    items(displayCategories) { category ->
-                        Box(
-                            modifier = Modifier.clickable(
-                                enabled = !isEditable,
-                                onClick = { onCategoryClick(category) },
-                            ),
+                    // Inactive categories section
+                    if (inactiveCategories.isNotEmpty()) {
+                        Text(
+                            text = "Inactive",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(bottom = 16.dp),
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                CategoryIconCircle(
-                                    category = category,
-                                    size = 48.dp,
-                                )
+                            inactiveCategories.forEach { category ->
+                                Box {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        CategoryIconCircle(
+                                            category = category,
+                                            size = 48.dp,
+                                            modifier = Modifier.alpha(0.4f),
+                                        )
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
 
-                                Text(
-                                    text = category.name,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center,
-                                )
+                                        Text(
+                                            text = category.name,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                            textAlign = TextAlign.Center,
+                                        )
+                                    }
+
+                                    // Reactivate (+) badge
+                                    Card(
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .align(Alignment.TopEnd),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                        ),
+                                        shape = CircleShape,
+                                        onClick = { onReactivateCategory(category) },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = "+",
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                                style = MaterialTheme.typography.labelSmall,
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                }
 
-                if (displayCategories.isEmpty()) {
-                    Text(
-                        text = "No categories added yet",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(top = 8.dp),
+                    // Create New button
+                    AddCategoryButton(
+                        onClick = {
+                            focusManager.clearFocus()
+                            onCreateCategoryClick()
+                        },
+                        label = "Create New",
+                        size = 48.dp,
                     )
+                } else {
+                    // View mode: Show only active categories in LazyRow (clickable)
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(displayCategories) { category ->
+                            Box(
+                                modifier = Modifier.clickable(
+                                    enabled = !isEditable,
+                                    onClick = { onCategoryClick(category) },
+                                ),
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    CategoryIconCircle(
+                                        category = category,
+                                        size = 48.dp,
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = category.name,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (displayCategories.isEmpty()) {
+                        Text(
+                            text = "No categories added yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
                 }
             }
         }

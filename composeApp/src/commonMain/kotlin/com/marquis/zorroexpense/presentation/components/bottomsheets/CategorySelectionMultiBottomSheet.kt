@@ -84,13 +84,18 @@ fun CategorySelectionMultiBottomSheet(
 
             LazyColumn {
                 items(categories) { category ->
-                    val isSelected = selectedCategories.any { it.documentId == category.documentId }
+                    // Show active categories and previously selected categories (even if deactivated)
+                    val shouldShow = category.active || selectedCategories.any { it.documentId == category.documentId }
 
-                    CategoryMultiSelectItem(
-                        category = category,
-                        isSelected = isSelected,
-                        onClick = { onCategoryToggled(category) },
-                    )
+                    if (shouldShow) {
+                        val isSelected = selectedCategories.any { it.documentId == category.documentId && it.active }
+
+                        CategoryMultiSelectItem(
+                            category = category,
+                            isSelected = isSelected,
+                            onClick = { onCategoryToggled(category) },
+                        )
+                    }
                 }
             }
 

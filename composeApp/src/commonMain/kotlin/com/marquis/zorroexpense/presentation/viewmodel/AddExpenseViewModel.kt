@@ -969,8 +969,8 @@ class AddExpenseViewModel(
                 .getGroup(listId)
                 .onSuccess { group ->
                     group?.let { expenseList ->
-                        // Get categories from the group's categories field
-                        _categories.value = expenseList.categories
+                        // Get active categories from the group's categories field
+                        _categories.value = expenseList.categories.filter { it.active }
                     } ?: run {
                         _categories.value = emptyList()
                     }

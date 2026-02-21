@@ -370,24 +370,26 @@ fun App() {
                             else -> GroupDetailMode.VIEW
                         }
 
-                        val viewModel = AppModule.provideExpenseListDetailViewModel(
-                            listId = listDetailRoute.listId,
-                            userId = userId,
-                            initialGroup = group,
-                            initialMode = initialMode,
-                            onListDeleted = {
-                                // Navigate back to the lists overview after deletion
-                                navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
-                            },
-                            onListSaved = { newListId, listName ->
-                                // For ADD mode, navigate to the newly created list
-                                if (initialMode == GroupDetailMode.ADD) {
-                                    navController.navigate(AppDestinations.ExpenseList(listId = newListId, listName = listName)) {
-                                        popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
+                        val viewModel = remember(listDetailRoute.listId, userId, initialMode) {
+                            AppModule.provideExpenseListDetailViewModel(
+                                listId = listDetailRoute.listId,
+                                userId = userId,
+                                initialGroup = group,
+                                initialMode = initialMode,
+                                onListDeleted = {
+                                    // Navigate back to the lists overview after deletion
+                                    navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                                },
+                                onListSaved = { newListId, listName ->
+                                    // For ADD mode, navigate to the newly created list
+                                    if (initialMode == GroupDetailMode.ADD) {
+                                        navController.navigate(AppDestinations.ExpenseList(listId = newListId, listName = listName)) {
+                                            popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
+                                        }
                                     }
-                                }
-                            },
-                        )
+                                },
+                            )
+                        }
 
                         GroupDetailScreen(
                             viewModel = viewModel,
@@ -452,14 +454,19 @@ fun App() {
                             groupId = categoryRoute.groupId,
                             category = category,
                             initialMode = initialMode,
-                            onCategorySaved = {
-                                // Pop back stack and refresh group categories if listId is provided
+                            onCategorySaved = { savedCategory ->
+                                // Pop back stack and update group categories
                                 navController.popBackStack()
-                                if (categoryRoute.groupId.isNotEmpty()) {
-                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)?.loadCategories()
+                                if (categoryRoute.groupId.isNotEmpty() && savedCategory != null) {
+                                    // Add or update the category in the group's cache
+                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)?.addOrUpdateCategory(savedCategory)
                                 }
                             },
-                            onCategoryDeleted = {
+                            onCategoryDeleted = { categoryId ->
+                                // Remove the category from the group's cache
+                                if (categoryRoute.groupId.isNotEmpty()) {
+                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)?.removeCategory(categoryId)
+                                }
                                 navController.popBackStack()
                             },
                         )

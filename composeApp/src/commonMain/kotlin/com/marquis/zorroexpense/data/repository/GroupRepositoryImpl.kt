@@ -98,9 +98,12 @@ class GroupRepositoryImpl(
                 val newCategoryIds = list.categories.map { it.documentId }.toSet()
                 val currentCategoryIds = currentCategories.map { it.documentId }.toSet()
 
-                // Delete removed categories
+                // Deactivate removed categories (soft delete)
                 (currentCategoryIds - newCategoryIds).forEach { removedId ->
-                    firestoreService.deleteGroupCategory(listId, removedId).getOrThrow()
+                    val inactiveCategory = currentCategories.find { it.documentId == removedId }?.copy(active = false)
+                    if (inactiveCategory != null) {
+                        firestoreService.updateCategory(listId, inactiveCategory).getOrThrow()
+                    }
                 }
 
                 // Add/update categories
@@ -154,6 +157,13 @@ class GroupRepositoryImpl(
                     // Clear cache
                     cachedLists = emptyMap()
                 }
+        }
+
+    override suspend fun getCategories(groupId: String): Result<List<Category>> =
+        mutex.withLock {
+            firestoreService.getGroupCategories(groupId).mapCatching { dtos ->
+                dtos.map { it.toDomain() }
+            }
         }
 
     override suspend fun createCategory(

@@ -57,6 +57,8 @@ interface GroupRepository {
         userId: String,
     ): Result<Unit>
 
+    suspend fun getCategories(groupId: String): Result<List<Category>>
+
     suspend fun createCategory(
         groupId: String,
         category: Category

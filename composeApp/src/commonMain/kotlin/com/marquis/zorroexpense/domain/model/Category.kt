@@ -5,4 +5,5 @@ data class Category(
     val name: String = "",
     val icon: String = "",
     val color: String = "", // Hex color string like "#FF5722"
+    val active: Boolean = true,
 )

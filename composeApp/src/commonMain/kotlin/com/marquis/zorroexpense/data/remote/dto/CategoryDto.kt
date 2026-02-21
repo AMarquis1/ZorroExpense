@@ -12,4 +12,6 @@ data class CategoryDto(
     val icon: String = "",
     @SerialName("color")
     val color: String = "",
+    @SerialName("active")
+    val active: Boolean = true,
 )

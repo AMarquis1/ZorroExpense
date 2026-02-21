@@ -22,8 +22,8 @@ class CategoryDetailViewModel(
     private val createCategoryUseCase: CreateCategoryUseCase,
     private val updateCategoryUseCase: UpdateCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
-    private val onCategorySaved: () -> Unit = {},
-    private val onCategoryDeleted: () -> Unit = {},
+    private val onCategorySaved: (Category?) -> Unit = {},
+    private val onCategoryDeleted: (String) -> Unit = {},
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<CategoryDetailUiState>(
         CategoryDetailUiState.Success(
@@ -118,14 +118,15 @@ class CategoryDetailViewModel(
                     CategoryDetailMode.ADD -> {
                         createCategoryUseCase(groupId, updatedCategory).fold(
                             onSuccess = { newCategoryId ->
+                                val newCategory = updatedCategory.copy(documentId = newCategoryId)
                                 _uiState.update {
                                     currentState.copy(
                                         isSaving = false,
-                                        category = updatedCategory.copy(documentId = newCategoryId),
+                                        category = newCategory,
                                         mode = CategoryDetailMode.VIEW,
                                     )
                                 }
-                                onCategorySaved()
+                                onCategorySaved(newCategory)
                             },
                             onFailure = { error ->
                                 _uiState.value = CategoryDetailUiState.Error(
@@ -144,7 +145,7 @@ class CategoryDetailViewModel(
                                         mode = CategoryDetailMode.VIEW,
                                     )
                                 }
-                                onCategorySaved()
+                                onCategorySaved(updatedCategory)
                             },
                             onFailure = { error ->
                                 _uiState.value = CategoryDetailUiState.Error(
@@ -183,14 +184,15 @@ class CategoryDetailViewModel(
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is CategoryDetailUiState.Success) {
+                val categoryId = currentState.category.documentId
                 _uiState.update {
                     currentState.copy(showDeleteDialog = false)
                 }
 
-                deleteCategoryUseCase(groupId, currentState.category.documentId).fold(
+                deleteCategoryUseCase(groupId, categoryId).fold(
                     onSuccess = {
                         _uiState.value = CategoryDetailUiState.Deleted
-                        onCategoryDeleted()
+                        onCategoryDeleted(categoryId)
                     },
                     onFailure = { error ->
                         _uiState.value = CategoryDetailUiState.Error(

@@ -33,6 +33,7 @@ import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetGroupCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUserGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
 import com.marquis.zorroexpense.domain.usecase.GoogleSignInUseCase
@@ -215,6 +216,10 @@ object AppModule {
         CreateGroupUseCase(groupRepository, getUsersUseCase)
     }
 
+    private val GetGroupCategoriesUseCase: GetGroupCategoriesUseCase by lazy {
+        GetGroupCategoriesUseCase(groupRepository)
+    }
+
     private val joinGroupUseCase: JoinGroupUseCase by lazy {
         JoinGroupUseCase(groupRepository)
     }
@@ -367,7 +372,7 @@ object AppModule {
         // For ADD mode, always create a new ViewModel (no caching)
         if (initialMode == com.marquis.zorroexpense.presentation.state.GroupDetailMode.ADD) {
             return GroupDetailViewModel(
-                listId = listId,
+                groupId = listId,
                 userId = userId,
                 initialGroup = initialGroup,
                 initialMode = initialMode,
@@ -375,6 +380,7 @@ object AppModule {
                 getGroupByIdUseCase = getExpenseListByIdUseCase,
                 updateGroupUseCase = updateExpenseListUseCase,
                 createGroupUseCase = createExpenseListUseCase,
+                getGroupCategoriesUseCase = GetGroupCategoriesUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
@@ -383,7 +389,7 @@ object AppModule {
 
         return groupDetailViewModels.getOrPut(listId) {
             GroupDetailViewModel(
-                listId = listId,
+                groupId = listId,
                 userId = userId,
                 initialGroup = initialGroup,
                 initialMode = initialMode,
@@ -391,6 +397,7 @@ object AppModule {
                 getGroupByIdUseCase = getExpenseListByIdUseCase,
                 updateGroupUseCase = updateExpenseListUseCase,
                 createGroupUseCase = createExpenseListUseCase,
+                getGroupCategoriesUseCase = GetGroupCategoriesUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
@@ -411,8 +418,8 @@ object AppModule {
         category: com.marquis.zorroexpense.domain.model.Category,
         initialMode: com.marquis.zorroexpense.presentation.state.CategoryDetailMode =
             com.marquis.zorroexpense.presentation.state.CategoryDetailMode.VIEW,
-        onCategorySaved: () -> Unit = {},
-        onCategoryDeleted: () -> Unit = {},
+        onCategorySaved: (com.marquis.zorroexpense.domain.model.Category?) -> Unit = {},
+        onCategoryDeleted: (String) -> Unit = {},
     ): CategoryDetailViewModel =
         CategoryDetailViewModel(
             groupId = groupId,
