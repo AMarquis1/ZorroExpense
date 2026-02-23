@@ -16,4 +16,13 @@ interface UserRepository {
      * Get multiple users by their IDs.
      */
     suspend fun getUsersByIds(userIds: List<String>): Result<List<User>>
+
+    /**
+     * Update a user's profile information.
+     *
+     * @param userId The ID of the user
+     * @param name The new name for the user
+     * @param profileImageUrl The new profile image URL (optional)
+     */
+    suspend fun updateProfile(userId: String, name: String, profileImageUrl: String?): Result<Unit>
 }

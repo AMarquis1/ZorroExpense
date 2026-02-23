@@ -23,6 +23,7 @@ material-icons = "1.7.3"
 ktlint = "14.0.1"
 placeholder = "1.0.12"
 play-services-auth = "21.0.0"
+imagepickerkmp = "1.0.32"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -33,6 +34,7 @@ androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil3" }
 coil-compose-core = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil3" }
 coil-mp = { module = "io.coil-kt.coil3:coil", version.ref = "coil3" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil3" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
@@ -47,11 +49,13 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-common-ktx = { module = "dev.gitlive:firebase-common", version.ref = "firebase-ktx" }
 firebase-firestore-ktx = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-ktx" }
 firebase-auth-ktx = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-ktx" }
+firebase-storage-ktx = { module = "dev.gitlive:firebase-storage", version.ref = "firebase-ktx" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
 android-material = { module = "com.google.android.material:material", version.ref = "android-material" }
 material-icons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons" }
 placeholder = { module = "com.eygraber:compose-placeholder-material3", version.ref = "placeholder" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "play-services-auth" }
+imagepickerkmp = { module = "io.github.ismoy:imagepickerkmp", version.ref = "imagepickerkmp" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

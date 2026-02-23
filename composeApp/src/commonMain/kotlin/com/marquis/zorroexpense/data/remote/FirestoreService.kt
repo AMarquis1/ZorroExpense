@@ -113,4 +113,10 @@ expect class FirestoreService() {
         groupId: String,
         categoryId: String
     ): Result<Unit>
+
+    suspend fun updateUserProfile(
+        userId: String,
+        name: String,
+        profileImageUrl: String?,
+    ): Result<Unit>
 }

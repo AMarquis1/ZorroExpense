@@ -33,6 +33,7 @@ import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.CategoryDetailScreen
 import com.marquis.zorroexpense.presentation.screens.CategoryManagementScreen
+import com.marquis.zorroexpense.presentation.screens.EditProfileScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.GroupDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
@@ -205,6 +206,9 @@ fun App() {
                                     ),
                                     mode = "EDIT",
                                 ))
+                            },
+                            onProfileClick = {
+                                navController.navigate(AppDestinations.EditProfile)
                             },
                         )
                     }
@@ -739,6 +743,25 @@ fun App() {
                                 }
                                 // Navigate back to ExpenseList, popping both EditExpense and ExpenseDetail screens
                                 navController.popBackStack()
+                                navController.popBackStack()
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.EditProfile> {
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val editProfileViewModel = remember { AppModule.provideEditProfileViewModel() }
+                        EditProfileScreen(
+                            viewModel = editProfileViewModel,
+                            onNavigateBack = {
                                 navController.popBackStack()
                             },
                         )
