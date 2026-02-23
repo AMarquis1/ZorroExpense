@@ -66,6 +66,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.coil.network.okhttp)
             implementation(libs.firebase.common.ktx)
             implementation(libs.firebase.firestore.ktx)
             implementation(libs.firebase.auth.ktx)

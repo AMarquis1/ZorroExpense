@@ -58,6 +58,12 @@ import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
 
 /**
+ * Platform-specific function to get Android context.
+ * Expect/actual implementation - androidMain provides the context
+ */
+internal expect fun getAndroidContext(): Any?
+
+/**
  * Clean dependency injection module following KMP and Clean Architecture standards
  *
  * Features:
@@ -81,7 +87,7 @@ object AppModule {
     }
 
     private val storageService: StorageService by lazy {
-        StorageService()
+        StorageService(getAndroidContext())
     }
 
     // =================

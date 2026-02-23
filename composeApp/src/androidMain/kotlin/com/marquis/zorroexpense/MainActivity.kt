@@ -12,9 +12,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        // Store application context for services that need it
+        appContext = this
+
         setContent {
             App()
         }
+    }
+
+    companion object {
+        var appContext: android.content.Context? = null
     }
 }
 

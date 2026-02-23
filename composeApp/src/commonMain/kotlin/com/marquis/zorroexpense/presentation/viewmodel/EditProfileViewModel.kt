@@ -7,6 +7,7 @@ import com.marquis.zorroexpense.domain.repository.UserRepository
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
 import com.marquis.zorroexpense.presentation.state.EditProfileUiEvent
 import com.marquis.zorroexpense.presentation.state.EditProfileUiState
+import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -86,6 +87,21 @@ class EditProfileViewModel(
         }
     }
 
+    fun onPhotoSelected(photo: GalleryPhotoResult) {
+        // Read bytes from the photo URI and upload
+        viewModelScope.launch {
+            storageService.readImageBytesFromUri(photo.uri)
+                .onSuccess { imageBytes ->
+                    uploadImage(imageBytes)
+                }
+                .onFailure { error ->
+                    _uiState.value = EditProfileUiState.Error(
+                        error.message ?: "Failed to read image",
+                    )
+                }
+        }
+    }
+
     private fun updateName(name: String) {
         val currentState = _uiState.value as? EditProfileUiState.Success ?: return
         _uiState.value = currentState.copy(name = name)
@@ -122,7 +138,7 @@ class EditProfileViewModel(
             userRepository.updateProfile(
                 userId = currentUserId,
                 name = currentState.name,
-                profileImageUrl = currentImageUrl,
+                profileImageUrl = currentState.profileImageUrl,
             )
                 .onSuccess {
                     _uiState.value = currentState.copy(isSaving = false)

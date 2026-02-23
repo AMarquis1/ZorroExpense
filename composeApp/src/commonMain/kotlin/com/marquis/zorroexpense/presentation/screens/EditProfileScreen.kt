@@ -40,33 +40,40 @@ import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.presentation.state.EditProfileUiEvent
 import com.marquis.zorroexpense.presentation.state.EditProfileUiState
 import com.marquis.zorroexpense.presentation.viewmodel.EditProfileViewModel
+import io.github.ismoy.imagepickerkmp.domain.config.CameraCaptureConfig
+import io.github.ismoy.imagepickerkmp.domain.config.CropConfig
+import io.github.ismoy.imagepickerkmp.domain.models.CompressionLevel
+import io.github.ismoy.imagepickerkmp.domain.models.MimeType
+import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EditProfileScreen(
     viewModel: EditProfileViewModel,
     onNavigateBack: () -> Unit = {},
-    onImageSelected: (ByteArray) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showGalleryPicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Edit Profile") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-            )
+            if (!showGalleryPicker) {
+                TopAppBar(
+                    title = { Text("Edit Profile") },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                )
+            }
         },
     ) { paddingValues ->
         when (val state = uiState) {
@@ -85,7 +92,8 @@ internal fun EditProfileScreen(
                 EditProfileContent(
                     state = state,
                     viewModel = viewModel,
-                    onImageSelected = onImageSelected,
+                    showGalleryPicker = showGalleryPicker,
+                    onShowGalleryPickerChanged = { show -> showGalleryPicker = show },
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -112,14 +120,10 @@ internal fun EditProfileScreen(
 private fun EditProfileContent(
     state: EditProfileUiState.Success,
     viewModel: EditProfileViewModel,
-    onImageSelected: (ByteArray) -> Unit,
+    showGalleryPicker: Boolean,
+    onShowGalleryPickerChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-//    val imagePicker = rememberImagePicker { imageBytes ->
-//        if (imageBytes != null) {
-//            viewModel.onEvent(EditProfileUiEvent.ImageSelected(imageBytes))
-//        }
-//    }
 
     Column(
         modifier = modifier
@@ -142,9 +146,9 @@ private fun EditProfileContent(
             // Edit Icon (clickable to open image picker)
             IconButton(
                 onClick = {
-//                    if (!state.isUploading) {
-//                        imagePicker.launch()
-//                    }
+                    if (!state.isUploading) {
+                        onShowGalleryPickerChanged(true)
+                    }
                 },
                 modifier = Modifier
                     .size(40.dp)
@@ -218,11 +222,34 @@ private fun EditProfileContent(
             }
         }
     }
-}
 
-//@Composable
-//fun rememberImagePicker(onImageSelected: (ByteArray?) -> Unit): ImagePicker {
-//    return ImagePicker.rememberImagePickerLauncher(
-//        onImageSelected = onImageSelected
-//    )
-//}
+
+    Box(modifier = Modifier.fillMaxSize().padding(top = 24.dp)) {
+        if (showGalleryPicker) {
+            GalleryPickerLauncher(
+                allowMultiple = false,
+                mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
+                cameraCaptureConfig = CameraCaptureConfig(
+                    compressionLevel = CompressionLevel.HIGH,
+                    cropConfig = CropConfig(
+                        enabled = true,
+                        squareCrop = false
+                    )
+                ),
+                onPhotosSelected = { photos ->
+                    if (photos.isNotEmpty()) {
+                        val photo = photos.first()
+                        viewModel.onPhotoSelected(photo)
+                    }
+                    onShowGalleryPickerChanged(false)
+                },
+                onError = {
+                    onShowGalleryPickerChanged(false)
+                },
+                onDismiss = {
+                    onShowGalleryPickerChanged(false)
+                }
+            )
+        }
+    }
+}

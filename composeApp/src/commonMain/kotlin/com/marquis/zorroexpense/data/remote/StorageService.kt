@@ -11,4 +11,12 @@ expect class StorageService(context: Any? = null) {
      * @return A Result containing the Firebase Storage download URL on success, or an error on failure
      */
     suspend fun uploadProfileImage(userId: String, imageBytes: ByteArray): Result<String>
+
+    /**
+     * Read image bytes from a URI (typically from image picker).
+     *
+     * @param uri The URI of the image file
+     * @return A Result containing the image bytes on success, or an error on failure
+     */
+    suspend fun readImageBytesFromUri(uri: String): Result<ByteArray>
 }

@@ -8,6 +8,10 @@ actual class StorageService actual constructor(context: Any?) {
     ): Result<String> {
         TODO("Not yet implemented")
     }
+
+    actual suspend fun readImageBytesFromUri(uri: String): Result<ByteArray> {
+        TODO("Not yet implemented for wasmJs platform")
+    }
 }
 
 actual fun createTempFileFromByteArray(fileByteArray: ByteArray): File {
