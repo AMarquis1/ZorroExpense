@@ -21,12 +21,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
@@ -51,10 +51,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -65,10 +67,11 @@ import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.presentation.components.AddCategoryButton
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionMultiBottomSheet
+import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
-import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -638,12 +641,17 @@ private fun ExpenseListDetailContent(
 
         // Share code section (only in VIEW mode and when available)
         if (mode == GroupDetailMode.VIEW && group.shareCode.isNotEmpty() && mode != GroupDetailMode.ADD) {
+            val clipboardManager = LocalClipboardManager.current
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
                 ),
                 shape = RoundedCornerShape(16.dp),
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(group.shareCode))
+                },
             ) {
                 Row(
                     modifier = Modifier
@@ -678,13 +686,24 @@ private fun ExpenseListDetailContent(
                         ),
                         shape = RoundedCornerShape(8.dp),
                     ) {
-                        Text(
-                            text = group.shareCode,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                        Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = group.shareCode,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy share code",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
                 }
             }
