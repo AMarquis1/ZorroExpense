@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class CategoryDetailViewModel(
     private val groupId: String,
@@ -22,6 +23,7 @@ class CategoryDetailViewModel(
     private val createCategoryUseCase: CreateCategoryUseCase,
     private val updateCategoryUseCase: UpdateCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
+    private val saveImmediately: Boolean = true,
     private val onCategorySaved: (Category?) -> Unit = {},
     private val onCategoryDeleted: (String) -> Unit = {},
 ) : ViewModel() {
@@ -116,24 +118,43 @@ class CategoryDetailViewModel(
 
                 when (currentState.mode) {
                     CategoryDetailMode.ADD -> {
-                        createCategoryUseCase(groupId, updatedCategory).fold(
-                            onSuccess = { newCategoryId ->
-                                val newCategory = updatedCategory.copy(documentId = newCategoryId)
-                                _uiState.update {
-                                    currentState.copy(
-                                        isSaving = false,
-                                        category = newCategory,
-                                        mode = CategoryDetailMode.VIEW,
+                        if (saveImmediately) {
+                            // Save immediately to database (existing group workflow)
+                            createCategoryUseCase(groupId, updatedCategory).fold(
+                                onSuccess = { newCategoryId ->
+                                    val newCategory = updatedCategory.copy(documentId = newCategoryId)
+                                    _uiState.update {
+                                        currentState.copy(
+                                            isSaving = false,
+                                            category = newCategory,
+                                            mode = CategoryDetailMode.VIEW,
+                                        )
+                                    }
+                                    onCategorySaved(newCategory)
+                                },
+                                onFailure = { error ->
+                                    _uiState.value = CategoryDetailUiState.Error(
+                                        error.message ?: "Failed to create category",
                                     )
-                                }
-                                onCategorySaved(newCategory)
-                            },
-                            onFailure = { error ->
-                                _uiState.value = CategoryDetailUiState.Error(
-                                    error.message ?: "Failed to create category",
+                                },
+                            )
+                        } else {
+                            // Return category without saving to database (new group workflow)
+                            // Category will be saved when the group is saved
+                            // Generate a temporary unique ID so multiple new categories don't conflict
+                            val tempId = "temp_${System.currentTimeMillis()}_${Random.nextInt(10000)}"
+                            val newCategory = updatedCategory.copy(
+                                documentId = tempId,
+                            )
+                            _uiState.update {
+                                currentState.copy(
+                                    isSaving = false,
+                                    category = newCategory,
+                                    mode = CategoryDetailMode.VIEW,
                                 )
-                            },
-                        )
+                            }
+                            onCategorySaved(newCategory)
+                        }
                     }
                     CategoryDetailMode.EDIT -> {
                         updateCategoryUseCase(groupId, updatedCategory).fold(

@@ -49,6 +49,7 @@ import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryDetailViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.CategoryManagementViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
@@ -339,6 +340,8 @@ object AppModule {
      */
     fun clearAllViewModels() {
         expenseListViewModels.clear()
+        groupDetailViewModels.clear()
+        categoryManagementViewModels.clear()
     }
 
     fun provideAddExpenseViewModel(
@@ -359,6 +362,7 @@ object AppModule {
         ExpenseDetailViewModel(expense)
 
     private val groupDetailViewModels = mutableMapOf<String, GroupDetailViewModel>()
+    private val categoryManagementViewModels = mutableMapOf<String, CategoryManagementViewModel>()
 
     fun provideExpenseListDetailViewModel(
         listId: String,
@@ -418,6 +422,7 @@ object AppModule {
         category: com.marquis.zorroexpense.domain.model.Category,
         initialMode: com.marquis.zorroexpense.presentation.state.CategoryDetailMode =
             com.marquis.zorroexpense.presentation.state.CategoryDetailMode.VIEW,
+        saveImmediately: Boolean = true,
         onCategorySaved: (com.marquis.zorroexpense.domain.model.Category?) -> Unit = {},
         onCategoryDeleted: (String) -> Unit = {},
     ): CategoryDetailViewModel =
@@ -428,9 +433,35 @@ object AppModule {
             createCategoryUseCase = createCategoryUseCase,
             updateCategoryUseCase = updateCategoryUseCase,
             deleteCategoryUseCase = deleteCategoryUseCase,
+            saveImmediately = saveImmediately,
             onCategorySaved = onCategorySaved,
             onCategoryDeleted = onCategoryDeleted,
         )
+
+    fun provideCategoryManagementViewModel(
+        groupId: String,
+        groupName: String,
+        onCategoriesSaved: (groupId: String, groupName: String) -> Unit = { _, _ -> },
+    ): CategoryManagementViewModel {
+        return categoryManagementViewModels.getOrPut(groupId) {
+            CategoryManagementViewModel(
+                groupId = groupId,
+                groupName = groupName,
+                getCategoriesUseCase = getCategoriesUseCase,
+                getGroupByIdUseCase = getExpenseListByIdUseCase,
+                updateGroupUseCase = updateExpenseListUseCase,
+                createCategoryUseCase = createCategoryUseCase,
+                onCategoriesSaved = onCategoriesSaved,
+            )
+        }
+    }
+
+    fun getCategoryManagementViewModel(groupId: String): CategoryManagementViewModel? =
+        categoryManagementViewModels[groupId]
+
+    fun clearCategoryManagementViewModel(groupId: String) {
+        categoryManagementViewModels.remove(groupId)
+    }
 
     fun getGroupDetailViewModel(groupId: String): GroupDetailViewModel? =
         groupDetailViewModels[groupId]

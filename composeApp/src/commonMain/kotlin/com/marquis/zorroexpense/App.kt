@@ -32,6 +32,7 @@ import com.marquis.zorroexpense.navigation.AppDestinations
 import com.marquis.zorroexpense.platform.BindBrowserNavigation
 import com.marquis.zorroexpense.presentation.screens.AddExpenseScreen
 import com.marquis.zorroexpense.presentation.screens.CategoryDetailScreen
+import com.marquis.zorroexpense.presentation.screens.CategoryManagementScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
 import com.marquis.zorroexpense.presentation.screens.GroupDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
@@ -381,9 +382,12 @@ fun App() {
                                     navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
                                 },
                                 onListSaved = { newListId, listName ->
-                                    // For ADD mode, navigate to the newly created list
+                                    // For ADD mode, navigate to category management screen
                                     if (initialMode == GroupDetailMode.ADD) {
-                                        navController.navigate(AppDestinations.ExpenseList(listId = newListId, listName = listName)) {
+                                        navController.navigate(AppDestinations.ManageGroupCategories(
+                                            groupId = newListId,
+                                            groupName = listName,
+                                        )) {
                                             popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
                                         }
                                     }
@@ -454,12 +458,18 @@ fun App() {
                             groupId = categoryRoute.groupId,
                             category = category,
                             initialMode = initialMode,
+                            saveImmediately = categoryRoute.saveImmediately,
                             onCategorySaved = { savedCategory ->
-                                // Pop back stack and update group categories
+                                // Pop back stack and update categories
                                 navController.popBackStack()
                                 if (categoryRoute.groupId.isNotEmpty() && savedCategory != null) {
-                                    // Add or update the category in the group's cache
-                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)?.addOrUpdateCategory(savedCategory)
+                                    // Try to update CategoryManagementViewModel first (for new group flow)
+                                    AppModule.getCategoryManagementViewModel(categoryRoute.groupId)
+                                        ?.addOrUpdateCategory(savedCategory)
+
+                                    // Also update GroupDetailViewModel if it exists (for existing group flow)
+                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)
+                                        ?.addOrUpdateCategory(savedCategory)
                                 }
                             },
                             onCategoryDeleted = { categoryId ->
@@ -478,6 +488,52 @@ fun App() {
                             },
                             onCategoryDeleted = {
                                 navController.popBackStack()
+                            },
+                        )
+                    }
+
+                    composable<AppDestinations.ManageGroupCategories> { backStackEntry ->
+                        // Auth guard: redirect to login if not authenticated
+                        LaunchedEffect(globalAuthState) {
+                            if (globalAuthState is GlobalAuthState.Unauthenticated) {
+                                navController.navigate(AppDestinations.Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        val manageCategoriesRoute = backStackEntry.toRoute<AppDestinations.ManageGroupCategories>()
+
+                        val viewModel = AppModule.provideCategoryManagementViewModel(
+                            groupId = manageCategoriesRoute.groupId,
+                            groupName = manageCategoriesRoute.groupName,
+                            onCategoriesSaved = { groupId, groupName ->
+                                // Navigate to the expense list for the newly created group
+                                navController.navigate(AppDestinations.ExpenseList(
+                                    listId = groupId,
+                                    listName = groupName,
+                                )) {
+                                    popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
+                                }
+                            },
+                        )
+
+                        val categoryManagementViewModel = remember { viewModel }
+                        CategoryManagementScreen(
+                            viewModel = categoryManagementViewModel,
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            onCreateCategoryClick = {
+                                navController.navigate(AppDestinations.CategoryDetail(
+                                    categoryId = "",
+                                    categoryName = "",
+                                    categoryIcon = "",
+                                    categoryColor = "",
+                                    mode = "ADD",
+                                    groupId = manageCategoriesRoute.groupId,
+                                    saveImmediately = false, // Don't save to DB, will be saved with group
+                                ))
                             },
                         )
                     }

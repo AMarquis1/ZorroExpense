@@ -51,7 +51,10 @@ class GroupDetailViewModel(
     val currentUserId: String get() = userId
 
     init {
-        loadCategories(groupId, initialMode)
+        // Only load categories if not in ADD mode
+        if (initialMode != GroupDetailMode.ADD) {
+            loadCategories(groupId, initialMode)
+        }
     }
 
     fun onEvent(event: GroupDetailUiEvent) {
@@ -254,10 +257,11 @@ class GroupDetailViewModel(
 
                 when (currentState.mode) {
                     GroupDetailMode.ADD -> {
+                        // In ADD mode, create group with just the name (no categories yet)
                         createGroupUseCase(
                             userId = userId,
                             name = currentState.editedName,
-                            categories = currentState.editedCategories,
+                            categories = emptyList(),
                         ).fold(
                             onSuccess = { newListId ->
                                 _uiState.update {
@@ -267,6 +271,7 @@ class GroupDetailViewModel(
                                         mode = GroupDetailMode.VIEW,
                                     )
                                 }
+                                // Navigate to category management screen
                                 onListSaved(newListId, updatedList.name)
                             },
                             onFailure = { error ->

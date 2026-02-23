@@ -168,8 +168,7 @@ fun GroupDetailScreen(
                                         onClick = {
                                             viewModel.onEvent(GroupDetailUiEvent.SaveChanges)
                                         },
-                                        enabled = successState.editedName.isNotBlank() &&
-                                            (successState.mode != GroupDetailMode.ADD || successState.editedCategories.isNotEmpty()),
+                                        enabled = successState.editedName.isNotBlank(),
                                     ) {
                                         Icon(
                                             imageVector = Icons.Filled.Check,
@@ -338,25 +337,27 @@ private fun ExpenseListDetailContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            ),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
+        // Categories section - hidden in ADD mode
+        if (mode != GroupDetailMode.ADD) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                ),
+                shape = RoundedCornerShape(16.dp),
             ) {
-                Text(
-                    text = "Categories",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp),
-                )
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                ) {
+                    Text(
+                        text = "Categories",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 12.dp),
+                    )
 
-                if (isEditable) {
+                    if (isEditable) {
                     // Edit mode: Show active and inactive categories in sections
                     val activeCategories = editedCategories.filter { it.active }
                     val inactiveCategories = editedCategories.filter { !it.active }
@@ -545,14 +546,15 @@ private fun ExpenseListDetailContent(
                             modifier = Modifier.padding(top = 8.dp),
                         )
                     }
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Members section
-        if (displayMembers.isNotEmpty()) {
+        // Members section - hidden in ADD mode
+        if (mode != GroupDetailMode.ADD && displayMembers.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -635,7 +637,7 @@ private fun ExpenseListDetailContent(
         }
 
         // Share code section (only in VIEW mode and when available)
-        if (mode == GroupDetailMode.VIEW && group.shareCode.isNotEmpty()) {
+        if (mode == GroupDetailMode.VIEW && group.shareCode.isNotEmpty() && mode != GroupDetailMode.ADD) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(

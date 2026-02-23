@@ -155,5 +155,12 @@ sealed class AppDestinations {
         val categoryColor: String = "",
         val mode: String = "ADD",
         val groupId: String = "",
+        val saveImmediately: Boolean = true,
+    ) : AppDestinations()
+
+    @Serializable
+    data class ManageGroupCategories(
+        val groupId: String,
+        val groupName: String,
     ) : AppDestinations()
 }
