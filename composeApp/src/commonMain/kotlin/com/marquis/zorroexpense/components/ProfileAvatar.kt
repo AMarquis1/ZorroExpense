@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
@@ -50,29 +51,48 @@ fun ProfileAvatar(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize(),
         ) {
-            if (imageResource != null) {
-                Image(
-                    painter = painterResource(imageResource),
-                    contentDescription = "Profile picture",
-                    modifier =
-                        Modifier
-                            .size(size)
-                            .clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                Text(
-                    text = fallbackText.take(2).uppercase(),
-                    style =
-                        when {
-                            size <= 40.dp -> MaterialTheme.typography.titleMedium
-                            size <= 56.dp -> MaterialTheme.typography.headlineSmall
-                            else -> MaterialTheme.typography.headlineLarge
-                        },
-                    fontWeight = FontWeight.Bold,
-                    color = contentColor,
-                    textAlign = TextAlign.Center,
-                )
+            when {
+                userProfile.startsWith("http") -> {
+                    // Load remote image from Firebase Storage URL
+                    AsyncImage(
+                        model = userProfile,
+                        contentDescription = "Profile picture",
+                        modifier =
+                            Modifier
+                                .size(size)
+                                .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+
+                imageResource != null -> {
+                    // Load local drawable resource
+                    Image(
+                        painter = painterResource(imageResource),
+                        contentDescription = "Profile picture",
+                        modifier =
+                            Modifier
+                                .size(size)
+                                .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+
+                else -> {
+                    // Show initials as fallback
+                    Text(
+                        text = fallbackText.take(2).uppercase(),
+                        style =
+                            when {
+                                size <= 40.dp -> MaterialTheme.typography.titleMedium
+                                size <= 56.dp -> MaterialTheme.typography.headlineSmall
+                                else -> MaterialTheme.typography.headlineLarge
+                            },
+                        fontWeight = FontWeight.Bold,
+                        color = contentColor,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
     }

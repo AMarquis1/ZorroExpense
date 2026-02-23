@@ -7,6 +7,7 @@ import com.marquis.zorroexpense.data.datasource.ExpenseRemoteDataSource
 import com.marquis.zorroexpense.data.datasource.ExpenseRemoteDataSourceImpl
 import com.marquis.zorroexpense.data.remote.AuthService
 import com.marquis.zorroexpense.data.remote.FirestoreService
+import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.data.repository.AuthRepositoryImpl
 import com.marquis.zorroexpense.data.repository.CategoryRepositoryImpl
 import com.marquis.zorroexpense.data.repository.GroupRepositoryImpl
@@ -50,6 +51,7 @@ import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryManagementViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.EditProfileViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
@@ -76,6 +78,10 @@ object AppModule {
 
     private val firestoreService: FirestoreService by lazy {
         FirestoreService()
+    }
+
+    private val storageService: StorageService by lazy {
+        StorageService()
     }
 
     // =================
@@ -465,6 +471,13 @@ object AppModule {
 
     fun getGroupDetailViewModel(groupId: String): GroupDetailViewModel? =
         groupDetailViewModels[groupId]
+
+    fun provideEditProfileViewModel(): EditProfileViewModel =
+        EditProfileViewModel(
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            userRepository = userRepository,
+            storageService = storageService,
+        )
 
     // =================
     // Public API for Testing and Direct Access

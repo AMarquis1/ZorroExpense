@@ -69,6 +69,7 @@ kotlin {
             implementation(libs.firebase.common.ktx)
             implementation(libs.firebase.firestore.ktx)
             implementation(libs.firebase.auth.ktx)
+            implementation(libs.firebase.storage.ktx)
             implementation(libs.compose.material3)
             implementation(libs.android.material)
             implementation(libs.play.services.auth)
@@ -79,6 +80,7 @@ kotlin {
             implementation(libs.firebase.common.ktx)
             implementation(libs.firebase.firestore.ktx)
             implementation(libs.firebase.auth.ktx)
+            implementation(libs.firebase.storage.ktx)
         }
 
         wasmJsMain.dependencies {
@@ -101,6 +103,7 @@ kotlin {
             implementation(libs.material.icons)
             implementation(libs.kotlinx.datetime)
             implementation(libs.placeholder)
+            implementation(libs.imagepickerkmp)
         }
 
         commonTest.dependencies {

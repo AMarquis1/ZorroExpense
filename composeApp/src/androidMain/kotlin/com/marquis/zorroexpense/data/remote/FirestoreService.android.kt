@@ -510,4 +510,20 @@ actual class FirestoreService {
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    actual suspend fun updateUserProfile(
+        userId: String,
+        name: String,
+        profileImageUrl: String?,
+    ): Result<Unit> =
+        try {
+            val updates = mutableMapOf<String, Any?>(
+                "name" to name,
+                "profileImage" to profileImageUrl,
+            )
+            firestore.document(userId).update(updates)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 }

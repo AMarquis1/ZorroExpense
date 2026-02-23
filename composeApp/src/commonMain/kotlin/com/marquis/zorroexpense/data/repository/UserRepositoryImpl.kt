@@ -64,4 +64,27 @@ class UserRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    override suspend fun updateProfile(userId: String, name: String, profileImageUrl: String?): Result<Unit> =
+        try {
+            // Normalize path: if it doesn't start with "Users/", add it
+            val normalizedPath = if (userId.startsWith("Users/")) userId else "Users/$userId"
+            if (AppConfig.USE_MOCK_DATA) {
+                // Update mock data in memory - extract just the userId part
+                val userIdOnly = normalizedPath.substringAfterLast("/")
+                val existingUser = MockExpenseData.usersMap[userIdOnly]
+                if (existingUser != null) {
+                    MockExpenseData.usersMap[userIdOnly] = existingUser.copy(
+                        name = name,
+                        profileImage = profileImageUrl ?: existingUser.profileImage,
+                    )
+                }
+                Result.success(Unit)
+            } else {
+                // Use Firestore for production
+                firestoreService.updateUserProfile(normalizedPath, name, profileImageUrl)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 }

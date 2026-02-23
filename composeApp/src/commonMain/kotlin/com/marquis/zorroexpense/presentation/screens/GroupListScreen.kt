@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
@@ -90,6 +91,7 @@ internal fun GroupListScreen(
     onGroupSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     onCreateGroup: () -> Unit = {},
     onEditGroup: (group: Group) -> Unit = { _ -> },
+    onProfileClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -181,7 +183,7 @@ internal fun GroupListScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
             ) {
-                ModernHeader()
+                ModernHeader(onProfileClick = onProfileClick)
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     when (uiState) {
@@ -282,13 +284,14 @@ internal fun GroupListScreen(
 }
 
 @Composable
-private fun ModernHeader() {
+private fun ModernHeader(onProfileClick: () -> Unit = {}) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         // Logo
         Image(
@@ -298,6 +301,16 @@ private fun ModernHeader() {
             colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(Color.White) else null,
             modifier = Modifier.width(140.dp),
         )
+
+        // Profile button
+        IconButton(onClick = onProfileClick) {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = "Edit profile",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp),
+            )
+        }
     }
 }
 

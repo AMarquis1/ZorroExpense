@@ -10,9 +10,9 @@ object MockExpenseData {
     val userSarah = User(userId = "yblRlB470XiMuiJhbxSZ", name = "Sarah", profileImage = "sarah")
     val userAlex = User(userId = "5KaHBQhJUv6NdU9WuXSm", name = "Alex", profileImage = "alex")
 
-    // User lookup map for easy access
+    // User lookup map for easy access (mutable for profile updates)
     val usersMap =
-        mapOf(
+        mutableMapOf(
             userSarah.userId to userSarah,
             userAlex.userId to userAlex,
         )

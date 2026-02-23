@@ -163,4 +163,7 @@ sealed class AppDestinations {
         val groupId: String,
         val groupName: String,
     ) : AppDestinations()
+
+    @Serializable
+    data object EditProfile : AppDestinations()
 }
