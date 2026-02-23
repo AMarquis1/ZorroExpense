@@ -47,6 +47,7 @@ fun SignUpScreen(
         Text(
             text = "Create Account",
             style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 32.dp),
         )
 

@@ -39,7 +39,10 @@ import zorroexpense.composeapp.generated.resources.Res
 import com.marquis.zorroexpense.presentation.state.AuthUiEvent
 import com.marquis.zorroexpense.presentation.state.AuthUiState
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.ColorFilter
 import zorroexpense.composeapp.generated.resources.google
+import zorroexpense.composeapp.generated.resources.logo
 import zorroexpense.composeapp.generated.resources.zorro2
 
 @Composable
@@ -68,8 +71,17 @@ fun LoginScreen(
             contentDescription = "Zorro Header",
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 24.dp)
                 .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)),
+        )
+
+        Image(
+            painter = painterResource(Res.drawable.logo),
+            contentDescription = "Zorro Expense Logo",
+            contentScale = ContentScale.Fit,
+            colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(Color.White) else null,
+            modifier = Modifier
+                .width(180.dp)
+                .padding(top = 24.dp),
         )
 
         Text(

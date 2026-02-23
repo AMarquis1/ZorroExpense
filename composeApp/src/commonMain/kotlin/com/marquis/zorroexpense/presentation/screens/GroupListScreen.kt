@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -61,6 +62,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,6 +80,7 @@ import com.marquis.zorroexpense.presentation.state.GroupListUiState
 import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
 import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
+import zorroexpense.composeapp.generated.resources.logo
 import zorroexpense.composeapp.generated.resources.zorro2
 import zorroexpense.composeapp.generated.resources.zorro3
 
@@ -278,34 +283,20 @@ internal fun GroupListScreen(
 
 @Composable
 private fun ModernHeader() {
-    Column(
+    Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(
-                    brush =
-                        Brush.verticalGradient(
-                            colors =
-                                listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                ),
-                        ),
-                )
-                .padding(vertical = 24.dp, horizontal = 20.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "Zorro Expense",
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Bold,
-            color = androidx.compose.ui.graphics.Color.White,
-            fontSize = 28.sp,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Manage your groups",
-            style = MaterialTheme.typography.bodyLarge,
-            color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
+        // Logo
+        Image(
+            painter = painterResource(Res.drawable.logo),
+            contentDescription = "Zorro Expense Logo",
+            contentScale = ContentScale.Fit,
+            colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(Color.White) else null,
+            modifier = Modifier.width(140.dp),
         )
     }
 }
