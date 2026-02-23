@@ -46,6 +46,6 @@ expect fun SpeedDialFab(
     onExpandedChange: (Boolean) -> Unit,
     items: List<SpeedDialFabItem>,
     mainIcon: ImageVector = Icons.Default.Add,
-    mainLabel: String = "Add",
+    mainLabel: String = "Add Group",
     fabExpanded: Boolean = true,
 )

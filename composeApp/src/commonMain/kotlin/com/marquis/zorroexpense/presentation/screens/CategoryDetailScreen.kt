@@ -113,10 +113,18 @@ fun CategoryDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = {
                         val currentState = uiState
-                        if (currentState is CategoryDetailUiState.Success &&
-                            currentState.mode != CategoryDetailMode.VIEW
-                        ) {
-                            viewModel.onEvent(CategoryDetailUiEvent.CancelEdit)
+                        if (currentState is CategoryDetailUiState.Success) {
+                            when (currentState.mode) {
+                                CategoryDetailMode.ADD -> {
+                                    onBackClick()
+                                }
+                                CategoryDetailMode.EDIT -> {
+                                    viewModel.onEvent(CategoryDetailUiEvent.CancelEdit)
+                                }
+                                CategoryDetailMode.VIEW -> {
+                                    onBackClick()
+                                }
+                            }
                         } else {
                             onBackClick()
                         }

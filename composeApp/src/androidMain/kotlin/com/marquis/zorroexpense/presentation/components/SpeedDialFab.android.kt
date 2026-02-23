@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
@@ -35,21 +36,25 @@ actual fun SpeedDialFab(
     FloatingActionButtonMenu(
         expanded = expanded,
         button = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = { onExpandedChange(!expanded) },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ) {
-                Icon(
-                    imageVector = mainIcon,
-                    contentDescription = "Toggle menu",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .graphicsLayer {
-                            rotationZ = if (expanded) 45f else 0f
-                        },
-                )
-            }
+                icon = {
+                    Icon(
+                        imageVector = mainIcon,
+                        contentDescription = "Toggle menu",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .graphicsLayer {
+                                rotationZ = if (expanded) 45f else 0f
+                            },
+                    )
+                },
+                text = {
+                    Text(mainLabel)
+                },
+            )
         },
     ) {
         // Add menu items - they appear in order from list

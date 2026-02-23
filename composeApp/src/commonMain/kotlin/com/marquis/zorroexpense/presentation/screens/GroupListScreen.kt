@@ -154,8 +154,8 @@ internal fun GroupListScreen(
                     ),
                     SpeedDialFabItem(
                         icon = Icons.Default.Add,
-                        label = "Add Group",
-                        contentDescription = "Add Group",
+                        label = "Create Group",
+                        contentDescription = "Create Group",
                         onClick = { onCreateGroup() },
                     ),
                 ),
