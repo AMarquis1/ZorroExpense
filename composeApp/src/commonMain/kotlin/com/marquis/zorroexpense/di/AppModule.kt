@@ -398,6 +398,7 @@ object AppModule {
                 createGroupUseCase = createExpenseListUseCase,
                 getGroupCategoriesUseCase = GetGroupCategoriesUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
+                storageService = storageService,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
             )
@@ -415,6 +416,7 @@ object AppModule {
                 createGroupUseCase = createExpenseListUseCase,
                 getGroupCategoriesUseCase = GetGroupCategoriesUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
+                storageService = storageService,
                 onListDeleted = onListDeleted,
                 onListSaved = onListSaved,
             )

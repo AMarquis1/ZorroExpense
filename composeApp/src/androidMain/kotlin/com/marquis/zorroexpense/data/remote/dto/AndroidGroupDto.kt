@@ -22,6 +22,8 @@ data class AndroidGroupDto(
     override val createdAt: String = "",
     @SerialName("lastModified")
     override val lastModified: Timestamp,
+    @SerialName("imageUrl")
+    override val imageUrl: String = "",
 ) : GroupDto {
     override val members: List<Any> get() = memberRefs
 }

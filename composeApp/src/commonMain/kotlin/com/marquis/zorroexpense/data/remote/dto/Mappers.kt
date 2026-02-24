@@ -91,5 +91,6 @@ fun GroupDto.toDomain(categories: List<CategoryDto> = emptyList()): Group {
         createdAt = createdAt,
         lastModified = lastModified.toDateString(),
         categories = resolvedCategories,
+        imageUrl = imageUrl,
     )
 }

@@ -9,6 +9,13 @@ actual class StorageService actual constructor(context: Any?) {
         TODO("Not yet implemented")
     }
 
+    actual suspend fun uploadGroupImage(
+        groupId: String,
+        imageBytes: ByteArray
+    ): Result<String> {
+        TODO("Not yet implemented")
+    }
+
     actual suspend fun readImageBytesFromUri(uri: String): Result<ByteArray> {
         TODO("Not yet implemented for wasmJs platform")
     }

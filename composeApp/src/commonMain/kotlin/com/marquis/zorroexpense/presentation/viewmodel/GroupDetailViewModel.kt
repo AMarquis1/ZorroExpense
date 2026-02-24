@@ -9,11 +9,13 @@ import com.marquis.zorroexpense.domain.usecase.CreateGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
+import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.domain.usecase.GetGroupCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
 import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
+import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +33,7 @@ class GroupDetailViewModel(
     private val createGroupUseCase: CreateGroupUseCase,
     private val getGroupCategoriesUseCase: GetGroupCategoriesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val storageService: StorageService,
     private val onListDeleted: () -> Unit = {},
     private val onListSaved: (listId: String, listName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
@@ -73,6 +76,7 @@ class GroupDetailViewModel(
             is GroupDetailUiEvent.RemoveMember -> showDeleteMemberConfirmation(event.member)
             is GroupDetailUiEvent.ConfirmDeleteMember -> confirmDeleteMember()
             is GroupDetailUiEvent.CancelDeleteMember -> cancelDeleteMember()
+            is GroupDetailUiEvent.PhotoSelected -> onPhotoSelected(event.photo)
         }
     }
 
@@ -91,6 +95,7 @@ class GroupDetailViewModel(
                             editedName = expenseList.name,
                             editedCategories = expenseList.categories,
                             editedMembers = expenseList.members,
+                            editedImageUrl = expenseList.imageUrl,
                         )
                     } else {
                         _uiState.value = GroupDetailUiState.Success(expenseList)
@@ -109,6 +114,7 @@ class GroupDetailViewModel(
                     editedName = currentState.group.name,
                     editedCategories = currentState.group.categories,
                     editedMembers = currentState.group.members,
+                    editedImageUrl = currentState.group.imageUrl,
                 )
             }
         }
@@ -123,6 +129,7 @@ class GroupDetailViewModel(
                     editedName = currentState.group.name,
                     editedCategories = currentState.group.categories,
                     editedMembers = currentState.group.members,
+                    editedImageUrl = currentState.group.imageUrl,
                 )
             }
         }
@@ -253,6 +260,7 @@ class GroupDetailViewModel(
                     name = currentState.editedName,
                     categories = currentState.editedCategories,
                     members = currentState.editedMembers,
+                    imageUrl = currentState.editedImageUrl,
                 )
 
                 when (currentState.mode) {
@@ -430,6 +438,40 @@ class GroupDetailViewModel(
                     group = currentState.group.copy(categories = updatedEditedCategories),
                 )
             }
+        }
+    }
+
+    fun onPhotoSelected(photo: GalleryPhotoResult) {
+        // Read bytes from the photo URI and upload
+        viewModelScope.launch {
+            storageService.readImageBytesFromUri(photo.uri)
+                .onSuccess { imageBytes ->
+                    uploadGroupImage(imageBytes)
+                }
+                .onFailure { error ->
+                    // Error handled silently - image upload is optional
+                }
+        }
+    }
+
+    private fun uploadGroupImage(imageBytes: ByteArray) {
+        val currentState = _uiState.value as? GroupDetailUiState.Success ?: return
+
+        viewModelScope.launch {
+            _uiState.update { currentState.copy(isUploading = true) }
+
+            storageService.uploadGroupImage(groupId, imageBytes)
+                .onSuccess { downloadUrl ->
+                    _uiState.update {
+                        currentState.copy(
+                            editedImageUrl = downloadUrl,
+                            isUploading = false,
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { currentState.copy(isUploading = false) }
+                }
         }
     }
 }

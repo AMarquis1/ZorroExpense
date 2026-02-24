@@ -14,4 +14,5 @@ data class Group(
     val createdAt: String = "",
     val lastModified: String = "",
     val categories: List<Category> = emptyList(),
+    val imageUrl: String = "",
 )

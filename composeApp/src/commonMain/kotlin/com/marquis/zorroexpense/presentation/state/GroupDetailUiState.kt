@@ -3,6 +3,7 @@ package com.marquis.zorroexpense.presentation.state
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
+import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 
 enum class GroupDetailMode {
     VIEW,
@@ -21,10 +22,12 @@ sealed class GroupDetailUiState {
         val memberToDelete: User? = null,
         val isSaving: Boolean = false,
         val showCategoryBottomSheet: Boolean = false,
+        val isUploading: Boolean = false,
         // Editable fields for EDIT/ADD modes
         val editedName: String = group.name,
         val editedCategories: List<Category> = group.categories,
         val editedMembers: List<User> = group.members,
+        val editedImageUrl: String = group.imageUrl,
     ) : GroupDetailUiState()
 
     data object Deleted : GroupDetailUiState()
@@ -73,4 +76,7 @@ sealed class GroupDetailUiEvent {
 
     /** Cancel member deletion */
     data object CancelDeleteMember : GroupDetailUiEvent()
+
+    /** Photo selected from gallery */
+    data class PhotoSelected(val photo: GalleryPhotoResult) : GroupDetailUiEvent()
 }

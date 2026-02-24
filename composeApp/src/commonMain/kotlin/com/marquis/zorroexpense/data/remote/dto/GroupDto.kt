@@ -11,6 +11,7 @@ interface GroupDto {
     val shareCode: String
     val createdAt: String
     val lastModified: Any
+    val imageUrl: String
 }
 
 expect fun List<Any>.getMemberIds(): List<String>

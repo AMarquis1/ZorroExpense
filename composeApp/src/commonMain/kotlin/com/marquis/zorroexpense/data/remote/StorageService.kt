@@ -13,6 +13,15 @@ expect class StorageService(context: Any? = null) {
     suspend fun uploadProfileImage(userId: String, imageBytes: ByteArray): Result<String>
 
     /**
+     * Upload a group image to Firebase Storage.
+     *
+     * @param groupId The ID of the group
+     * @param imageBytes The image data to upload (JPEG format)
+     * @return A Result containing the Firebase Storage download URL on success, or an error on failure
+     */
+    suspend fun uploadGroupImage(groupId: String, imageBytes: ByteArray): Result<String>
+
+    /**
      * Read image bytes from a URI (typically from image picker).
      *
      * @param uri The URI of the image file

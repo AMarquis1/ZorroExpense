@@ -20,6 +20,8 @@ data class WasmGroupDto(
     override val createdAt: String = "",
     @SerialName("lastModified")
     override val lastModified: String = "",
+    @SerialName("imageUrl")
+    override val imageUrl: String = "",
 ) : GroupDto {
     override val members: List<Any> get() = memberIds
 }

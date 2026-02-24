@@ -49,6 +49,43 @@ actual class StorageService actual constructor(context: Any?) {
             Result.failure(e)
         }
 
+    actual suspend fun uploadGroupImage(groupId: String, imageBytes: ByteArray): Result<String> =
+        try {
+            val fileName = "group_images/$groupId.jpg"
+            Log.d(tag, "Starting group image upload to: gs://zorro-expense.firebasestorage.app/$fileName (${imageBytes.size} bytes)")
+
+            val reference = storage.reference.child(fileName)
+
+            // Upload the bytes directly to Firebase Storage
+            reference.putData(Data(imageBytes))
+
+            // Get the download URL
+            val downloadUrl = reference.getDownloadUrl()
+            Log.d(tag, "Download URL obtained: $downloadUrl")
+
+            // Extract token from the download URL if present
+            val token = if (downloadUrl.contains("token=")) {
+                downloadUrl.substringAfter("token=")
+            } else {
+                ""
+            }
+
+            // Ensure proper URL encoding with %2F for path separators
+            val httpsUrl = if (token.isNotEmpty()) {
+                "https://firebasestorage.googleapis.com/v0/b/zorro-expense.firebasestorage.app/o/${fileName.replace("/", "%2F")}?alt=media&token=$token"
+            } else {
+                // Fallback if token extraction fails (for gs:// URLs)
+                "https://firebasestorage.googleapis.com/v0/b/zorro-expense.firebasestorage.app/o/${fileName.replace("/", "%2F")}?alt=media"
+            }
+
+            Log.d(tag, "Final URL to use: $httpsUrl")
+            Result.success(httpsUrl)
+        } catch (e: Exception) {
+            Log.e(tag, "Group image upload failed: ${e.message}", e)
+            e.printStackTrace()
+            Result.failure(e)
+        }
+
     actual suspend fun readImageBytesFromUri(uri: String): Result<ByteArray> {
         return try {
             if (androidContext == null) {

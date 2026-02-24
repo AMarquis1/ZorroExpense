@@ -13,4 +13,5 @@ actual fun Group.toDto(): GroupDto =
         shareCode = shareCode,
         createdAt = createdAt,
         lastModified = lastModified,
+        imageUrl = imageUrl,
     )

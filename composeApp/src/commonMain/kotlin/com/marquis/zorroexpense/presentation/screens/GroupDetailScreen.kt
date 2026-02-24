@@ -1,5 +1,6 @@
 package com.marquis.zorroexpense.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,11 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,6 +30,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -50,16 +53,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import coil3.compose.AsyncImage
 import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.Category
@@ -71,6 +83,11 @@ import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
 import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
+import io.github.ismoy.imagepickerkmp.domain.config.CameraCaptureConfig
+import io.github.ismoy.imagepickerkmp.domain.config.CropConfig
+import io.github.ismoy.imagepickerkmp.domain.models.CompressionLevel
+import io.github.ismoy.imagepickerkmp.domain.models.MimeType
+import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -86,11 +103,13 @@ fun GroupDetailScreen(
     val allCategories by viewModel.allCategories.collectAsState()
     val bottomSheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
+    var showGalleryPicker by remember { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
         topBar = {
-            TopAppBar(
+            if (!showGalleryPicker) {
+                TopAppBar(
                 title = {
                     val title = when (uiState) {
                         is GroupDetailUiState.Success -> {
@@ -190,6 +209,7 @@ fun GroupDetailScreen(
                     actionIconContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             )
+            }
         },
     ) { paddingValues ->
         when (uiState) {
@@ -209,12 +229,15 @@ fun GroupDetailScreen(
                     editedName = successState.editedName,
                     editedCategories = successState.editedCategories,
                     editedMembers = successState.editedMembers,
+                    editedImageUrl = successState.editedImageUrl,
+                    isUploading = successState.isUploading,
                     currentUserId = viewModel.currentUserId,
                     onNameChange = { viewModel.onEvent(GroupDetailUiEvent.UpdateName(it)) },
                     onAddCategoryClick = { viewModel.onEvent(GroupDetailUiEvent.AddCategoryClicked) },
                     onRemoveCategory = { viewModel.onEvent(GroupDetailUiEvent.RemoveCategory(it)) },
                     onReactivateCategory = { viewModel.onEvent(GroupDetailUiEvent.CategoryToggled(it)) },
                     onRemoveMember = { viewModel.onEvent(GroupDetailUiEvent.RemoveMember(it)) },
+                    onShowGalleryPicker = { showGalleryPicker = true },
                     onCreateCategoryClick = onCreateCategoryClick,
                     onCategoryClick = onCategoryClick,
                     modifier = Modifier.padding(paddingValues),
@@ -283,6 +306,35 @@ fun GroupDetailScreen(
             }
         }
     }
+
+    Box(modifier = Modifier.fillMaxSize().padding(top = 36.dp)) {
+        if (showGalleryPicker) {
+            GalleryPickerLauncher(
+                allowMultiple = false,
+                mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
+                cameraCaptureConfig = CameraCaptureConfig(
+                    compressionLevel = CompressionLevel.HIGH,
+                    cropConfig = CropConfig(
+                        enabled = true,
+                        squareCrop = false
+                    )
+                ),
+                onPhotosSelected = { photos ->
+                    if (photos.isNotEmpty()) {
+                        val photo = photos.first()
+                        viewModel.onEvent(GroupDetailUiEvent.PhotoSelected(photo))
+                    }
+                    showGalleryPicker = false
+                },
+                onError = {
+                    showGalleryPicker = false
+                },
+                onDismiss = {
+                    showGalleryPicker = false
+                }
+            )
+        }
+    }
 }
 
 @Composable
@@ -292,12 +344,15 @@ private fun ExpenseListDetailContent(
     editedName: String,
     editedCategories: List<Category>,
     editedMembers: List<User>,
+    editedImageUrl: String,
+    isUploading: Boolean,
     currentUserId: String,
     onNameChange: (String) -> Unit,
     onAddCategoryClick: () -> Unit,
     onRemoveCategory: (Category) -> Unit,
     onReactivateCategory: (Category) -> Unit,
     onRemoveMember: (User) -> Unit,
+    onShowGalleryPicker: () -> Unit,
     onCreateCategoryClick: () -> Unit = {},
     onCategoryClick: (Category) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -319,6 +374,85 @@ private fun ExpenseListDetailContent(
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) {
+        // Group avatar with edit icon (only in EDIT mode)
+        if (isEditable) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .align(Alignment.CenterHorizontally),
+                contentAlignment = Alignment.BottomEnd,
+            ) {
+                if (editedImageUrl.isNotBlank()) {
+                    coil3.compose.AsyncImage(
+                        model = editedImageUrl,
+                        contentDescription = "Group image",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    ),
+                                ),
+                                shape = CircleShape,
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FolderOpen,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.scale(1.5f),
+                        )
+                    }
+                }
+
+                // Camera icon button
+                IconButton(
+                    onClick = onShowGalleryPicker,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .zIndex(1f),
+                    enabled = !isUploading,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                if (isUploading) MaterialTheme.colorScheme.surfaceVariant
+                                else MaterialTheme.colorScheme.primary,
+                                CircleShape,
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Change group image",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
         if (isEditable) {
             OutlinedTextField(
                 value = editedName,

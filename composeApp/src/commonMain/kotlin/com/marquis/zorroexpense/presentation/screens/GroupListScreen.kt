@@ -69,6 +69,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.platform.pullToRefreshBox
@@ -427,31 +428,43 @@ internal fun ExpenseListCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Folder icon with gradient background
-            Box(
-                modifier =
-                    Modifier
+            // Group image or folder icon fallback
+            if (list.imageUrl.isNotBlank()) {
+                AsyncImage(
+                    model = list.imageUrl,
+                    contentDescription = "Group image",
+                    modifier = Modifier
                         .width(48.dp)
                         .height(48.dp)
-                        .background(
-                            brush =
-                                Brush.linearGradient(
-                                    colors =
-                                        listOf(
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                        ),
-                                ),
-                            shape = RoundedCornerShape(12.dp),
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.FolderOpen,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.scale(1.2f),
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop,
                 )
+            } else {
+                Box(
+                    modifier =
+                        Modifier
+                            .width(48.dp)
+                            .height(48.dp)
+                            .background(
+                                brush =
+                                    Brush.linearGradient(
+                                        colors =
+                                            listOf(
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                            ),
+                                    ),
+                                shape = RoundedCornerShape(12.dp),
+                            ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.FolderOpen,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.scale(1.2f),
+                    )
+                }
             }
 
             // Title and last modified date (center section)
