@@ -1,16 +1,19 @@
 package com.marquis.zorroexpense.presentation.screens
 
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +36,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.AlertDialog
@@ -68,7 +70,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.Group
@@ -83,12 +84,14 @@ import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
 import org.jetbrains.compose.resources.painterResource
 import zorroexpense.composeapp.generated.resources.Res
 import zorroexpense.composeapp.generated.resources.logo
-import zorroexpense.composeapp.generated.resources.zorro2
 import zorroexpense.composeapp.generated.resources.zorro3
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun GroupListScreen(
     viewModel: GroupListViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onGroupSelected: (listId: String, listName: String) -> Unit = { _, _ -> },
     onCreateGroup: () -> Unit = {},
     onEditGroup: (group: Group) -> Unit = { _ -> },
@@ -204,6 +207,8 @@ internal fun GroupListScreen(
                                 SuccessState(
                                     lists = successState.groups,
                                     listState = listState,
+                                    sharedTransitionScope = sharedTransitionScope,
+                                    animatedContentScope = animatedContentScope,
                                     onGroupSelected = { group ->
                                         viewModel.onEvent(GroupListUiEvent.SelectGroup(group.listId))
                                         onGroupSelected(group.listId, group.name)
@@ -229,6 +234,8 @@ internal fun GroupListScreen(
                                     message = errorState.message,
                                     lists = errorState.cachedLists,
                                     listState = listState,
+                                    sharedTransitionScope = sharedTransitionScope,
+                                    animatedContentScope = animatedContentScope,
                                     onRetry = { viewModel.onEvent(GroupListUiEvent.RetryLoad) },
                                     onGroupSelected = { group ->
                                         viewModel.onEvent(GroupListUiEvent.SelectGroup(group.listId))
@@ -342,10 +349,13 @@ private fun LoadingState() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun SuccessState(
     lists: List<Group>,
     listState: androidx.compose.foundation.lazy.LazyListState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onGroupSelected: (Group) -> Unit,
     onEditGroup: (Group) -> Unit = {},
     onDeleteGroup: (Group) -> Unit = {},
@@ -374,6 +384,8 @@ private fun SuccessState(
             ) {
                 SwipeableGroupCard(
                     list = group,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
                     onClick = { onGroupSelected(group) },
                     onEdit = { onEditGroup(group)},
                     onDelete = { onDeleteGroup(group) },
@@ -383,9 +395,12 @@ private fun SuccessState(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun ExpenseListCard(
     list: Group,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onClick: () -> Unit,
     onDelete: () -> Unit = {},
     isSwipeable: Boolean = false,
@@ -430,15 +445,21 @@ internal fun ExpenseListCard(
         ) {
             // Group image or folder icon fallback
             if (list.imageUrl.isNotBlank()) {
-                AsyncImage(
-                    model = list.imageUrl,
-                    contentDescription = "Group image",
-                    modifier = Modifier
-                        .width(48.dp)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop,
-                )
+                with(sharedTransitionScope) {
+                    AsyncImage(
+                        model = list.imageUrl,
+                        contentDescription = "Group image",
+                        modifier = Modifier
+                            .width(48.dp)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .sharedElement(
+                                rememberSharedContentState(key = "group_image_${list.listId}"),
+                                animatedVisibilityScope = animatedContentScope,
+                            ),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
             } else {
                 Box(
                     modifier =
@@ -614,11 +635,14 @@ fun EmptyState() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ErrorStateWithCache(
     message: String,
     lists: List<Group>,
     listState: androidx.compose.foundation.lazy.LazyListState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onRetry: () -> Unit,
     onGroupSelected: (Group) -> Unit,
     onEditGroup: (Group) -> Unit = { _ -> },
@@ -677,6 +701,8 @@ private fun ErrorStateWithCache(
         SuccessState(
             lists = lists,
             listState = listState,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope,
             onGroupSelected = onGroupSelected,
             onEditGroup = onEditGroup,
             onDeleteGroup = onDeleteGroup,

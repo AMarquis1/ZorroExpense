@@ -160,6 +160,8 @@ fun App() {
                             )
                         GroupListScreen(
                             viewModel = viewModel,
+                            sharedTransitionScope = this@SharedTransitionLayout,
+                            animatedContentScope = this,
                             onGroupSelected = { listId, listName ->
                                 navController.navigate(AppDestinations.ExpenseList(listId = listId, listName = listName))
                             },

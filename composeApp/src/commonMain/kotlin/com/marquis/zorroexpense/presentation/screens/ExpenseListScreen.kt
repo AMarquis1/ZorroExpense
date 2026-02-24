@@ -68,6 +68,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -78,7 +79,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.marquis.zorroexpense.components.EmptyState
 import com.marquis.zorroexpense.components.ErrorState
 import com.marquis.zorroexpense.components.ExpenseCardSkeleton
@@ -86,7 +87,6 @@ import com.marquis.zorroexpense.components.ExpenseCardWithDate
 import com.marquis.zorroexpense.components.MonthSeparator
 import com.marquis.zorroexpense.components.MonthSeparatorSkeleton
 import com.marquis.zorroexpense.components.getMonthYear
-import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.platform.pullToRefreshBox
 import com.marquis.zorroexpense.presentation.components.CustomDeleteSnackbar
@@ -225,6 +225,7 @@ fun ExpenseListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val availableCategories by viewModel.availableCategories.collectAsState()
+    val groupMetadata by viewModel.groupMetadata.collectAsState()
     val listName by remember { mutableStateOf(viewModel.listName) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -466,14 +467,33 @@ fun ExpenseListScreen(
                                 )
                             }
 
-                            Text(
-                                text = listName,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                            Row (
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f),
-                            )
+                            ) {
+                                with(sharedTransitionScope) {
+                                    AsyncImage(
+                                        model = groupMetadata?.imageUrl,
+                                        contentDescription = "Group image",
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .sharedElement(
+                                                rememberSharedContentState(key = "group_image_${groupMetadata?.listId}"),
+                                                animatedVisibilityScope = animatedContentScope,
+                                            ),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                }
+
+                                Text(
+                                    text = listName,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                )
+                            }
 
                             IconButton(
                                 onClick = {

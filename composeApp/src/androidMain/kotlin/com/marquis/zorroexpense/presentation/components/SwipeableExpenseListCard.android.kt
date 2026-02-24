@@ -1,5 +1,8 @@
 package com.marquis.zorroexpense.presentation.components
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -29,10 +32,12 @@ import kotlinx.coroutines.launch
  * Android-specific implementation with SwipeToDismissBox
  * Swipe left (EndToStart) to delete
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 actual fun SwipeableGroupCard(
     list: Group,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -70,6 +75,8 @@ actual fun SwipeableGroupCard(
     ) {
         ExpenseListCard(
             list = list,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope,
             onClick = onClick,
             onDelete = {},
             isSwipeable = true,
