@@ -154,6 +154,7 @@ fun App() {
                                                 )
                                             },
                                         ),
+                                        imageUrl = group.imageUrl,
                                         mode = "EDIT",
                                     ))
                                 },
@@ -176,6 +177,7 @@ fun App() {
                                     lastModified = "",
                                     membersJson = AppDestinations.ExpenseListDetail.createMembersJson(emptyList()),
                                     categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(emptyList()),
+                                    imageUrl = "",
                                 ))
                             },
                             onEditGroup = { group ->
@@ -206,6 +208,7 @@ fun App() {
                                             )
                                         },
                                     ),
+                                    imageUrl = group.imageUrl,
                                     mode = "EDIT",
                                 ))
                             },
@@ -324,6 +327,7 @@ fun App() {
                                                     )
                                                 },
                                             ),
+                                            imageUrl = expenseList.imageUrl,
                                         ),
                                     )
                                 }
@@ -351,6 +355,7 @@ fun App() {
                             createdBy = listDetailRoute.createdBy,
                             createdAt = listDetailRoute.createdAt,
                             lastModified = listDetailRoute.lastModified,
+                            imageUrl = listDetailRoute.imageUrl,
                             members = listDetailRoute.members.map { memberNav ->
                                 com.marquis.zorroexpense.domain.model.User(
                                     userId = memberNav.userId,

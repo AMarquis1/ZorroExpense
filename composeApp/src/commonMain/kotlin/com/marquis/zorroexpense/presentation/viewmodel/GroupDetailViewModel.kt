@@ -43,6 +43,7 @@ class GroupDetailViewModel(
             mode = initialMode,
             // For ADD mode, start with empty categories - they'll be loaded in the background
             editedCategories = if (initialMode == GroupDetailMode.ADD) emptyList() else initialGroup.categories,
+            editedImageUrl = initialGroup.imageUrl,
         ),
     )
     val uiState: StateFlow<GroupDetailUiState> = _uiState.asStateFlow()

@@ -79,6 +79,7 @@ sealed class AppDestinations {
         val lastModified: String,
         val membersJson: String,
         val categoriesJson: String,
+        val imageUrl: String = "",
         val mode: String = "VIEW",
     ) : AppDestinations() {
         companion object {
