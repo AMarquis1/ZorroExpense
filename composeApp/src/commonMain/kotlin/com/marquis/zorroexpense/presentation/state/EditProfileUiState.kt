@@ -1,7 +1,5 @@
 package com.marquis.zorroexpense.presentation.state
 
-import com.marquis.zorroexpense.domain.model.User
-
 sealed class EditProfileUiState {
     data object Loading : EditProfileUiState()
 
@@ -15,22 +13,26 @@ sealed class EditProfileUiState {
 
     data object Saved : EditProfileUiState()
 
-    data class Error(val message: String) : EditProfileUiState()
+    data class Error(
+        val message: String,
+    ) : EditProfileUiState()
 }
 
 sealed class EditProfileUiEvent {
-    data class NameChanged(val name: String) : EditProfileUiEvent()
+    data class NameChanged(
+        val name: String,
+    ) : EditProfileUiEvent()
 
-    data class ImageSelected(val imageBytes: ByteArray) : EditProfileUiEvent() {
+    data class ImageSelected(
+        val imageBytes: ByteArray,
+    ) : EditProfileUiEvent() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is ImageSelected) return false
             return imageBytes.contentEquals(other.imageBytes)
         }
 
-        override fun hashCode(): Int {
-            return imageBytes.contentHashCode()
-        }
+        override fun hashCode(): Int = imageBytes.contentHashCode()
     }
 
     data object SaveProfile : EditProfileUiEvent()

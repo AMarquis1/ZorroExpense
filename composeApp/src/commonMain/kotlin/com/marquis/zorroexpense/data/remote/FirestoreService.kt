@@ -101,17 +101,17 @@ expect class FirestoreService() {
     // Global category operations
     suspend fun createCategory(
         groupId: String,
-        category: CategoryDto
+        category: CategoryDto,
     ): Result<String>
 
     suspend fun updateCategory(
         groupId: String,
-        category: CategoryDto
+        category: CategoryDto,
     ): Result<Unit>
 
     suspend fun deleteCategory(
         groupId: String,
-        categoryId: String
+        categoryId: String,
     ): Result<Unit>
 
     suspend fun updateUserProfile(

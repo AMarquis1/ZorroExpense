@@ -45,5 +45,8 @@ interface ExpenseLocalDataSource : ExpenseDataSource {
 
     suspend fun cacheExpenses(expenses: List<Expense>)
 
-    suspend fun cacheExpensesForList(listId: String, expenses: List<Expense>)
+    suspend fun cacheExpensesForList(
+        listId: String,
+        expenses: List<Expense>,
+    )
 }

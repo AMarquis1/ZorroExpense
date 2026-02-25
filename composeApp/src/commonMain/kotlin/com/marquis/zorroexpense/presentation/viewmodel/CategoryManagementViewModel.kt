@@ -24,9 +24,10 @@ class CategoryManagementViewModel(
     private val createCategoryUseCase: CreateCategoryUseCase,
     private val onCategoriesSaved: (groupId: String, groupName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<CategoryManagementUiState>(
-        CategoryManagementUiState.Loading,
-    )
+    private val _uiState =
+        MutableStateFlow<CategoryManagementUiState>(
+            CategoryManagementUiState.Loading,
+        )
     val uiState: StateFlow<CategoryManagementUiState> = _uiState.asStateFlow()
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
@@ -55,20 +56,23 @@ class CategoryManagementViewModel(
                     _allCategories.value = categories
 
                     // By default, select the first 3 categories as active for new groups
-                    val defaultCategories = categories.map { category ->
-                        category.copy(active = true)
-                    }
+                    val defaultCategories =
+                        categories.map { category ->
+                            category.copy(active = true)
+                        }
 
-                    _uiState.value = CategoryManagementUiState.Success(
-                        groupId = groupId,
-                        groupName = groupName,
-                        categories = defaultCategories,
-                    )
+                    _uiState.value =
+                        CategoryManagementUiState.Success(
+                            groupId = groupId,
+                            groupName = groupName,
+                            categories = defaultCategories,
+                        )
                 },
                 onFailure = { error ->
-                    _uiState.value = CategoryManagementUiState.Error(
-                        error.message ?: "Failed to load categories",
-                    )
+                    _uiState.value =
+                        CategoryManagementUiState.Error(
+                            error.message ?: "Failed to load categories",
+                        )
                 },
             )
         }
@@ -81,28 +85,31 @@ class CategoryManagementViewModel(
     private fun toggleCategory(category: Category) {
         val currentState = _uiState.value
         if (currentState is CategoryManagementUiState.Success) {
-            val isAlreadySelected = currentState.categories.any {
-                it.documentId == category.documentId && it.active
-            }
+            val isAlreadySelected =
+                currentState.categories.any {
+                    it.documentId == category.documentId && it.active
+                }
 
-            val updatedCategories = if (isAlreadySelected) {
-                // Deactivate the category
-                currentState.categories.map {
-                    if (it.documentId == category.documentId) it.copy(active = false) else it
-                }
-            } else {
-                // Reactivate or add the category
-                val existingIndex = currentState.categories.indexOfFirst {
-                    it.documentId == category.documentId
-                }
-                if (existingIndex >= 0) {
-                    currentState.categories.toMutableList().apply {
-                        set(existingIndex, this[existingIndex].copy(active = true))
+            val updatedCategories =
+                if (isAlreadySelected) {
+                    // Deactivate the category
+                    currentState.categories.map {
+                        if (it.documentId == category.documentId) it.copy(active = false) else it
                     }
                 } else {
-                    currentState.categories + category.copy(active = true)
+                    // Reactivate or add the category
+                    val existingIndex =
+                        currentState.categories.indexOfFirst {
+                            it.documentId == category.documentId
+                        }
+                    if (existingIndex >= 0) {
+                        currentState.categories.toMutableList().apply {
+                            set(existingIndex, this[existingIndex].copy(active = true))
+                        }
+                    } else {
+                        currentState.categories + category.copy(active = true)
+                    }
                 }
-            }
 
             _uiState.update {
                 currentState.copy(categories = updatedCategories)
@@ -116,16 +123,18 @@ class CategoryManagementViewModel(
             // Remove from the selected categories (it will be excluded when we save)
             _uiState.update {
                 currentState.copy(
-                    categories = currentState.categories.filter {
-                        it.documentId != category.documentId
-                    },
+                    categories =
+                        currentState.categories.filter {
+                            it.documentId != category.documentId
+                        },
                 )
             }
 
             // Also remove from all categories display
-            _allCategories.value = _allCategories.value.filter {
-                it.documentId != category.documentId
-            }
+            _allCategories.value =
+                _allCategories.value.filter {
+                    it.documentId != category.documentId
+                }
         }
     }
 
@@ -149,9 +158,10 @@ class CategoryManagementViewModel(
                             createdCategories.add(newCategory.copy(documentId = categoryId))
                         },
                         onFailure = { error ->
-                            _uiState.value = CategoryManagementUiState.Error(
-                                error.message ?: "Failed to create category",
-                            )
+                            _uiState.value =
+                                CategoryManagementUiState.Error(
+                                    error.message ?: "Failed to create category",
+                                )
                             creationFailed = true
                         },
                     )
@@ -160,17 +170,19 @@ class CategoryManagementViewModel(
                 if (creationFailed) return@launch
 
                 // Combine existing and newly created categories
-                val allActiveCategories = (existingCategories + createdCategories)
-                    .filter { it.active }
-                    .map { it.copy(active = true) }
+                val allActiveCategories =
+                    (existingCategories + createdCategories)
+                        .filter { it.active }
+                        .map { it.copy(active = true) }
 
                 // Now save the group with all categories
                 getGroupByIdUseCase(groupId).fold(
                     onSuccess = { group ->
                         if (group != null) {
-                            val updatedGroup = group.copy(
-                                categories = allActiveCategories,
-                            )
+                            val updatedGroup =
+                                group.copy(
+                                    categories = allActiveCategories,
+                                )
 
                             updateGroupUseCase(groupId, updatedGroup).fold(
                                 onSuccess = {
@@ -180,21 +192,24 @@ class CategoryManagementViewModel(
                                     onCategoriesSaved(groupId, groupName)
                                 },
                                 onFailure = { error ->
-                                    _uiState.value = CategoryManagementUiState.Error(
-                                        error.message ?: "Failed to save categories",
-                                    )
+                                    _uiState.value =
+                                        CategoryManagementUiState.Error(
+                                            error.message ?: "Failed to save categories",
+                                        )
                                 },
                             )
                         } else {
-                            _uiState.value = CategoryManagementUiState.Error(
-                                "Failed to load group",
-                            )
+                            _uiState.value =
+                                CategoryManagementUiState.Error(
+                                    "Failed to load group",
+                                )
                         }
                     },
                     onFailure = { error ->
-                        _uiState.value = CategoryManagementUiState.Error(
-                            error.message ?: "Failed to load group",
-                        )
+                        _uiState.value =
+                            CategoryManagementUiState.Error(
+                                error.message ?: "Failed to load group",
+                            )
                     },
                 )
             }
@@ -205,25 +220,28 @@ class CategoryManagementViewModel(
         val currentState = _uiState.value
         if (currentState is CategoryManagementUiState.Success) {
             // Add to allCategories if not already there
-            val updatedAllCategories = _allCategories.value.let { categories ->
-                val filtered = categories.filter { it.documentId != category.documentId }
-                filtered + category
-            }
+            val updatedAllCategories =
+                _allCategories.value.let { categories ->
+                    val filtered = categories.filter { it.documentId != category.documentId }
+                    filtered + category
+                }
             _allCategories.value = updatedAllCategories
 
             // Check if this is a new category (not in current selected list)
-            val isNewCategory = currentState.categories.none {
-                it.documentId == category.documentId
-            }
+            val isNewCategory =
+                currentState.categories.none {
+                    it.documentId == category.documentId
+                }
 
             // Add to the selected categories with active = true
-            val updatedCategories = if (isNewCategory) {
-                currentState.categories + category.copy(active = true)
-            } else {
-                currentState.categories.map {
-                    if (it.documentId == category.documentId) category.copy(active = true) else it
+            val updatedCategories =
+                if (isNewCategory) {
+                    currentState.categories + category.copy(active = true)
+                } else {
+                    currentState.categories.map {
+                        if (it.documentId == category.documentId) category.copy(active = true) else it
+                    }
                 }
-            }
 
             _uiState.update {
                 currentState.copy(categories = updatedCategories)

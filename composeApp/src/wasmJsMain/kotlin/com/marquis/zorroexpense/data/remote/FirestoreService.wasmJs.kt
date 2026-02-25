@@ -260,39 +260,58 @@ actual class FirestoreService actual constructor() {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun getGroupCategories(groupId: String): Result<List<CategoryDto>> =
-        Result.success(emptyList())
+    actual suspend fun getGroupCategories(groupId: String): Result<List<CategoryDto>> = Result.success(emptyList())
 
     actual suspend fun setGroupCategories(
         listId: String,
         categories: List<CategoryDto>,
-    ): Result<Unit> =
-        Result.success(Unit)
+    ): Result<Unit> = Result.success(Unit)
 
     actual suspend fun deleteGroupCategory(
         listId: String,
         categoryId: String,
-    ): Result<Unit> =
-        Result.success(Unit)
+    ): Result<Unit> = Result.success(Unit)
 
     actual suspend fun createCategory(
         groupId: String,
-        category: CategoryDto
+        category: CategoryDto,
     ): Result<String> {
         TODO("Not yet implemented for WASM")
     }
 
     actual suspend fun updateCategory(
         groupId: String,
-        category: CategoryDto
+        category: CategoryDto,
     ): Result<Unit> {
         TODO("Not yet implemented for WASM")
     }
 
     actual suspend fun deleteCategory(
         groupId: String,
-        categoryId: String
+        categoryId: String,
     ): Result<Unit> {
         TODO("Not yet implemented for WASM")
+    }
+
+    actual suspend fun addGroupToUser(
+        userId: String,
+        groupId: String,
+    ): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun getExpenseById(
+        groupId: String,
+        expenseId: String,
+    ): Result<ExpenseDto?> {
+        TODO("Not yet implemented")
+    }
+
+    actual suspend fun updateUserProfile(
+        userId: String,
+        name: String,
+        profileImageUrl: String?,
+    ): Result<Unit> {
+        TODO("Not yet implemented")
     }
 }

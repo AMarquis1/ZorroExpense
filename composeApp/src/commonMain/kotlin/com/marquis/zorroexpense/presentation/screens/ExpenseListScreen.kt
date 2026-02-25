@@ -121,7 +121,10 @@ private fun isFutureExpense(expenseDate: String): Boolean =
         false
     }
 
-private fun sortExpensesByOption(expenses: List<Expense>, sortOption: SortOption): List<Expense> =
+private fun sortExpensesByOption(
+    expenses: List<Expense>,
+    sortOption: SortOption,
+): List<Expense> =
     when (sortOption) {
         SortOption.DATE_DESC -> expenses.sortedByDescending { it.date }
         SortOption.DATE_ASC -> expenses.sortedBy { it.date }
@@ -130,7 +133,6 @@ private fun sortExpensesByOption(expenses: List<Expense>, sortOption: SortOption
         SortOption.NAME_ASC -> expenses.sortedBy { it.name.lowercase() }
         SortOption.NAME_DESC -> expenses.sortedByDescending { it.name.lowercase() }
     }
-
 
 @Composable
 private fun UpcomingExpensesSeparator(
@@ -340,11 +342,12 @@ fun ExpenseListScreen(
                     currentOffset > previousFirstVisibleItemScrollOffset
                 }
 
-            isFabExpanded = if (currentIndex <= 5) {
-                true
-            } else {
-                !isScrollingDown
-            }
+            isFabExpanded =
+                if (currentIndex <= 5) {
+                    true
+                } else {
+                    !isScrollingDown
+                }
 
             previousFirstVisibleItemIndex = currentIndex
             previousFirstVisibleItemScrollOffset = currentOffset
@@ -469,25 +472,27 @@ fun ExpenseListScreen(
                                 )
                             }
 
-                            Row (
+                            Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f),
                             ) {
-                                groupMetadata?.imageUrl
+                                groupMetadata
+                                    ?.imageUrl
                                     ?.takeIf { it.isNotBlank() }
                                     ?.let { imageUrl ->
                                         with(sharedTransitionScope) {
                                             AsyncImage(
                                                 model = imageUrl,
                                                 contentDescription = "Group image",
-                                                modifier = Modifier
-                                                    .size(40.dp)
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .sharedElement(
-                                                        rememberSharedContentState(key = "group_image_${groupMetadata?.listId}"),
-                                                        animatedVisibilityScope = animatedContentScope,
-                                                    ),
+                                                modifier =
+                                                    Modifier
+                                                        .size(40.dp)
+                                                        .clip(RoundedCornerShape(12.dp))
+                                                        .sharedElement(
+                                                            rememberSharedContentState(key = "group_image_${groupMetadata?.listId}"),
+                                                            animatedVisibilityScope = animatedContentScope,
+                                                        ),
                                                 contentScale = ContentScale.Crop,
                                             )
                                         }
@@ -578,7 +583,8 @@ fun ExpenseListScreen(
                                         )
                                     }
 
-                                    if (disabledCategoryCount > 0) {
+
+                                    if (disabledCategoryCount > 0 && !isLoading) {
                                         Badge(
                                             modifier = Modifier.align(Alignment.TopEnd),
                                             containerColor = MaterialTheme.colorScheme.primary,
@@ -863,7 +869,7 @@ fun ExpenseListScreen(
                                     },
                                 )
                             }
-                            
+
                             items(
                                 items = expensesInMonth,
                                 key = { expense: Expense -> "expense_current_${expense.documentId}" },

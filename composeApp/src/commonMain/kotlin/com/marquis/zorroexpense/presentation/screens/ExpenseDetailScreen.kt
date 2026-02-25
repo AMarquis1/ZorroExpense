@@ -55,9 +55,6 @@ import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.presentation.constants.DeleteConstants
 import com.marquis.zorroexpense.presentation.state.ExpenseDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseDetailUiState
-import zorroexpense.composeapp.generated.resources.Res
-import zorroexpense.composeapp.generated.resources.alex
-import zorroexpense.composeapp.generated.resources.sarah
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable

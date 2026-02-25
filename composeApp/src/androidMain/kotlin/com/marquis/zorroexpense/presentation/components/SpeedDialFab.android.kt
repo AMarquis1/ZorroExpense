@@ -1,11 +1,8 @@
 package com.marquis.zorroexpense.presentation.components
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -44,11 +41,12 @@ actual fun SpeedDialFab(
                     Icon(
                         imageVector = mainIcon,
                         contentDescription = "Toggle menu",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .graphicsLayer {
-                                rotationZ = if (expanded) 45f else 0f
-                            },
+                        modifier =
+                            Modifier
+                                .size(24.dp)
+                                .graphicsLayer {
+                                    rotationZ = if (expanded) 45f else 0f
+                                },
                     )
                 },
                 text = {

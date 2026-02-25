@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
@@ -9,7 +10,6 @@ import com.marquis.zorroexpense.domain.usecase.CreateGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
-import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.domain.usecase.GetGroupCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
 import com.marquis.zorroexpense.presentation.state.GroupDetailMode
@@ -37,15 +37,16 @@ class GroupDetailViewModel(
     private val onListDeleted: () -> Unit = {},
     private val onListSaved: (listId: String, listName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<GroupDetailUiState>(
-        GroupDetailUiState.Success(
-            group = initialGroup,
-            mode = initialMode,
-            // For ADD mode, start with empty categories - they'll be loaded in the background
-            editedCategories = if (initialMode == GroupDetailMode.ADD) emptyList() else initialGroup.categories,
-            editedImageUrl = initialGroup.imageUrl,
-        ),
-    )
+    private val _uiState =
+        MutableStateFlow<GroupDetailUiState>(
+            GroupDetailUiState.Success(
+                group = initialGroup,
+                mode = initialMode,
+                // For ADD mode, start with empty categories - they'll be loaded in the background
+                editedCategories = if (initialMode == GroupDetailMode.ADD) emptyList() else initialGroup.categories,
+                editedImageUrl = initialGroup.imageUrl,
+            ),
+        )
     val uiState: StateFlow<GroupDetailUiState> = _uiState.asStateFlow()
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
@@ -91,13 +92,14 @@ class GroupDetailViewModel(
                 if (expenseList != null) {
                     val currentState = _uiState.value
                     if (currentState is GroupDetailUiState.Success) {
-                        _uiState.value = currentState.copy(
-                            group = expenseList,
-                            editedName = expenseList.name,
-                            editedCategories = expenseList.categories,
-                            editedMembers = expenseList.members,
-                            editedImageUrl = expenseList.imageUrl,
-                        )
+                        _uiState.value =
+                            currentState.copy(
+                                group = expenseList,
+                                editedName = expenseList.name,
+                                editedCategories = expenseList.categories,
+                                editedMembers = expenseList.members,
+                                editedImageUrl = expenseList.imageUrl,
+                            )
                     } else {
                         _uiState.value = GroupDetailUiState.Success(expenseList)
                     }
@@ -157,28 +159,31 @@ class GroupDetailViewModel(
     private fun toggleCategory(category: Category) {
         val currentState = _uiState.value
         if (currentState is GroupDetailUiState.Success) {
-            val isAlreadySelected = currentState.editedCategories.any {
-                it.documentId == category.documentId && it.active
-            }
+            val isAlreadySelected =
+                currentState.editedCategories.any {
+                    it.documentId == category.documentId && it.active
+                }
 
-            val updatedCategories = if (isAlreadySelected) {
-                // Deactivate the category instead of removing it
-                currentState.editedCategories.map {
-                    if (it.documentId == category.documentId) it.copy(active = false) else it
-                }
-            } else {
-                // Reactivate or add the category
-                val existingIndex = currentState.editedCategories.indexOfFirst {
-                    it.documentId == category.documentId
-                }
-                if (existingIndex >= 0) {
-                    currentState.editedCategories.toMutableList().apply {
-                        set(existingIndex, this[existingIndex].copy(active = true))
+            val updatedCategories =
+                if (isAlreadySelected) {
+                    // Deactivate the category instead of removing it
+                    currentState.editedCategories.map {
+                        if (it.documentId == category.documentId) it.copy(active = false) else it
                     }
                 } else {
-                    currentState.editedCategories + category.copy(active = true)
+                    // Reactivate or add the category
+                    val existingIndex =
+                        currentState.editedCategories.indexOfFirst {
+                            it.documentId == category.documentId
+                        }
+                    if (existingIndex >= 0) {
+                        currentState.editedCategories.toMutableList().apply {
+                            set(existingIndex, this[existingIndex].copy(active = true))
+                        }
+                    } else {
+                        currentState.editedCategories + category.copy(active = true)
+                    }
                 }
-            }
 
             _uiState.update {
                 currentState.copy(editedCategories = updatedCategories)
@@ -200,9 +205,10 @@ class GroupDetailViewModel(
         if (currentState is GroupDetailUiState.Success) {
             _uiState.update {
                 currentState.copy(
-                    editedCategories = currentState.editedCategories.map {
-                        if (it.documentId == category.documentId) it.copy(active = false) else it
-                    },
+                    editedCategories =
+                        currentState.editedCategories.map {
+                            if (it.documentId == category.documentId) it.copy(active = false) else it
+                        },
                 )
             }
         }
@@ -231,9 +237,10 @@ class GroupDetailViewModel(
                 currentState.copy(
                     showDeleteMemberDialog = false,
                     memberToDelete = null,
-                    editedMembers = currentState.editedMembers.filter {
-                        it.userId != memberToRemove.userId
-                    },
+                    editedMembers =
+                        currentState.editedMembers.filter {
+                            it.userId != memberToRemove.userId
+                        },
                 )
             }
         }
@@ -257,12 +264,13 @@ class GroupDetailViewModel(
             if (currentState is GroupDetailUiState.Success) {
                 _uiState.update { currentState.copy(isSaving = true) }
 
-                val updatedList = currentState.group.copy(
-                    name = currentState.editedName,
-                    categories = currentState.editedCategories,
-                    members = currentState.editedMembers,
-                    imageUrl = currentState.editedImageUrl,
-                )
+                val updatedList =
+                    currentState.group.copy(
+                        name = currentState.editedName,
+                        categories = currentState.editedCategories,
+                        members = currentState.editedMembers,
+                        imageUrl = currentState.editedImageUrl,
+                    )
 
                 when (currentState.mode) {
                     GroupDetailMode.ADD -> {
@@ -284,9 +292,10 @@ class GroupDetailViewModel(
                                 onListSaved(newListId, updatedList.name)
                             },
                             onFailure = { error ->
-                                _uiState.value = GroupDetailUiState.Error(
-                                    error.message ?: "Failed to create list",
-                                )
+                                _uiState.value =
+                                    GroupDetailUiState.Error(
+                                        error.message ?: "Failed to create list",
+                                    )
                             },
                         )
                     }
@@ -303,9 +312,10 @@ class GroupDetailViewModel(
                                 onListSaved(groupId, updatedList.name)
                             },
                             onFailure = { error ->
-                                _uiState.value = GroupDetailUiState.Error(
-                                    error.message ?: "Failed to update list",
-                                )
+                                _uiState.value =
+                                    GroupDetailUiState.Error(
+                                        error.message ?: "Failed to update list",
+                                    )
                             },
                         )
                     }
@@ -350,16 +360,20 @@ class GroupDetailViewModel(
                         onListDeleted()
                     },
                     onFailure = { error ->
-                        _uiState.value = GroupDetailUiState.Error(
-                            error.message ?: "Failed to delete list",
-                        )
+                        _uiState.value =
+                            GroupDetailUiState.Error(
+                                error.message ?: "Failed to delete list",
+                            )
                     },
                 )
             }
         }
     }
 
-    fun loadCategories(groupId: String, mode: GroupDetailMode = GroupDetailMode.VIEW) {
+    fun loadCategories(
+        groupId: String,
+        mode: GroupDetailMode = GroupDetailMode.VIEW,
+    ) {
         viewModelScope.launch {
             if (mode == GroupDetailMode.ADD) {
                 getCategoriesUseCase().fold(
@@ -367,9 +381,10 @@ class GroupDetailViewModel(
                         _allCategories.value = categories
                         val currentState = _uiState.value
                         if (currentState is GroupDetailUiState.Success) {
-                            _uiState.value = currentState.copy(
-                                editedCategories = categories,
-                            )
+                            _uiState.value =
+                                currentState.copy(
+                                    editedCategories = categories,
+                                )
                         }
                     },
                     onFailure = {
@@ -396,17 +411,19 @@ class GroupDetailViewModel(
         val currentState = _uiState.value
         if (currentState is GroupDetailUiState.Success) {
             // Add to allCategories if not already there
-            val updatedAllCategories = _allCategories.value.let { categories ->
-                val filtered = categories.filter { it.documentId != category.documentId }
-                filtered + category
-            }
+            val updatedAllCategories =
+                _allCategories.value.let { categories ->
+                    val filtered = categories.filter { it.documentId != category.documentId }
+                    filtered + category
+                }
             _allCategories.value = updatedAllCategories
 
             // Add to group's editedCategories if it's new
-            val updatedEditedCategories = currentState.editedCategories.let { categories ->
-                val filtered = categories.filter { it.documentId != category.documentId }
-                filtered + category
-            }
+            val updatedEditedCategories =
+                currentState.editedCategories.let { categories ->
+                    val filtered = categories.filter { it.documentId != category.documentId }
+                    filtered + category
+                }
 
             _uiState.update {
                 currentState.copy(
@@ -424,14 +441,16 @@ class GroupDetailViewModel(
         val currentState = _uiState.value
         if (currentState is GroupDetailUiState.Success) {
             // Deactivate in allCategories
-            _allCategories.value = _allCategories.value.map {
-                if (it.documentId == categoryId) it.copy(active = false) else it
-            }
+            _allCategories.value =
+                _allCategories.value.map {
+                    if (it.documentId == categoryId) it.copy(active = false) else it
+                }
 
             // Deactivate in group's editedCategories
-            val updatedEditedCategories = currentState.editedCategories.map {
-                if (it.documentId == categoryId) it.copy(active = false) else it
-            }
+            val updatedEditedCategories =
+                currentState.editedCategories.map {
+                    if (it.documentId == categoryId) it.copy(active = false) else it
+                }
 
             _uiState.update {
                 currentState.copy(
@@ -445,11 +464,11 @@ class GroupDetailViewModel(
     fun onPhotoSelected(photo: GalleryPhotoResult) {
         // Read bytes from the photo URI and upload
         viewModelScope.launch {
-            storageService.readImageBytesFromUri(photo.uri)
+            storageService
+                .readImageBytesFromUri(photo.uri)
                 .onSuccess { imageBytes ->
                     uploadGroupImage(imageBytes)
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     // Error handled silently - image upload is optional
                 }
         }
@@ -461,7 +480,8 @@ class GroupDetailViewModel(
         viewModelScope.launch {
             _uiState.update { currentState.copy(isUploading = true) }
 
-            storageService.uploadGroupImage(groupId, imageBytes)
+            storageService
+                .uploadGroupImage(groupId, imageBytes)
                 .onSuccess { downloadUrl ->
                     _uiState.update {
                         currentState.copy(
@@ -469,8 +489,7 @@ class GroupDetailViewModel(
                             isUploading = false,
                         )
                     }
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     _uiState.update { currentState.copy(isUploading = false) }
                 }
         }

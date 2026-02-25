@@ -386,7 +386,11 @@ actual class FirestoreService {
             firestore
                 .collection("ExpenseLists")
                 .document(groupId)
-                .update("lastModified" to dev.gitlive.firebase.firestore.Timestamp.now())
+                .update(
+                    "lastModified" to
+                        dev.gitlive.firebase.firestore.Timestamp
+                            .now(),
+                )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -446,14 +450,15 @@ actual class FirestoreService {
 
     actual suspend fun createCategory(
         groupId: String,
-        category: CategoryDto
+        category: CategoryDto,
     ): Result<String> =
         try {
-            val docRef = firestore
-                .collection("ExpenseLists")
-                .document(groupId)
-                .collection("categories")
-                .add(category)
+            val docRef =
+                firestore
+                    .collection("ExpenseLists")
+                    .document(groupId)
+                    .collection("categories")
+                    .add(category)
             Result.success(docRef.id)
         } catch (e: Exception) {
             Result.failure(e)
@@ -461,7 +466,7 @@ actual class FirestoreService {
 
     actual suspend fun updateCategory(
         groupId: String,
-        category: CategoryDto
+        category: CategoryDto,
     ): Result<Unit> =
         try {
             firestore
@@ -477,7 +482,7 @@ actual class FirestoreService {
 
     actual suspend fun deleteCategory(
         groupId: String,
-        categoryId: String
+        categoryId: String,
     ): Result<Unit> =
         try {
             firestore
@@ -497,13 +502,21 @@ actual class FirestoreService {
         profileImageUrl: String?,
     ): Result<Unit> =
         try {
-            val updates = mutableMapOf<String, Any?>(
-                "name" to name,
-                "profileImage" to profileImageUrl,
-            )
+            val updates =
+                mutableMapOf<String, Any?>(
+                    "name" to name,
+                    "profileImage" to profileImageUrl,
+                )
             firestore.document(userId).update(updates)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    actual suspend fun addGroupToUser(
+        userId: String,
+        groupId: String,
+    ): Result<Unit> {
+        TODO("Not yet implemented")
+    }
 }

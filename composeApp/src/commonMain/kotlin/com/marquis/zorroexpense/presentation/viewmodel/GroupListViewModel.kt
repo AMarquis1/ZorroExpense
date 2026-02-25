@@ -66,7 +66,10 @@ class GroupListViewModel(
         loadListsWithCache(showCacheImmediately = false, forceRefresh = false)
     }
 
-    private fun loadListsWithCache(showCacheImmediately: Boolean, forceRefresh: Boolean = false) {
+    private fun loadListsWithCache(
+        showCacheImmediately: Boolean,
+        forceRefresh: Boolean = false,
+    ) {
         viewModelScope.launch {
             // Check if we should show cache immediately
             val currentState = _uiState.value
@@ -81,47 +84,53 @@ class GroupListViewModel(
             }
 
             // Use refresh use case for force refresh (pull-to-refresh), otherwise use normal get
-            val result = if (forceRefresh) {
-                refreshUserGroupUseCase.invoke(userId)
-            } else {
-                getUserGroupUseCase.invoke(userId)
-            }
+            val result =
+                if (forceRefresh) {
+                    refreshUserGroupUseCase.invoke(userId)
+                } else {
+                    getUserGroupUseCase.invoke(userId)
+                }
 
             result.onSuccess { lists ->
                 val allUserIds = lists.flatMap { list -> list.members.map { "Users/${it.userId}" } }.distinct()
 
                 if (allUserIds.isNotEmpty()) {
-                    getUsersUseCase.invoke(allUserIds).onSuccess { users ->
-                        val userMap = users.associateBy { it.userId }
+                    getUsersUseCase
+                        .invoke(allUserIds)
+                        .onSuccess { users ->
+                            val userMap = users.associateBy { it.userId }
 
-                        val enrichedLists = lists.map { list ->
-                            val enrichedMembers = list.members.map { member ->
-                                userMap[member.userId]?.let {
-                                    member.copy(name = it.name, profileImage = it.profileImage)
-                                } ?: member
-                            }
-                            list.copy(members = enrichedMembers)
-                        }.sortedByDescending { it.lastModified }
+                            val enrichedLists =
+                                lists
+                                    .map { list ->
+                                        val enrichedMembers =
+                                            list.members.map { member ->
+                                                userMap[member.userId]?.let {
+                                                    member.copy(name = it.name, profileImage = it.profileImage)
+                                                } ?: member
+                                            }
+                                        list.copy(members = enrichedMembers)
+                                    }.sortedByDescending { it.lastModified }
 
-                        cachedLists = enrichedLists
+                            cachedLists = enrichedLists
 
-                        _uiState.value =
-                            if (enrichedLists.isEmpty()) {
-                                GroupListUiState.Empty
-                            } else {
-                                GroupListUiState.Success(enrichedLists)
-                            }
-                    }.onFailure {
-                        val sortedLists = lists.sortedByDescending { it.lastModified }
-                        cachedLists = sortedLists
+                            _uiState.value =
+                                if (enrichedLists.isEmpty()) {
+                                    GroupListUiState.Empty
+                                } else {
+                                    GroupListUiState.Success(enrichedLists)
+                                }
+                        }.onFailure {
+                            val sortedLists = lists.sortedByDescending { it.lastModified }
+                            cachedLists = sortedLists
 
-                        _uiState.value =
-                            if (sortedLists.isEmpty()) {
-                                GroupListUiState.Empty
-                            } else {
-                                GroupListUiState.Success(sortedLists)
-                            }
-                    }
+                            _uiState.value =
+                                if (sortedLists.isEmpty()) {
+                                    GroupListUiState.Empty
+                                } else {
+                                    GroupListUiState.Success(sortedLists)
+                                }
+                        }
                 } else {
                     val sortedLists = lists.sortedByDescending { it.lastModified }
                     cachedLists = sortedLists
@@ -163,39 +172,46 @@ class GroupListViewModel(
 
             result.onSuccess { joinedGroup ->
                 // Fetch the updated groups list to show the newly joined group
-                getUserGroupUseCase.invoke(userId).onSuccess { groups ->
-                    val allUserIds = groups.flatMap { list -> list.members.map { "Users/${it.userId}" } }.distinct()
+                getUserGroupUseCase
+                    .invoke(userId)
+                    .onSuccess { groups ->
+                        val allUserIds = groups.flatMap { list -> list.members.map { "Users/${it.userId}" } }.distinct()
 
-                    if (allUserIds.isNotEmpty()) {
-                        getUsersUseCase.invoke(allUserIds).onSuccess { users ->
-                            val userMap = users.associateBy { it.userId }
-                            val enrichedLists = groups.map { list ->
-                                val enrichedMembers = list.members.map { member ->
-                                    userMap[member.userId]?.let {
-                                        member.copy(name = it.name, profileImage = it.profileImage)
-                                    } ?: member
+                        if (allUserIds.isNotEmpty()) {
+                            getUsersUseCase
+                                .invoke(allUserIds)
+                                .onSuccess { users ->
+                                    val userMap = users.associateBy { it.userId }
+                                    val enrichedLists =
+                                        groups
+                                            .map { list ->
+                                                val enrichedMembers =
+                                                    list.members.map { member ->
+                                                        userMap[member.userId]?.let {
+                                                            member.copy(name = it.name, profileImage = it.profileImage)
+                                                        } ?: member
+                                                    }
+                                                list.copy(members = enrichedMembers)
+                                            }.sortedByDescending { it.lastModified }
+
+                                    cachedLists = enrichedLists
+                                    _uiState.value = GroupListUiState.Success(enrichedLists)
+                                    // Navigate to the newly joined group
+                                    onListSelected(joinedGroup.listId, joinedGroup.name)
+                                }.onFailure {
+                                    cachedLists = groups.sortedByDescending { it.lastModified }
+                                    _uiState.value = GroupListUiState.Success(cachedLists!!)
+                                    onListSelected(joinedGroup.listId, joinedGroup.name)
                                 }
-                                list.copy(members = enrichedMembers)
-                            }.sortedByDescending { it.lastModified }
-
-                            cachedLists = enrichedLists
-                            _uiState.value = GroupListUiState.Success(enrichedLists)
-                            // Navigate to the newly joined group
-                            onListSelected(joinedGroup.listId, joinedGroup.name)
-                        }.onFailure {
-                            cachedLists = groups.sortedByDescending { it.lastModified }
-                            _uiState.value = GroupListUiState.Success(cachedLists!!)
+                        } else {
+                            val sortedLists = groups.sortedByDescending { it.lastModified }
+                            cachedLists = sortedLists
+                            _uiState.value = GroupListUiState.Success(sortedLists)
                             onListSelected(joinedGroup.listId, joinedGroup.name)
                         }
-                    } else {
-                        val sortedLists = groups.sortedByDescending { it.lastModified }
-                        cachedLists = sortedLists
-                        _uiState.value = GroupListUiState.Success(sortedLists)
-                        onListSelected(joinedGroup.listId, joinedGroup.name)
+                    }.onFailure { error ->
+                        _uiState.value = GroupListUiState.Error(error.message ?: "Failed to refresh groups")
                     }
-                }.onFailure { error ->
-                    _uiState.value = GroupListUiState.Error(error.message ?: "Failed to refresh groups")
-                }
             }
 
             result.onFailure { error ->

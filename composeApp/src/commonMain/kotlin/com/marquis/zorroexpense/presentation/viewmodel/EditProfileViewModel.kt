@@ -35,37 +35,39 @@ class EditProfileViewModel(
                     if (authUser != null) {
                         currentUserId = authUser.userId
                         // Fetch the full user profile from the repository
-                        userRepository.getUserById("Users/${authUser.userId}")
+                        userRepository
+                            .getUserById("Users/${authUser.userId}")
                             .onSuccess { userProfile ->
                                 if (userProfile != null) {
                                     currentImageUrl = userProfile.profileImage
-                                    _uiState.value = EditProfileUiState.Success(
-                                        userId = authUser.userId,
-                                        name = userProfile.name,
-                                        profileImageUrl = userProfile.profileImage,
-                                    )
+                                    _uiState.value =
+                                        EditProfileUiState.Success(
+                                            userId = authUser.userId,
+                                            name = userProfile.name,
+                                            profileImageUrl = userProfile.profileImage,
+                                        )
                                 } else {
                                     // Use auth user display name if profile not found
-                                    _uiState.value = EditProfileUiState.Success(
+                                    _uiState.value =
+                                        EditProfileUiState.Success(
+                                            userId = authUser.userId,
+                                            name = authUser.displayName ?: authUser.email,
+                                            profileImageUrl = "",
+                                        )
+                                }
+                            }.onFailure { error ->
+                                // Fallback to auth user data if profile fetch fails
+                                _uiState.value =
+                                    EditProfileUiState.Success(
                                         userId = authUser.userId,
                                         name = authUser.displayName ?: authUser.email,
                                         profileImageUrl = "",
                                     )
-                                }
-                            }
-                            .onFailure { error ->
-                                // Fallback to auth user data if profile fetch fails
-                                _uiState.value = EditProfileUiState.Success(
-                                    userId = authUser.userId,
-                                    name = authUser.displayName ?: authUser.email,
-                                    profileImageUrl = "",
-                                )
                             }
                     } else {
                         _uiState.value = EditProfileUiState.Error("Could not load current user")
                     }
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     _uiState.value = EditProfileUiState.Error(error.message ?: "Unknown error")
                 }
         }
@@ -90,14 +92,15 @@ class EditProfileViewModel(
     fun onPhotoSelected(photo: GalleryPhotoResult) {
         // Read bytes from the photo URI and upload
         viewModelScope.launch {
-            storageService.readImageBytesFromUri(photo.uri)
+            storageService
+                .readImageBytesFromUri(photo.uri)
                 .onSuccess { imageBytes ->
                     uploadImage(imageBytes)
-                }
-                .onFailure { error ->
-                    _uiState.value = EditProfileUiState.Error(
-                        error.message ?: "Failed to read image",
-                    )
+                }.onFailure { error ->
+                    _uiState.value =
+                        EditProfileUiState.Error(
+                            error.message ?: "Failed to read image",
+                        )
                 }
         }
     }
@@ -113,18 +116,20 @@ class EditProfileViewModel(
         viewModelScope.launch {
             _uiState.value = currentState.copy(isUploading = true)
 
-            storageService.uploadProfileImage(currentUserId, imageBytes)
+            storageService
+                .uploadProfileImage(currentUserId, imageBytes)
                 .onSuccess { downloadUrl ->
                     currentImageUrl = downloadUrl
-                    _uiState.value = currentState.copy(
-                        profileImageUrl = downloadUrl,
-                        isUploading = false,
-                    )
-                }
-                .onFailure { error ->
-                    _uiState.value = EditProfileUiState.Error(
-                        error.message ?: "Failed to upload image",
-                    )
+                    _uiState.value =
+                        currentState.copy(
+                            profileImageUrl = downloadUrl,
+                            isUploading = false,
+                        )
+                }.onFailure { error ->
+                    _uiState.value =
+                        EditProfileUiState.Error(
+                            error.message ?: "Failed to upload image",
+                        )
                 }
         }
     }
@@ -135,18 +140,18 @@ class EditProfileViewModel(
         viewModelScope.launch {
             _uiState.value = currentState.copy(isSaving = true)
 
-            userRepository.updateProfile(
-                userId = currentUserId,
-                name = currentState.name,
-                profileImageUrl = currentState.profileImageUrl,
-            )
-                .onSuccess {
+            userRepository
+                .updateProfile(
+                    userId = currentUserId,
+                    name = currentState.name,
+                    profileImageUrl = currentState.profileImageUrl,
+                ).onSuccess {
                     _uiState.value = EditProfileUiState.Saved
-                }
-                .onFailure { error ->
-                    _uiState.value = EditProfileUiState.Error(
-                        error.message ?: "Failed to save profile",
-                    )
+                }.onFailure { error ->
+                    _uiState.value =
+                        EditProfileUiState.Error(
+                            error.message ?: "Failed to save profile",
+                        )
                 }
         }
     }

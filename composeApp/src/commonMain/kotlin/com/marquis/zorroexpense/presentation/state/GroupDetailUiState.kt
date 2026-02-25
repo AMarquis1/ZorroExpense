@@ -54,22 +54,30 @@ sealed class GroupDetailUiEvent {
     data object SaveChanges : GroupDetailUiEvent()
 
     /** Update list name */
-    data class UpdateName(val name: String) : GroupDetailUiEvent()
+    data class UpdateName(
+        val name: String,
+    ) : GroupDetailUiEvent()
 
     /** Add a category */
     data object AddCategoryClicked : GroupDetailUiEvent()
 
     /** Toggle a category selection in the bottom sheet */
-    data class CategoryToggled(val category: Category) : GroupDetailUiEvent()
+    data class CategoryToggled(
+        val category: Category,
+    ) : GroupDetailUiEvent()
 
     /** Dismiss the category selection bottom sheet */
     data object DismissCategoryBottomSheet : GroupDetailUiEvent()
 
     /** Remove a category */
-    data class RemoveCategory(val category: Category) : GroupDetailUiEvent()
+    data class RemoveCategory(
+        val category: Category,
+    ) : GroupDetailUiEvent()
 
     /** Remove a member */
-    data class RemoveMember(val member: User) : GroupDetailUiEvent()
+    data class RemoveMember(
+        val member: User,
+    ) : GroupDetailUiEvent()
 
     /** Confirm member deletion */
     data object ConfirmDeleteMember : GroupDetailUiEvent()
@@ -78,5 +86,7 @@ sealed class GroupDetailUiEvent {
     data object CancelDeleteMember : GroupDetailUiEvent()
 
     /** Photo selected from gallery */
-    data class PhotoSelected(val photo: GalleryPhotoResult) : GroupDetailUiEvent()
+    data class PhotoSelected(
+        val photo: GalleryPhotoResult,
+    ) : GroupDetailUiEvent()
 }

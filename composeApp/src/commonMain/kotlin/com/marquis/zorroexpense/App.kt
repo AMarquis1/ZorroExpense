@@ -35,8 +35,8 @@ import com.marquis.zorroexpense.presentation.screens.CategoryDetailScreen
 import com.marquis.zorroexpense.presentation.screens.CategoryManagementScreen
 import com.marquis.zorroexpense.presentation.screens.EditProfileScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseDetailScreen
-import com.marquis.zorroexpense.presentation.screens.GroupDetailScreen
 import com.marquis.zorroexpense.presentation.screens.ExpenseListScreen
+import com.marquis.zorroexpense.presentation.screens.GroupDetailScreen
 import com.marquis.zorroexpense.presentation.screens.GroupListScreen
 import com.marquis.zorroexpense.presentation.screens.LoginScreen
 import com.marquis.zorroexpense.presentation.screens.SignUpScreen
@@ -128,35 +128,39 @@ fun App() {
                                 },
                                 onEditGroup = { group ->
                                     // Navigate to ExpenseListDetail with the group data in EDIT mode
-                                    navController.navigate(AppDestinations.ExpenseListDetail(
-                                        listId = group.listId,
-                                        listName = group.name,
-                                        shareCode = group.shareCode,
-                                        createdBy = group.createdBy,
-                                        createdAt = group.createdAt,
-                                        lastModified = group.lastModified,
-                                        membersJson = AppDestinations.ExpenseListDetail.createMembersJson(
-                                            group.members.map { member ->
-                                                AppDestinations.MemberNavigation(
-                                                    userId = member.userId,
-                                                    name = member.name,
-                                                    profileImage = member.profileImage,
-                                                )
-                                            },
+                                    navController.navigate(
+                                        AppDestinations.ExpenseListDetail(
+                                            listId = group.listId,
+                                            listName = group.name,
+                                            shareCode = group.shareCode,
+                                            createdBy = group.createdBy,
+                                            createdAt = group.createdAt,
+                                            lastModified = group.lastModified,
+                                            membersJson =
+                                                AppDestinations.ExpenseListDetail.createMembersJson(
+                                                    group.members.map { member ->
+                                                        AppDestinations.MemberNavigation(
+                                                            userId = member.userId,
+                                                            name = member.name,
+                                                            profileImage = member.profileImage,
+                                                        )
+                                                    },
+                                                ),
+                                            categoriesJson =
+                                                AppDestinations.ExpenseListDetail.createCategoriesJson(
+                                                    group.categories.map { category ->
+                                                        AppDestinations.CategoryNavigation(
+                                                            documentId = category.documentId,
+                                                            name = category.name,
+                                                            icon = category.icon,
+                                                            color = category.color,
+                                                        )
+                                                    },
+                                                ),
+                                            imageUrl = group.imageUrl,
+                                            mode = "EDIT",
                                         ),
-                                        categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(
-                                            group.categories.map { category ->
-                                                AppDestinations.CategoryNavigation(
-                                                    documentId = category.documentId,
-                                                    name = category.name,
-                                                    icon = category.icon,
-                                                    color = category.color,
-                                                )
-                                            },
-                                        ),
-                                        imageUrl = group.imageUrl,
-                                        mode = "EDIT",
-                                    ))
+                                    )
                                 },
                             )
                         GroupListScreen(
@@ -168,49 +172,55 @@ fun App() {
                             },
                             onCreateGroup = {
                                 // Navigate to ExpenseListDetail with ADD mode to create a new list
-                                navController.navigate(AppDestinations.ExpenseListDetail(
-                                    listId = "",
-                                    listName = "",
-                                    shareCode = "",
-                                    createdBy = "",
-                                    createdAt = "",
-                                    lastModified = "",
-                                    membersJson = AppDestinations.ExpenseListDetail.createMembersJson(emptyList()),
-                                    categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(emptyList()),
-                                    imageUrl = "",
-                                ))
+                                navController.navigate(
+                                    AppDestinations.ExpenseListDetail(
+                                        listId = "",
+                                        listName = "",
+                                        shareCode = "",
+                                        createdBy = "",
+                                        createdAt = "",
+                                        lastModified = "",
+                                        membersJson = AppDestinations.ExpenseListDetail.createMembersJson(emptyList()),
+                                        categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(emptyList()),
+                                        imageUrl = "",
+                                    ),
+                                )
                             },
                             onEditGroup = { group ->
                                 // Navigate to ExpenseListDetail with the group data in EDIT mode
-                                navController.navigate(AppDestinations.ExpenseListDetail(
-                                    listId = group.listId,
-                                    listName = group.name,
-                                    shareCode = group.shareCode,
-                                    createdBy = group.createdBy,
-                                    createdAt = group.createdAt,
-                                    lastModified = group.lastModified,
-                                    membersJson = AppDestinations.ExpenseListDetail.createMembersJson(
-                                        group.members.map { member ->
-                                            AppDestinations.MemberNavigation(
-                                                userId = member.userId,
-                                                name = member.name,
-                                                profileImage = member.profileImage,
-                                            )
-                                        },
+                                navController.navigate(
+                                    AppDestinations.ExpenseListDetail(
+                                        listId = group.listId,
+                                        listName = group.name,
+                                        shareCode = group.shareCode,
+                                        createdBy = group.createdBy,
+                                        createdAt = group.createdAt,
+                                        lastModified = group.lastModified,
+                                        membersJson =
+                                            AppDestinations.ExpenseListDetail.createMembersJson(
+                                                group.members.map { member ->
+                                                    AppDestinations.MemberNavigation(
+                                                        userId = member.userId,
+                                                        name = member.name,
+                                                        profileImage = member.profileImage,
+                                                    )
+                                                },
+                                            ),
+                                        categoriesJson =
+                                            AppDestinations.ExpenseListDetail.createCategoriesJson(
+                                                group.categories.map { category ->
+                                                    AppDestinations.CategoryNavigation(
+                                                        documentId = category.documentId,
+                                                        name = category.name,
+                                                        icon = category.icon,
+                                                        color = category.color,
+                                                    )
+                                                },
+                                            ),
+                                        imageUrl = group.imageUrl,
+                                        mode = "EDIT",
                                     ),
-                                    categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(
-                                        group.categories.map { category ->
-                                            AppDestinations.CategoryNavigation(
-                                                documentId = category.documentId,
-                                                name = category.name,
-                                                icon = category.icon,
-                                                color = category.color,
-                                            )
-                                        },
-                                    ),
-                                    imageUrl = group.imageUrl,
-                                    mode = "EDIT",
-                                ))
+                                )
                             },
                             onProfileClick = {
                                 navController.navigate(AppDestinations.EditProfile)
@@ -308,25 +318,27 @@ fun App() {
                                             createdBy = expenseList.createdBy,
                                             createdAt = expenseList.createdAt,
                                             lastModified = expenseList.lastModified,
-                                            membersJson = AppDestinations.ExpenseListDetail.createMembersJson(
-                                                expenseList.members.map { member ->
-                                                    AppDestinations.MemberNavigation(
-                                                        userId = member.userId,
-                                                        name = member.name,
-                                                        profileImage = member.profileImage,
-                                                    )
-                                                },
-                                            ),
-                                            categoriesJson = AppDestinations.ExpenseListDetail.createCategoriesJson(
-                                                expenseList.categories.map { category ->
-                                                    AppDestinations.CategoryNavigation(
-                                                        documentId = category.documentId,
-                                                        name = category.name,
-                                                        icon = category.icon,
-                                                        color = category.color,
-                                                    )
-                                                },
-                                            ),
+                                            membersJson =
+                                                AppDestinations.ExpenseListDetail.createMembersJson(
+                                                    expenseList.members.map { member ->
+                                                        AppDestinations.MemberNavigation(
+                                                            userId = member.userId,
+                                                            name = member.name,
+                                                            profileImage = member.profileImage,
+                                                        )
+                                                    },
+                                                ),
+                                            categoriesJson =
+                                                AppDestinations.ExpenseListDetail.createCategoriesJson(
+                                                    expenseList.categories.map { category ->
+                                                        AppDestinations.CategoryNavigation(
+                                                            documentId = category.documentId,
+                                                            name = category.name,
+                                                            icon = category.icon,
+                                                            color = category.color,
+                                                        )
+                                                    },
+                                                ),
                                             imageUrl = expenseList.imageUrl,
                                         ),
                                     )
@@ -348,65 +360,72 @@ fun App() {
                         val listDetailRoute = backStackEntry.toRoute<AppDestinations.ExpenseListDetail>()
 
                         // Reconstruct Group from navigation params
-                        val group = Group(
-                            listId = listDetailRoute.listId,
-                            name = listDetailRoute.listName,
-                            shareCode = listDetailRoute.shareCode,
-                            createdBy = listDetailRoute.createdBy,
-                            createdAt = listDetailRoute.createdAt,
-                            lastModified = listDetailRoute.lastModified,
-                            imageUrl = listDetailRoute.imageUrl,
-                            members = listDetailRoute.members.map { memberNav ->
-                                com.marquis.zorroexpense.domain.model.User(
-                                    userId = memberNav.userId,
-                                    name = memberNav.name,
-                                    profileImage = memberNav.profileImage,
-                                )
-                            },
-                            categories = listDetailRoute.categories.map { categoryNav ->
-                                Category(
-                                    documentId = categoryNav.documentId,
-                                    name = categoryNav.name,
-                                    icon = categoryNav.icon,
-                                    color = categoryNav.color,
-                                )
-                            },
-                        )
+                        val group =
+                            Group(
+                                listId = listDetailRoute.listId,
+                                name = listDetailRoute.listName,
+                                shareCode = listDetailRoute.shareCode,
+                                createdBy = listDetailRoute.createdBy,
+                                createdAt = listDetailRoute.createdAt,
+                                lastModified = listDetailRoute.lastModified,
+                                imageUrl = listDetailRoute.imageUrl,
+                                members =
+                                    listDetailRoute.members.map { memberNav ->
+                                        com.marquis.zorroexpense.domain.model.User(
+                                            userId = memberNav.userId,
+                                            name = memberNav.name,
+                                            profileImage = memberNav.profileImage,
+                                        )
+                                    },
+                                categories =
+                                    listDetailRoute.categories.map { categoryNav ->
+                                        Category(
+                                            documentId = categoryNav.documentId,
+                                            name = categoryNav.name,
+                                            icon = categoryNav.icon,
+                                            color = categoryNav.color,
+                                        )
+                                    },
+                            )
 
                         val userId = (globalAuthState as? GlobalAuthState.Authenticated)?.user?.userId ?: ""
 
                         // Determine initial mode from route parameter, with fallback logic
-                        val initialMode = when {
-                            listDetailRoute.listId.isEmpty() -> GroupDetailMode.ADD
-                            listDetailRoute.mode == "EDIT" -> GroupDetailMode.EDIT
-                            else -> GroupDetailMode.VIEW
-                        }
+                        val initialMode =
+                            when {
+                                listDetailRoute.listId.isEmpty() -> GroupDetailMode.ADD
+                                listDetailRoute.mode == "EDIT" -> GroupDetailMode.EDIT
+                                else -> GroupDetailMode.VIEW
+                            }
 
-                        val viewModel = remember(listDetailRoute.listId, userId, initialMode) {
-                            AppModule.provideExpenseListDetailViewModel(
-                                listId = listDetailRoute.listId,
-                                userId = userId,
-                                initialGroup = group,
-                                initialMode = initialMode,
-                                onListDeleted = {
-                                    // Navigate back to the lists overview after deletion
-                                    navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
-                                },
-                                onListSaved = { newListId, listName ->
-                                    // For ADD mode, navigate to category management screen
-                                    if (initialMode == GroupDetailMode.ADD) {
-                                        navController.navigate(AppDestinations.ManageGroupCategories(
-                                            groupId = newListId,
-                                            groupName = listName,
-                                        )) {
-                                            popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
+                        val viewModel =
+                            remember(listDetailRoute.listId, userId, initialMode) {
+                                AppModule.provideExpenseListDetailViewModel(
+                                    listId = listDetailRoute.listId,
+                                    userId = userId,
+                                    initialGroup = group,
+                                    initialMode = initialMode,
+                                    onListDeleted = {
+                                        // Navigate back to the lists overview after deletion
+                                        navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
+                                    },
+                                    onListSaved = { newListId, listName ->
+                                        // For ADD mode, navigate to category management screen
+                                        if (initialMode == GroupDetailMode.ADD) {
+                                            navController.navigate(
+                                                AppDestinations.ManageGroupCategories(
+                                                    groupId = newListId,
+                                                    groupName = listName,
+                                                ),
+                                            ) {
+                                                popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
+                                            }
+                                            // Trigger refresh when returning from group creation
+                                            AppModule.triggerGroupListRefresh()
                                         }
-                                        // Trigger refresh when returning from group creation
-                                        AppModule.triggerGroupListRefresh()
-                                    }
-                                },
-                            )
-                        }
+                                    },
+                                )
+                            }
 
                         GroupDetailScreen(
                             viewModel = viewModel,
@@ -418,24 +437,28 @@ fun App() {
                                 navController.popBackStack(AppDestinations.ExpenseLists, inclusive = false)
                             },
                             onCreateCategoryClick = {
-                                navController.navigate(AppDestinations.CategoryDetail(
-                                    categoryId = "",
-                                    categoryName = "",
-                                    categoryIcon = "",
-                                    categoryColor = "",
-                                    mode = "ADD",
-                                    groupId = listDetailRoute.listId,
-                                ))
+                                navController.navigate(
+                                    AppDestinations.CategoryDetail(
+                                        categoryId = "",
+                                        categoryName = "",
+                                        categoryIcon = "",
+                                        categoryColor = "",
+                                        mode = "ADD",
+                                        groupId = listDetailRoute.listId,
+                                    ),
+                                )
                             },
                             onCategoryClick = { category ->
-                                navController.navigate(AppDestinations.CategoryDetail(
-                                    categoryId = category.documentId,
-                                    categoryName = category.name,
-                                    categoryIcon = category.icon,
-                                    categoryColor = category.color,
-                                    mode = "VIEW",
-                                    groupId = listDetailRoute.listId,
-                                ))
+                                navController.navigate(
+                                    AppDestinations.CategoryDetail(
+                                        categoryId = category.documentId,
+                                        categoryName = category.name,
+                                        categoryIcon = category.icon,
+                                        categoryColor = category.color,
+                                        mode = "VIEW",
+                                        groupId = listDetailRoute.listId,
+                                    ),
+                                )
                             },
                         )
                     }
@@ -453,46 +476,51 @@ fun App() {
                         val categoryRoute = backStackEntry.toRoute<AppDestinations.CategoryDetail>()
 
                         // Reconstruct Category from route params
-                        val category = Category(
-                            documentId = categoryRoute.categoryId,
-                            name = categoryRoute.categoryName,
-                            icon = categoryRoute.categoryIcon,
-                            color = categoryRoute.categoryColor,
-                        )
+                        val category =
+                            Category(
+                                documentId = categoryRoute.categoryId,
+                                name = categoryRoute.categoryName,
+                                icon = categoryRoute.categoryIcon,
+                                color = categoryRoute.categoryColor,
+                            )
 
                         // Determine initial mode from route parameter
-                        val initialMode = when {
-                            categoryRoute.categoryId.isEmpty() -> CategoryDetailMode.ADD
-                            categoryRoute.mode == "EDIT" -> CategoryDetailMode.EDIT
-                            else -> CategoryDetailMode.VIEW
-                        }
+                        val initialMode =
+                            when {
+                                categoryRoute.categoryId.isEmpty() -> CategoryDetailMode.ADD
+                                categoryRoute.mode == "EDIT" -> CategoryDetailMode.EDIT
+                                else -> CategoryDetailMode.VIEW
+                            }
 
-                        val viewModel = AppModule.provideCategoryDetailViewModel(
-                            groupId = categoryRoute.groupId,
-                            category = category,
-                            initialMode = initialMode,
-                            saveImmediately = categoryRoute.saveImmediately,
-                            onCategorySaved = { savedCategory ->
-                                // Pop back stack and update categories
-                                navController.popBackStack()
-                                if (categoryRoute.groupId.isNotEmpty() && savedCategory != null) {
-                                    // Try to update CategoryManagementViewModel first (for new group flow)
-                                    AppModule.getCategoryManagementViewModel(categoryRoute.groupId)
-                                        ?.addOrUpdateCategory(savedCategory)
+                        val viewModel =
+                            AppModule.provideCategoryDetailViewModel(
+                                groupId = categoryRoute.groupId,
+                                category = category,
+                                initialMode = initialMode,
+                                saveImmediately = categoryRoute.saveImmediately,
+                                onCategorySaved = { savedCategory ->
+                                    // Pop back stack and update categories
+                                    navController.popBackStack()
+                                    if (categoryRoute.groupId.isNotEmpty() && savedCategory != null) {
+                                        // Try to update CategoryManagementViewModel first (for new group flow)
+                                        AppModule
+                                            .getCategoryManagementViewModel(categoryRoute.groupId)
+                                            ?.addOrUpdateCategory(savedCategory)
 
-                                    // Also update GroupDetailViewModel if it exists (for existing group flow)
-                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)
-                                        ?.addOrUpdateCategory(savedCategory)
-                                }
-                            },
-                            onCategoryDeleted = { categoryId ->
-                                // Remove the category from the group's cache
-                                if (categoryRoute.groupId.isNotEmpty()) {
-                                    AppModule.getGroupDetailViewModel(categoryRoute.groupId)?.removeCategory(categoryId)
-                                }
-                                navController.popBackStack()
-                            },
-                        )
+                                        // Also update GroupDetailViewModel if it exists (for existing group flow)
+                                        AppModule
+                                            .getGroupDetailViewModel(categoryRoute.groupId)
+                                            ?.addOrUpdateCategory(savedCategory)
+                                    }
+                                },
+                                onCategoryDeleted = { categoryId ->
+                                    // Remove the category from the group's cache
+                                    if (categoryRoute.groupId.isNotEmpty()) {
+                                        AppModule.getGroupDetailViewModel(categoryRoute.groupId)?.removeCategory(categoryId)
+                                    }
+                                    navController.popBackStack()
+                                },
+                            )
 
                         CategoryDetailScreen(
                             viewModel = viewModel,
@@ -517,19 +545,22 @@ fun App() {
 
                         val manageCategoriesRoute = backStackEntry.toRoute<AppDestinations.ManageGroupCategories>()
 
-                        val viewModel = AppModule.provideCategoryManagementViewModel(
-                            groupId = manageCategoriesRoute.groupId,
-                            groupName = manageCategoriesRoute.groupName,
-                            onCategoriesSaved = { groupId, groupName ->
-                                // Navigate to the expense list for the newly created group
-                                navController.navigate(AppDestinations.ExpenseList(
-                                    listId = groupId,
-                                    listName = groupName,
-                                )) {
-                                    popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
-                                }
-                            },
-                        )
+                        val viewModel =
+                            AppModule.provideCategoryManagementViewModel(
+                                groupId = manageCategoriesRoute.groupId,
+                                groupName = manageCategoriesRoute.groupName,
+                                onCategoriesSaved = { groupId, groupName ->
+                                    // Navigate to the expense list for the newly created group
+                                    navController.navigate(
+                                        AppDestinations.ExpenseList(
+                                            listId = groupId,
+                                            listName = groupName,
+                                        ),
+                                    ) {
+                                        popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
+                                    }
+                                },
+                            )
 
                         val categoryManagementViewModel = remember { viewModel }
                         CategoryManagementScreen(
@@ -538,15 +569,17 @@ fun App() {
                                 navController.popBackStack()
                             },
                             onCreateCategoryClick = {
-                                navController.navigate(AppDestinations.CategoryDetail(
-                                    categoryId = "",
-                                    categoryName = "",
-                                    categoryIcon = "",
-                                    categoryColor = "",
-                                    mode = "ADD",
-                                    groupId = manageCategoriesRoute.groupId,
-                                    saveImmediately = false, // Don't save to DB, will be saved with group
-                                ))
+                                navController.navigate(
+                                    AppDestinations.CategoryDetail(
+                                        categoryId = "",
+                                        categoryName = "",
+                                        categoryIcon = "",
+                                        categoryColor = "",
+                                        mode = "ADD",
+                                        groupId = manageCategoriesRoute.groupId,
+                                        saveImmediately = false, // Don't save to DB, will be saved with group
+                                    ),
+                                )
                             },
                         )
                     }

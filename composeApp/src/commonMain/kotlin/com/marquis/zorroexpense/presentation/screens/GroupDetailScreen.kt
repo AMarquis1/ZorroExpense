@@ -110,105 +110,108 @@ fun GroupDetailScreen(
         topBar = {
             if (!showGalleryPicker) {
                 TopAppBar(
-                title = {
-                    val title = when (uiState) {
-                        is GroupDetailUiState.Success -> {
-                            when ((uiState as GroupDetailUiState.Success).mode) {
-                                GroupDetailMode.VIEW -> "Group Details"
-                                GroupDetailMode.EDIT -> "Edit group"
-                                GroupDetailMode.ADD -> "New Group"
+                    title = {
+                        val title =
+                            when (uiState) {
+                                is GroupDetailUiState.Success -> {
+                                    when ((uiState as GroupDetailUiState.Success).mode) {
+                                        GroupDetailMode.VIEW -> "Group Details"
+                                        GroupDetailMode.EDIT -> "Edit group"
+                                        GroupDetailMode.ADD -> "New Group"
+                                    }
+                                }
+                                else -> "Group Details"
                             }
-                        }
-                        else -> "Group Details"
-                    }
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        val currentState = uiState
-                        if (currentState is GroupDetailUiState.Success &&
-                            currentState.mode == GroupDetailMode.EDIT
-                        ) {
-                            viewModel.onEvent(GroupDetailUiEvent.CancelEdit)
-                        } else {
-                            onBackClick()
-                        }
-                    }) {
-                        val icon = if (uiState is GroupDetailUiState.Success &&
-                            (uiState as GroupDetailUiState.Success).mode != GroupDetailMode.VIEW
-                        ) {
-                            Icons.Default.Close
-                        } else {
-                            Icons.AutoMirrored.Filled.ArrowBack
-                        }
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = "Back",
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
                         )
-                    }
-                },
-                actions = {
-                    if (uiState is GroupDetailUiState.Success) {
-                        val successState = uiState as GroupDetailUiState.Success
-
-                        when (successState.mode) {
-                            GroupDetailMode.VIEW -> {
-                                IconButton(
-                                    onClick = {
-                                        viewModel.onEvent(GroupDetailUiEvent.EnterEditMode)
-                                    },
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Edit,
-                                        contentDescription = "Edit groups",
-                                    )
-                                }
-                                IconButton(
-                                    onClick = {
-                                        viewModel.onEvent(GroupDetailUiEvent.DeleteGroup)
-                                    },
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Delete,
-                                        contentDescription = "Delete Group",
-                                    )
-                                }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            val currentState = uiState
+                            if (currentState is GroupDetailUiState.Success &&
+                                currentState.mode == GroupDetailMode.EDIT
+                            ) {
+                                viewModel.onEvent(GroupDetailUiEvent.CancelEdit)
+                            } else {
+                                onBackClick()
                             }
-                            GroupDetailMode.EDIT, GroupDetailMode.ADD -> {
-                                // Save button
-                                if (successState.isSaving) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.padding(12.dp),
-                                        strokeWidth = 2.dp,
-                                    )
+                        }) {
+                            val icon =
+                                if (uiState is GroupDetailUiState.Success &&
+                                    (uiState as GroupDetailUiState.Success).mode != GroupDetailMode.VIEW
+                                ) {
+                                    Icons.Default.Close
                                 } else {
+                                    Icons.AutoMirrored.Filled.ArrowBack
+                                }
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = "Back",
+                            )
+                        }
+                    },
+                    actions = {
+                        if (uiState is GroupDetailUiState.Success) {
+                            val successState = uiState as GroupDetailUiState.Success
+
+                            when (successState.mode) {
+                                GroupDetailMode.VIEW -> {
                                     IconButton(
                                         onClick = {
-                                            viewModel.onEvent(GroupDetailUiEvent.SaveChanges)
+                                            viewModel.onEvent(GroupDetailUiEvent.EnterEditMode)
                                         },
-                                        enabled = successState.editedName.isNotBlank(),
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Filled.Check,
-                                            contentDescription = "Save",
+                                            imageVector = Icons.Filled.Edit,
+                                            contentDescription = "Edit groups",
                                         )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.onEvent(GroupDetailUiEvent.DeleteGroup)
+                                        },
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Delete,
+                                            contentDescription = "Delete Group",
+                                        )
+                                    }
+                                }
+                                GroupDetailMode.EDIT, GroupDetailMode.ADD -> {
+                                    // Save button
+                                    if (successState.isSaving) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.padding(12.dp),
+                                            strokeWidth = 2.dp,
+                                        )
+                                    } else {
+                                        IconButton(
+                                            onClick = {
+                                                viewModel.onEvent(GroupDetailUiEvent.SaveChanges)
+                                            },
+                                            enabled = successState.editedName.isNotBlank(),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = "Save",
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-            )
+                    },
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                            actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+                        ),
+                )
             }
         },
     ) { paddingValues ->
@@ -312,13 +315,15 @@ fun GroupDetailScreen(
             GalleryPickerLauncher(
                 allowMultiple = false,
                 mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
-                cameraCaptureConfig = CameraCaptureConfig(
-                    compressionLevel = CompressionLevel.HIGH,
-                    cropConfig = CropConfig(
-                        enabled = true,
-                        squareCrop = false
-                    )
-                ),
+                cameraCaptureConfig =
+                    CameraCaptureConfig(
+                        compressionLevel = CompressionLevel.HIGH,
+                        cropConfig =
+                            CropConfig(
+                                enabled = true,
+                                squareCrop = false,
+                            ),
+                    ),
                 onPhotosSelected = { photos ->
                     if (photos.isNotEmpty()) {
                         val photo = photos.first()
@@ -331,7 +336,7 @@ fun GroupDetailScreen(
                 },
                 onDismiss = {
                     showGalleryPicker = false
-                }
+                },
             )
         }
     }
@@ -358,52 +363,59 @@ private fun ExpenseListDetailContent(
     modifier: Modifier = Modifier,
 ) {
     val isEditable = mode != GroupDetailMode.VIEW
-    val displayCategories = if (isEditable) {
-        // In edit mode, show all categories (active and inactive) so user can reactivate
-        editedCategories
-    } else {
-        // In view mode, only show active categories
-        group.categories.filter { it.active }
-    }
+    val displayCategories =
+        if (isEditable) {
+            // In edit mode, show all categories (active and inactive) so user can reactivate
+            editedCategories
+        } else {
+            // In view mode, only show active categories
+            group.categories.filter { it.active }
+        }
     val displayMembers = if (isEditable) editedMembers else group.members
     val focusManager = LocalFocusManager.current
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
     ) {
         // Group avatar with edit icon (only in EDIT mode)
         if (isEditable) {
             Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .align(Alignment.CenterHorizontally),
+                modifier =
+                    Modifier
+                        .size(120.dp)
+                        .align(Alignment.CenterHorizontally),
                 contentAlignment = Alignment.BottomEnd,
             ) {
                 if (editedImageUrl.isNotBlank()) {
                     AsyncImage(
                         model = editedImageUrl,
                         contentDescription = "Group image",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
+                        modifier =
+                            Modifier
+                                .size(120.dp)
+                                .clip(CircleShape),
                         contentScale = ContentScale.Crop,
                     )
                 } else {
                     Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    ),
+                        modifier =
+                            Modifier
+                                .size(120.dp)
+                                .background(
+                                    brush =
+                                        Brush.linearGradient(
+                                            colors =
+                                                listOf(
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                                ),
+                                        ),
+                                    shape = CircleShape,
                                 ),
-                                shape = CircleShape,
-                            ),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -418,19 +430,24 @@ private fun ExpenseListDetailContent(
                 // Camera icon button
                 IconButton(
                     onClick = onShowGalleryPicker,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .zIndex(1f),
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .zIndex(1f),
                     enabled = !isUploading,
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                if (isUploading) MaterialTheme.colorScheme.surfaceVariant
-                                else MaterialTheme.colorScheme.primary,
-                                CircleShape,
-                            ),
+                        modifier =
+                            Modifier
+                                .size(40.dp)
+                                .background(
+                                    if (isUploading) {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    } else {
+                                        MaterialTheme.colorScheme.primary
+                                    },
+                                    CircleShape,
+                                ),
                         contentAlignment = Alignment.Center,
                     ) {
                         if (isUploading) {
@@ -472,9 +489,10 @@ private fun ExpenseListDetailContent(
                     AsyncImage(
                         model = editedImageUrl,
                         contentDescription = "Group image",
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(CircleShape),
+                        modifier =
+                            Modifier
+                                .size(60.dp)
+                                .clip(CircleShape),
                         contentScale = ContentScale.Crop,
                     )
                 }
@@ -494,9 +512,10 @@ private fun ExpenseListDetailContent(
         if (mode != GroupDetailMode.ADD) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    ),
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Column(
@@ -511,26 +530,169 @@ private fun ExpenseListDetailContent(
                     )
 
                     if (isEditable) {
-                    // Edit mode: Show active and inactive categories in sections
-                    val activeCategories = editedCategories.filter { it.active }
-                    val inactiveCategories = editedCategories.filter { !it.active }
+                        // Edit mode: Show active and inactive categories in sections
+                        val activeCategories = editedCategories.filter { it.active }
+                        val inactiveCategories = editedCategories.filter { !it.active }
 
-                    // Active categories section
-                    if (activeCategories.isNotEmpty()) {
-                        Text(
-                            text = "Active",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(bottom = 8.dp),
+                        // Active categories section
+                        if (activeCategories.isNotEmpty()) {
+                            Text(
+                                text = "Active",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(bottom = 8.dp),
+                            )
+
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.padding(bottom = 16.dp),
+                            ) {
+                                activeCategories.forEach { category ->
+                                    Box {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                        ) {
+                                            CategoryIconCircle(
+                                                category = category,
+                                                size = 48.dp,
+                                            )
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            Text(
+                                                text = category.name,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                textAlign = TextAlign.Center,
+                                            )
+                                        }
+
+                                        // Remove (X) badge
+                                        Card(
+                                            modifier =
+                                                Modifier
+                                                    .size(20.dp)
+                                                    .align(Alignment.TopEnd),
+                                            colors =
+                                                CardDefaults.cardColors(
+                                                    containerColor = MaterialTheme.colorScheme.error,
+                                                ),
+                                            shape = CircleShape,
+                                            onClick = { onRemoveCategory(category) },
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = "Remove ${category.name}",
+                                                    tint = MaterialTheme.colorScheme.onError,
+                                                    modifier = Modifier.size(12.dp),
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "No active categories",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(bottom = 16.dp),
+                            )
+                        }
+
+                        // Inactive categories section
+                        if (inactiveCategories.isNotEmpty()) {
+                            Text(
+                                text = "Inactive",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(bottom = 8.dp),
+                            )
+
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.padding(bottom = 16.dp),
+                            ) {
+                                inactiveCategories.forEach { category ->
+                                    Box {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                        ) {
+                                            CategoryIconCircle(
+                                                category = category,
+                                                size = 48.dp,
+                                                modifier = Modifier.alpha(0.4f),
+                                            )
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            Text(
+                                                text = category.name,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                                textAlign = TextAlign.Center,
+                                            )
+                                        }
+
+                                        // Reactivate (+) badge
+                                        Card(
+                                            modifier =
+                                                Modifier
+                                                    .size(20.dp)
+                                                    .align(Alignment.TopEnd),
+                                            colors =
+                                                CardDefaults.cardColors(
+                                                    containerColor = MaterialTheme.colorScheme.primary,
+                                                ),
+                                            shape = CircleShape,
+                                            onClick = { onReactivateCategory(category) },
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Text(
+                                                    text = "+",
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Create New button
+                        AddCategoryButton(
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCreateCategoryClick()
+                            },
+                            label = "Create New",
+                            size = 48.dp,
                         )
-
-                        FlowRow(
+                    } else {
+                        // View mode: Show only active categories in LazyRow (clickable)
+                        LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.padding(bottom = 16.dp),
                         ) {
-                            activeCategories.forEach { category ->
-                                Box {
+                            items(displayCategories) { category ->
+                                Box(
+                                    modifier =
+                                        Modifier.clickable(
+                                            enabled = !isEditable,
+                                            onClick = { onCategoryClick(category) },
+                                        ),
+                                ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                     ) {
@@ -549,156 +711,18 @@ private fun ExpenseListDetailContent(
                                             textAlign = TextAlign.Center,
                                         )
                                     }
-
-                                    // Remove (X) badge
-                                    Card(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .align(Alignment.TopEnd),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.error,
-                                        ),
-                                        shape = CircleShape,
-                                        onClick = { onRemoveCategory(category) },
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Close,
-                                                contentDescription = "Remove ${category.name}",
-                                                tint = MaterialTheme.colorScheme.onError,
-                                                modifier = Modifier.size(12.dp),
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
-                    } else {
-                        Text(
-                            text = "No active categories",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(bottom = 16.dp),
-                        )
-                    }
 
-                    // Inactive categories section
-                    if (inactiveCategories.isNotEmpty()) {
-                        Text(
-                            text = "Inactive",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(bottom = 8.dp),
-                        )
-
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.padding(bottom = 16.dp),
-                        ) {
-                            inactiveCategories.forEach { category ->
-                                Box {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                    ) {
-                                        CategoryIconCircle(
-                                            category = category,
-                                            size = 48.dp,
-                                            modifier = Modifier.alpha(0.4f),
-                                        )
-
-                                        Spacer(modifier = Modifier.height(8.dp))
-
-                                        Text(
-                                            text = category.name,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                            textAlign = TextAlign.Center,
-                                        )
-                                    }
-
-                                    // Reactivate (+) badge
-                                    Card(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .align(Alignment.TopEnd),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                        ),
-                                        shape = CircleShape,
-                                        onClick = { onReactivateCategory(category) },
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            Text(
-                                                text = "+",
-                                                color = MaterialTheme.colorScheme.onPrimary,
-                                                style = MaterialTheme.typography.labelSmall,
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                        if (displayCategories.isEmpty()) {
+                            Text(
+                                text = "No categories added yet",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
                         }
-                    }
-
-                    // Create New button
-                    AddCategoryButton(
-                        onClick = {
-                            focusManager.clearFocus()
-                            onCreateCategoryClick()
-                        },
-                        label = "Create New",
-                        size = 48.dp,
-                    )
-                } else {
-                    // View mode: Show only active categories in LazyRow (clickable)
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(displayCategories) { category ->
-                            Box(
-                                modifier = Modifier.clickable(
-                                    enabled = !isEditable,
-                                    onClick = { onCategoryClick(category) },
-                                ),
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    CategoryIconCircle(
-                                        category = category,
-                                        size = 48.dp,
-                                    )
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    Text(
-                                        text = category.name,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        textAlign = TextAlign.Center,
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if (displayCategories.isEmpty()) {
-                        Text(
-                            text = "No categories added yet",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(top = 8.dp),
-                        )
-                    }
                     }
                 }
             }
@@ -710,9 +734,10 @@ private fun ExpenseListDetailContent(
         if (mode != GroupDetailMode.ADD && displayMembers.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    ),
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Column(
@@ -747,12 +772,14 @@ private fun ExpenseListDetailContent(
                                     // Remove button for removable members
                                     if (canRemove) {
                                         Card(
-                                            modifier = Modifier
-                                                .size(20.dp)
-                                                .align(Alignment.TopEnd),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = MaterialTheme.colorScheme.error,
-                                            ),
+                                            modifier =
+                                                Modifier
+                                                    .size(20.dp)
+                                                    .align(Alignment.TopEnd),
+                                            colors =
+                                                CardDefaults.cardColors(
+                                                    containerColor = MaterialTheme.colorScheme.error,
+                                                ),
                                             shape = CircleShape,
                                             onClick = { onRemoveMember(member) },
                                         ) {
@@ -795,18 +822,20 @@ private fun ExpenseListDetailContent(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    ),
                 shape = RoundedCornerShape(16.dp),
                 onClick = {
                     clipboardManager.setText(AnnotatedString(group.shareCode))
                 },
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(
@@ -831,9 +860,10 @@ private fun ExpenseListDetailContent(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                        ),
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                            ),
                         shape = RoundedCornerShape(8.dp),
                     ) {
                         Row(
@@ -865,9 +895,10 @@ private fun ExpenseListDetailContent(
         if (mode == GroupDetailMode.VIEW) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                    ),
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Column(
@@ -936,7 +967,10 @@ private fun MetadataRow(
     }
 }
 
-private fun findMemberName(group: Group, userId: String): String {
+private fun findMemberName(
+    group: Group,
+    userId: String,
+): String {
     val member = group.members.find { it.userId == userId }
     return member?.name?.ifEmpty { "Unknown" } ?: "Unknown"
 }
@@ -954,10 +988,21 @@ private fun formatTimestamp(timestamp: String): String {
             val month = parts[1].toIntOrNull() ?: 1
             val day = parts[2].toIntOrNull() ?: 1
 
-            val monthNames = arrayOf(
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-            )
+            val monthNames =
+                arrayOf(
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                )
 
             val monthName = if (month in 1..12) monthNames[month - 1] else "Jan"
             return "$monthName $day, $year"
@@ -994,9 +1039,10 @@ private fun DeleteListConfirmationDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
             ) {
                 Text(
                     text = "Delete",
@@ -1040,9 +1086,10 @@ private fun DeleteMemberConfirmationDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
             ) {
                 Text(
                     text = "Remove",

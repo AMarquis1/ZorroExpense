@@ -38,7 +38,10 @@ class ExpenseLocalDataSourceImpl(
     /**
      * Cache expenses for a specific list
      */
-    override suspend fun cacheExpensesForList(listId: String, expenses: List<Expense>) {
+    override suspend fun cacheExpensesForList(
+        listId: String,
+        expenses: List<Expense>,
+    ) {
         try {
             cacheManager.put(getListCacheKey(listId), expenses)
         } catch (e: Exception) {

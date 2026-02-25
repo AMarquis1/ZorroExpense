@@ -10,30 +10,29 @@ import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.data.repository.AuthRepositoryImpl
 import com.marquis.zorroexpense.data.repository.CategoryRepositoryImpl
-import com.marquis.zorroexpense.data.repository.GroupRepositoryImpl
 import com.marquis.zorroexpense.data.repository.ExpenseRepositoryImpl
+import com.marquis.zorroexpense.data.repository.GroupRepositoryImpl
 import com.marquis.zorroexpense.data.repository.UserRepositoryImpl
 import com.marquis.zorroexpense.domain.cache.CacheManager
 import com.marquis.zorroexpense.domain.cache.InMemoryCacheManager
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.repository.AuthRepository
 import com.marquis.zorroexpense.domain.repository.CategoryRepository
-import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
+import com.marquis.zorroexpense.domain.repository.GroupRepository
 import com.marquis.zorroexpense.domain.repository.UserRepository
 import com.marquis.zorroexpense.domain.usecase.AddExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.CreateCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.CreateGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteCategoryUseCase
-import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
+import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
-import com.marquis.zorroexpense.domain.usecase.UpdateCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
-import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesUseCase
+import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUserGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetUsersUseCase
@@ -45,16 +44,17 @@ import com.marquis.zorroexpense.domain.usecase.ObserveAuthStateUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshUserGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.SignUpUseCase
-import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
+import com.marquis.zorroexpense.domain.usecase.UpdateCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateExpenseUseCase
+import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
 import com.marquis.zorroexpense.presentation.viewmodel.AddExpenseViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryManagementViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.EditProfileViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseDetailViewModel
-import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.ExpenseListViewModel
+import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
 import com.marquis.zorroexpense.presentation.viewmodel.GroupListViewModel
 
 /**
@@ -177,7 +177,8 @@ object AppModule {
     }
 
     private val getExpenseByIdUseCase: com.marquis.zorroexpense.domain.usecase.GetExpenseByIdUseCase by lazy {
-        com.marquis.zorroexpense.domain.usecase.GetExpenseByIdUseCase(expenseRepository)
+        com.marquis.zorroexpense.domain.usecase
+            .GetExpenseByIdUseCase(expenseRepository)
     }
 
     private val refreshExpensesUseCase: RefreshExpensesUseCase by lazy {
@@ -378,8 +379,7 @@ object AppModule {
             expenseToEdit = expenseToEdit,
         )
 
-    fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel =
-        ExpenseDetailViewModel(expense)
+    fun provideExpenseDetailViewModel(expense: Expense): ExpenseDetailViewModel = ExpenseDetailViewModel(expense)
 
     private val groupDetailViewModels = mutableMapOf<String, GroupDetailViewModel>()
     private val categoryManagementViewModels = mutableMapOf<String, CategoryManagementViewModel>()
@@ -464,8 +464,8 @@ object AppModule {
         groupId: String,
         groupName: String,
         onCategoriesSaved: (groupId: String, groupName: String) -> Unit = { _, _ -> },
-    ): CategoryManagementViewModel {
-        return categoryManagementViewModels.getOrPut(groupId) {
+    ): CategoryManagementViewModel =
+        categoryManagementViewModels.getOrPut(groupId) {
             CategoryManagementViewModel(
                 groupId = groupId,
                 groupName = groupName,
@@ -476,17 +476,14 @@ object AppModule {
                 onCategoriesSaved = onCategoriesSaved,
             )
         }
-    }
 
-    fun getCategoryManagementViewModel(groupId: String): CategoryManagementViewModel? =
-        categoryManagementViewModels[groupId]
+    fun getCategoryManagementViewModel(groupId: String): CategoryManagementViewModel? = categoryManagementViewModels[groupId]
 
     fun clearCategoryManagementViewModel(groupId: String) {
         categoryManagementViewModels.remove(groupId)
     }
 
-    fun getGroupDetailViewModel(groupId: String): GroupDetailViewModel? =
-        groupDetailViewModels[groupId]
+    fun getGroupDetailViewModel(groupId: String): GroupDetailViewModel? = groupDetailViewModels[groupId]
 
     fun provideEditProfileViewModel(): EditProfileViewModel =
         EditProfileViewModel(
@@ -499,8 +496,7 @@ object AppModule {
      * Get the cached ExpenseListViewModel for a specific listId
      * Used to update the ViewModel after adding expenses
      */
-    fun getExpenseListViewModel(listId: String): ExpenseListViewModel? =
-        expenseListViewModels[listId]
+    fun getExpenseListViewModel(listId: String): ExpenseListViewModel? = expenseListViewModels[listId]
 
     // =================
     // Public API for Testing and Direct Access

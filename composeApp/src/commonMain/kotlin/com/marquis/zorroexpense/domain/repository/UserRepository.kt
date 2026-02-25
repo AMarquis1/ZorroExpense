@@ -24,5 +24,9 @@ interface UserRepository {
      * @param name The new name for the user
      * @param profileImageUrl The new profile image URL (optional)
      */
-    suspend fun updateProfile(userId: String, name: String, profileImageUrl: String?): Result<Unit>
+    suspend fun updateProfile(
+        userId: String,
+        name: String,
+        profileImageUrl: String?,
+    ): Result<Unit>
 }

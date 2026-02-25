@@ -18,8 +18,9 @@ class CreateGroupUseCase(
         val shareCode = generateShareCode()
 
         // Fetch the creator's user data
-        val creatorUser = getUsersUseCase.invoke(listOf(userId)).getOrNull()?.firstOrNull()
-            ?: User(userId = userId, name = "", profileImage = "")
+        val creatorUser =
+            getUsersUseCase.invoke(listOf(userId)).getOrNull()?.firstOrNull()
+                ?: User(userId = userId, name = "", profileImage = "")
 
         val group =
             Group(

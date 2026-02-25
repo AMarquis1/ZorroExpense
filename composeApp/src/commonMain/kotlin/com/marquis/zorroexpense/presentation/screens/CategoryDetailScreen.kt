@@ -23,15 +23,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.FlightTakeoff
-import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.LocalFlorist
@@ -72,12 +71,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.components.CategoryIconCircle
+import com.marquis.zorroexpense.presentation.state.CategoryDetailMode
 import com.marquis.zorroexpense.presentation.state.CategoryDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.CategoryDetailUiState
-import com.marquis.zorroexpense.presentation.state.CategoryDetailMode
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,16 +92,17 @@ fun CategoryDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    val title = when (uiState) {
-                        is CategoryDetailUiState.Success -> {
-                            when ((uiState as CategoryDetailUiState.Success).mode) {
-                                CategoryDetailMode.VIEW -> "Category"
-                                CategoryDetailMode.EDIT -> "Edit Category"
-                                CategoryDetailMode.ADD -> "New Category"
+                    val title =
+                        when (uiState) {
+                            is CategoryDetailUiState.Success -> {
+                                when ((uiState as CategoryDetailUiState.Success).mode) {
+                                    CategoryDetailMode.VIEW -> "Category"
+                                    CategoryDetailMode.EDIT -> "Edit Category"
+                                    CategoryDetailMode.ADD -> "New Category"
+                                }
                             }
+                            else -> "Category"
                         }
-                        else -> "Category"
-                    }
                     Text(
                         text = title,
                         style = MaterialTheme.typography.headlineSmall,
@@ -129,13 +128,14 @@ fun CategoryDetailScreen(
                             onBackClick()
                         }
                     }) {
-                        val icon = if (uiState is CategoryDetailUiState.Success &&
-                            (uiState as CategoryDetailUiState.Success).mode != CategoryDetailMode.VIEW
-                        ) {
-                            Icons.Default.Close
-                        } else {
-                            Icons.AutoMirrored.Filled.ArrowBack
-                        }
+                        val icon =
+                            if (uiState is CategoryDetailUiState.Success &&
+                                (uiState as CategoryDetailUiState.Success).mode != CategoryDetailMode.VIEW
+                            ) {
+                                Icons.Default.Close
+                            } else {
+                                Icons.AutoMirrored.Filled.ArrowBack
+                            }
                         Icon(
                             imageVector = icon,
                             contentDescription = "Back",
@@ -192,12 +192,13 @@ fun CategoryDetailScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
             )
         },
     ) { paddingValues ->
@@ -256,33 +257,34 @@ private fun hexStringToColor(colorHex: String): Color {
     return Color(0xFF000000 or long)
 }
 
-private fun getIconByName(iconName: String) = when (iconName) {
-    "Others" -> Icons.Filled.QuestionMark
-    "ShoppingCart" -> Icons.Filled.ShoppingCart
-    "Pets" -> Icons.Filled.Pets
-    "Restaurant" -> Icons.Filled.Restaurant
-    "DirectionsCar" -> Icons.Filled.DirectionsCar
-    "Work" -> Icons.Filled.Work
-    "Movie" -> Icons.Filled.Movie
-    "FitnessCenter" -> Icons.Filled.FitnessCenter
-    "LocalDining" -> Icons.Filled.LocalDining
-    "School" -> Icons.Filled.School
-    "LocalCafe" -> Icons.Filled.LocalCafe
-    "Book" -> Icons.Filled.Book
-    "MusicNote" -> Icons.Filled.MusicNote
-    "LocalMovies" -> Icons.Filled.LocalMovies
-    "Sports" -> Icons.Filled.Sports
-    "FlightTakeoff" -> Icons.Filled.FlightTakeoff
-    "LocalParking" -> Icons.Filled.LocalParking
-    "LocalGasStation" -> Icons.Filled.LocalGasStation
-    "LocalPharmacy" -> Icons.Filled.LocalPharmacy
-    "LocalHospital" -> Icons.Filled.LocalHospital
-    "LocalFlorist" -> Icons.Filled.LocalFlorist
-    "LocalLaundryService" -> Icons.Filled.LocalLaundryService
-    "LocalShipping" -> Icons.Filled.LocalShipping
-    "LocalOffer" -> Icons.Filled.LocalOffer
-    else -> Icons.Filled.QuestionMark
-}
+private fun getIconByName(iconName: String) =
+    when (iconName) {
+        "Others" -> Icons.Filled.QuestionMark
+        "ShoppingCart" -> Icons.Filled.ShoppingCart
+        "Pets" -> Icons.Filled.Pets
+        "Restaurant" -> Icons.Filled.Restaurant
+        "DirectionsCar" -> Icons.Filled.DirectionsCar
+        "Work" -> Icons.Filled.Work
+        "Movie" -> Icons.Filled.Movie
+        "FitnessCenter" -> Icons.Filled.FitnessCenter
+        "LocalDining" -> Icons.Filled.LocalDining
+        "School" -> Icons.Filled.School
+        "LocalCafe" -> Icons.Filled.LocalCafe
+        "Book" -> Icons.Filled.Book
+        "MusicNote" -> Icons.Filled.MusicNote
+        "LocalMovies" -> Icons.Filled.LocalMovies
+        "Sports" -> Icons.Filled.Sports
+        "FlightTakeoff" -> Icons.Filled.FlightTakeoff
+        "LocalParking" -> Icons.Filled.LocalParking
+        "LocalGasStation" -> Icons.Filled.LocalGasStation
+        "LocalPharmacy" -> Icons.Filled.LocalPharmacy
+        "LocalHospital" -> Icons.Filled.LocalHospital
+        "LocalFlorist" -> Icons.Filled.LocalFlorist
+        "LocalLaundryService" -> Icons.Filled.LocalLaundryService
+        "LocalShipping" -> Icons.Filled.LocalShipping
+        "LocalOffer" -> Icons.Filled.LocalOffer
+        else -> Icons.Filled.QuestionMark
+    }
 
 @Composable
 private fun CategoryDetailContent(
@@ -296,64 +298,69 @@ private fun CategoryDetailContent(
     onColorChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val icons = listOf(
-        "Others",
-        "ShoppingCart",
-        "Pets",
-        "Restaurant",
-        "DirectionsCar",
-        "Work",
-        "Movie",
-        "FitnessCenter",
-        "LocalDining",
-        "School",
-        "LocalCafe",
-        "Book",
-        "MusicNote",
-        "LocalMovies",
-        "Sports",
-        "FlightTakeoff",
-        "LocalParking",
-        "LocalGasStation",
-        "LocalPharmacy",
-        "LocalHospital",
-        "LocalFlorist",
-        "LocalLaundryService",
-        "LocalShipping",
-        "LocalOffer",
-    )
-    val colors = listOf(
-        "#FF5722",
-        "#2196F3",
-        "#4CAF50",
-        "#FF9800",
-        "#9C27B0",
-        "#F44336",
-        "#009688",
-        "#607D8B",
-    )
+    val icons =
+        listOf(
+            "Others",
+            "ShoppingCart",
+            "Pets",
+            "Restaurant",
+            "DirectionsCar",
+            "Work",
+            "Movie",
+            "FitnessCenter",
+            "LocalDining",
+            "School",
+            "LocalCafe",
+            "Book",
+            "MusicNote",
+            "LocalMovies",
+            "Sports",
+            "FlightTakeoff",
+            "LocalParking",
+            "LocalGasStation",
+            "LocalPharmacy",
+            "LocalHospital",
+            "LocalFlorist",
+            "LocalLaundryService",
+            "LocalShipping",
+            "LocalOffer",
+        )
+    val colors =
+        listOf(
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FF9800",
+            "#9C27B0",
+            "#F44336",
+            "#009688",
+            "#607D8B",
+        )
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         // Preview card
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             contentAlignment = Alignment.Center,
         ) {
             CategoryIconCircle(
-                category = com.marquis.zorroexpense.domain.model.Category(
-                    documentId = category.documentId,
-                    name = editedName,
-                    icon = editedIcon,
-                    color = editedColor,
-                ),
+                category =
+                    com.marquis.zorroexpense.domain.model.Category(
+                        documentId = category.documentId,
+                        name = editedName,
+                        icon = editedIcon,
+                        color = editedColor,
+                    ),
                 size = 80.dp,
             )
         }
@@ -450,18 +457,17 @@ private fun IconChip(
     onClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .background(
-                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = RoundedCornerShape(12.dp),
-            )
-            .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(12.dp),
-            )
-            .clickable(enabled = enabled) { onClick() }
-            .padding(12.dp),
+        modifier =
+            Modifier
+                .background(
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = RoundedCornerShape(12.dp),
+                ).border(
+                    width = if (isSelected) 2.dp else 1.dp,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(12.dp),
+                ).clickable(enabled = enabled) { onClick() }
+                .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -482,15 +488,15 @@ private fun ColorSwatch(
     onClick: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .size(48.dp)
-            .background(color, CircleShape)
-            .border(
-                width = if (isSelected) 3.dp else 0.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                shape = CircleShape,
-            )
-            .clickable(enabled = enabled) { onClick() },
+        modifier =
+            Modifier
+                .size(48.dp)
+                .background(color, CircleShape)
+                .border(
+                    width = if (isSelected) 3.dp else 0.dp,
+                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                    shape = CircleShape,
+                ).clickable(enabled = enabled) { onClick() },
     )
 }
 
@@ -512,9 +518,10 @@ private fun DeleteCategoryConfirmationDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
             ) {
                 Text("Delete")
             }

@@ -61,16 +61,16 @@ interface GroupRepository {
 
     suspend fun createCategory(
         groupId: String,
-        category: Category
+        category: Category,
     ): Result<String>
 
     suspend fun updateCategory(
         groupId: String,
-        category: Category
+        category: Category,
     ): Result<Unit>
 
     suspend fun deleteCategory(
         groupId: String,
-        categoryId: String
+        categoryId: String,
     ): Result<Unit>
 }

@@ -27,11 +27,12 @@ class GroupRepositoryImpl(
 
         return userRepository.getUsersByIds(userIds).getOrNull()?.let { users ->
             val userMap = users.associateBy { it.userId }
-            val enrichedMembers = list.members.map { member ->
-                userMap[member.userId]?.let {
-                    member.copy(name = it.name, profileImage = it.profileImage)
-                } ?: member
-            }
+            val enrichedMembers =
+                list.members.map { member ->
+                    userMap[member.userId]?.let {
+                        member.copy(name = it.name, profileImage = it.profileImage)
+                    } ?: member
+                }
             list.copy(members = enrichedMembers)
         } ?: list
     }
@@ -72,8 +73,7 @@ class GroupRepositoryImpl(
                     val categories = firestoreService.getGroupCategories(listId).getOrElse { emptyList() }
                     it.toDomain(categories)
                 }
-            }
-            .mapCatching { it?.let { enrichListMembers(it) } }
+            }.mapCatching { it?.let { enrichListMembers(it) } }
 
     override suspend fun createGroup(list: Group): Result<String> =
         mutex.withLock {
@@ -143,8 +143,7 @@ class GroupRepositoryImpl(
                 }.mapCatching { dto ->
                     val categories = firestoreService.getGroupCategories(dto.groupId).getOrElse { emptyList() }
                     dto.toDomain(categories)
-                }
-                .mapCatching { enrichListMembers(it) }
+                }.mapCatching { enrichListMembers(it) }
         }
 
     override suspend fun removeMemberFromGroup(
@@ -170,36 +169,34 @@ class GroupRepositoryImpl(
 
     override suspend fun createCategory(
         groupId: String,
-        category: Category
+        category: Category,
     ): Result<String> =
         mutex.withLock {
             firestoreService.createCategory(
                 groupId,
-                category.toDto()
+                category.toDto(),
             )
         }
 
-
     override suspend fun updateCategory(
         groupId: String,
-        category: Category
+        category: Category,
     ): Result<Unit> =
         mutex.withLock {
             firestoreService.updateCategory(
                 groupId,
-                category.toDto()
+                category.toDto(),
             )
         }
 
-
     override suspend fun deleteCategory(
         groupId: String,
-        categoryId: String
+        categoryId: String,
     ): Result<Unit> =
         mutex.withLock {
             firestoreService.deleteCategory(
                 groupId,
-                categoryId
+                categoryId,
             )
         }
 }

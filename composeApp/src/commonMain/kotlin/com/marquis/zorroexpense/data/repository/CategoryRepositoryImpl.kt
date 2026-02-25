@@ -4,7 +4,6 @@ import com.marquis.zorroexpense.AppConfig
 import com.marquis.zorroexpense.MockExpenseData
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.toDomain
-import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.repository.CategoryRepository
 

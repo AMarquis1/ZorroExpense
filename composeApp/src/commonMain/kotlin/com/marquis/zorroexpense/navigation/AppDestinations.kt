@@ -89,18 +89,20 @@ sealed class AppDestinations {
         }
 
         val members: List<MemberNavigation>
-            get() = try {
-                Json.decodeFromString<List<MemberNavigation>>(membersJson)
-            } catch (e: Exception) {
-                emptyList()
-            }
+            get() =
+                try {
+                    Json.decodeFromString<List<MemberNavigation>>(membersJson)
+                } catch (e: Exception) {
+                    emptyList()
+                }
 
         val categories: List<CategoryNavigation>
-            get() = try {
-                Json.decodeFromString<List<CategoryNavigation>>(categoriesJson)
-            } catch (e: Exception) {
-                emptyList()
-            }
+            get() =
+                try {
+                    Json.decodeFromString<List<CategoryNavigation>>(categoriesJson)
+                } catch (e: Exception) {
+                    emptyList()
+                }
     }
 
     @Serializable

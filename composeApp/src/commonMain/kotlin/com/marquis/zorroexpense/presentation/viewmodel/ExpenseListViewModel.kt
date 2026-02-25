@@ -7,8 +7,8 @@ import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
-import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
+import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiState
@@ -130,7 +130,10 @@ class ExpenseListViewModel(
         }
     }
 
-    private fun loadExpenses(isRefresh: Boolean = false, forceRefresh: Boolean = false) {
+    private fun loadExpenses(
+        isRefresh: Boolean = false,
+        forceRefresh: Boolean = false,
+    ) {
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is ExpenseListUiState.Success) {
@@ -144,19 +147,21 @@ class ExpenseListViewModel(
                 _uiState.value = ExpenseListUiState.Loading
             }
 
-            val expensesResult = if (forceRefresh) {
-                refreshExpensesUseCase(listId)
-            } else {
-                getExpensesByListIdUseCase(listId)
-            }
+            val expensesResult =
+                if (forceRefresh) {
+                    refreshExpensesUseCase(listId)
+                } else {
+                    getExpensesByListIdUseCase(listId)
+                }
 
             if (expensesResult.isSuccess) {
                 val expenses = expensesResult.getOrThrow()
-                val categories = expenses
-                    .map { it.category }
-                    .distinctBy { category ->
-                        category.documentId.ifBlank { category.name }
-                    }
+                val categories =
+                    expenses
+                        .map { it.category }
+                        .distinctBy { category ->
+                            category.documentId.ifBlank { category.name }
+                        }
 
                 _availableCategories.value = categories
 
@@ -510,27 +515,30 @@ class ExpenseListViewModel(
             val debtSummaries = calculateDebtsFromExpenses(updatedExpenses)
 
             // Extract new categories from the added expenses and add them to available categories if not already present
-            val newCategories = newExpenses
-                .map { it.category }
-                .distinctBy { category ->
-                    category.documentId.ifBlank { category.name }
-                }
+            val newCategories =
+                newExpenses
+                    .map { it.category }
+                    .distinctBy { category ->
+                        category.documentId.ifBlank { category.name }
+                    }
             val currentAvailableCategories = _availableCategories.value
-            val updatedAvailableCategories = (currentAvailableCategories + newCategories)
-                .distinctBy { category ->
-                    category.documentId.ifBlank { category.name }
-                }
+            val updatedAvailableCategories =
+                (currentAvailableCategories + newCategories)
+                    .distinctBy { category ->
+                        category.documentId.ifBlank { category.name }
+                    }
 
             // Add new categories to selected categories by default
-            val categoriesNotYetSelected = newCategories.filter { newCategory ->
-                !currentState.selectedCategories.any { selected ->
-                    if (newCategory.documentId.isNotBlank() && selected.documentId.isNotBlank()) {
-                        newCategory.documentId == selected.documentId
-                    } else {
-                        newCategory.name == selected.name
+            val categoriesNotYetSelected =
+                newCategories.filter { newCategory ->
+                    !currentState.selectedCategories.any { selected ->
+                        if (newCategory.documentId.isNotBlank() && selected.documentId.isNotBlank()) {
+                            newCategory.documentId == selected.documentId
+                        } else {
+                            newCategory.name == selected.name
+                        }
                     }
                 }
-            }
             val updatedSelectedCategories = currentState.selectedCategories + categoriesNotYetSelected
 
             _availableCategories.value = updatedAvailableCategories
@@ -573,13 +581,14 @@ class ExpenseListViewModel(
                 // Check if the updated expense uses a new category and add it if needed
                 val updatedCategory = updatedExpense.category
                 val currentAvailableCategories = _availableCategories.value
-                val categoryExists = currentAvailableCategories.any { category ->
-                    if (updatedCategory.documentId.isNotBlank() && category.documentId.isNotBlank()) {
-                        updatedCategory.documentId == category.documentId
-                    } else {
-                        updatedCategory.name == category.name
+                val categoryExists =
+                    currentAvailableCategories.any { category ->
+                        if (updatedCategory.documentId.isNotBlank() && category.documentId.isNotBlank()) {
+                            updatedCategory.documentId == category.documentId
+                        } else {
+                            updatedCategory.name == category.name
+                        }
                     }
-                }
 
                 if (!categoryExists) {
                     val updatedAvailableCategories = currentAvailableCategories + updatedCategory

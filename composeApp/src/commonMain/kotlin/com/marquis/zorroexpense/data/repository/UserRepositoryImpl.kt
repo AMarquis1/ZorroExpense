@@ -63,7 +63,11 @@ class UserRepositoryImpl(
             Result.failure(e)
         }
 
-    override suspend fun updateProfile(userId: String, name: String, profileImageUrl: String?): Result<Unit> =
+    override suspend fun updateProfile(
+        userId: String,
+        name: String,
+        profileImageUrl: String?,
+    ): Result<Unit> =
         try {
             // Extract just the userId (remove "Users/" prefix if present)
             val userIdOnly = if (userId.startsWith("Users/")) userId.substringAfterLast("/") else userId
@@ -71,10 +75,11 @@ class UserRepositoryImpl(
                 // Update mock data in memory
                 val existingUser = MockExpenseData.usersMap[userIdOnly]
                 if (existingUser != null) {
-                    MockExpenseData.usersMap[userIdOnly] = existingUser.copy(
-                        name = name,
-                        profileImage = profileImageUrl ?: existingUser.profileImage,
-                    )
+                    MockExpenseData.usersMap[userIdOnly] =
+                        existingUser.copy(
+                            name = name,
+                            profileImage = profileImageUrl ?: existingUser.profileImage,
+                        )
                 }
                 Result.success(Unit)
             } else {

@@ -26,7 +26,6 @@ import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.FlightTakeoff
-import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material.icons.outlined.LocalCafe
 import androidx.compose.material.icons.outlined.LocalDining
 import androidx.compose.material.icons.outlined.LocalFlorist

@@ -5,6 +5,5 @@ import com.marquis.zorroexpense.domain.repository.GroupRepository
 class DeleteGroupUseCase(
     private val groupRepository: GroupRepository,
 ) {
-    suspend operator fun invoke(listId: String): Result<Unit> =
-        groupRepository.deleteGroup(listId)
+    suspend operator fun invoke(listId: String): Result<Unit> = groupRepository.deleteGroup(listId)
 }

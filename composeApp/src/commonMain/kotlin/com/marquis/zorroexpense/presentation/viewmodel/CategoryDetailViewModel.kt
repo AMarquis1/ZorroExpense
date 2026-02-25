@@ -27,12 +27,13 @@ class CategoryDetailViewModel(
     private val onCategorySaved: (Category?) -> Unit = {},
     private val onCategoryDeleted: (String) -> Unit = {},
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<CategoryDetailUiState>(
-        CategoryDetailUiState.Success(
-            category = category,
-            mode = initialMode,
-        ),
-    )
+    private val _uiState =
+        MutableStateFlow<CategoryDetailUiState>(
+            CategoryDetailUiState.Success(
+                category = category,
+                mode = initialMode,
+            ),
+        )
     val uiState: StateFlow<CategoryDetailUiState> = _uiState.asStateFlow()
 
     fun onEvent(event: CategoryDetailUiEvent) {
@@ -110,11 +111,12 @@ class CategoryDetailViewModel(
             if (currentState is CategoryDetailUiState.Success) {
                 _uiState.update { currentState.copy(isSaving = true) }
 
-                val updatedCategory = currentState.category.copy(
-                    name = currentState.editedName,
-                    icon = currentState.editedIcon,
-                    color = currentState.editedColor,
-                )
+                val updatedCategory =
+                    currentState.category.copy(
+                        name = currentState.editedName,
+                        icon = currentState.editedIcon,
+                        color = currentState.editedColor,
+                    )
 
                 when (currentState.mode) {
                     CategoryDetailMode.ADD -> {
@@ -133,19 +135,21 @@ class CategoryDetailViewModel(
                                     onCategorySaved(newCategory)
                                 },
                                 onFailure = { error ->
-                                    _uiState.value = CategoryDetailUiState.Error(
-                                        error.message ?: "Failed to create category",
-                                    )
+                                    _uiState.value =
+                                        CategoryDetailUiState.Error(
+                                            error.message ?: "Failed to create category",
+                                        )
                                 },
                             )
                         } else {
                             // Return category without saving to database (new group workflow)
                             // Category will be saved when the group is saved
                             // Generate a temporary unique ID so multiple new categories don't conflict
-                            val tempId = "temp_${System.currentTimeMillis()}_${Random.nextInt(10000)}"
-                            val newCategory = updatedCategory.copy(
-                                documentId = tempId,
-                            )
+                            val tempId = "temp_${kotlin.time.Clock.System.now()}_${Random.nextInt(10000)}"
+                            val newCategory =
+                                updatedCategory.copy(
+                                    documentId = tempId,
+                                )
                             _uiState.update {
                                 currentState.copy(
                                     isSaving = false,
@@ -169,9 +173,10 @@ class CategoryDetailViewModel(
                                 onCategorySaved(updatedCategory)
                             },
                             onFailure = { error ->
-                                _uiState.value = CategoryDetailUiState.Error(
-                                    error.message ?: "Failed to update category",
-                                )
+                                _uiState.value =
+                                    CategoryDetailUiState.Error(
+                                        error.message ?: "Failed to update category",
+                                    )
                             },
                         )
                     }
@@ -216,9 +221,10 @@ class CategoryDetailViewModel(
                         onCategoryDeleted(categoryId)
                     },
                     onFailure = { error ->
-                        _uiState.value = CategoryDetailUiState.Error(
-                            error.message ?: "Failed to delete category",
-                        )
+                        _uiState.value =
+                            CategoryDetailUiState.Error(
+                                error.message ?: "Failed to delete category",
+                            )
                     },
                 )
             }

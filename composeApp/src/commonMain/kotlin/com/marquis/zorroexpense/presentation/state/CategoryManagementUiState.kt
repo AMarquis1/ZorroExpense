@@ -18,9 +18,13 @@ sealed class CategoryManagementUiState {
 }
 
 sealed class CategoryManagementUiEvent {
-    data class CategoryToggled(val category: Category) : CategoryManagementUiEvent()
+    data class CategoryToggled(
+        val category: Category,
+    ) : CategoryManagementUiEvent()
 
-    data class RemoveCategory(val category: Category) : CategoryManagementUiEvent()
+    data class RemoveCategory(
+        val category: Category,
+    ) : CategoryManagementUiEvent()
 
     data object SaveChanges : CategoryManagementUiEvent()
 

@@ -30,7 +30,8 @@ sealed class GroupListUiEvent {
     data object LoadGroups : GroupListUiEvent()
 
     data object CreateNewGroup : GroupListUiEvent()
-    data object RefreshGroups: GroupListUiEvent()
+
+    data object RefreshGroups : GroupListUiEvent()
 
     data class SelectGroup(
         val groupId: String,
@@ -40,13 +41,17 @@ sealed class GroupListUiEvent {
         val shareCode: String,
     ) : GroupListUiEvent()
 
-    data class DeleteGroup(val group: Group) : GroupListUiEvent()
+    data class DeleteGroup(
+        val group: Group,
+    ) : GroupListUiEvent()
 
     data object ConfirmDelete : GroupListUiEvent()
 
     data object CancelDelete : GroupListUiEvent()
 
-    data class EditGroup(val group: Group) : GroupListUiEvent()
+    data class EditGroup(
+        val group: Group,
+    ) : GroupListUiEvent()
 
     data object RetryLoad : GroupListUiEvent()
 }

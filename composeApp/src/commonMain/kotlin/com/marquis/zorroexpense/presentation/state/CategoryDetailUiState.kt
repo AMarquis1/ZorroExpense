@@ -35,11 +35,17 @@ sealed class CategoryDetailUiEvent {
 
     data object SaveChanges : CategoryDetailUiEvent()
 
-    data class UpdateName(val name: String) : CategoryDetailUiEvent()
+    data class UpdateName(
+        val name: String,
+    ) : CategoryDetailUiEvent()
 
-    data class UpdateIcon(val icon: String) : CategoryDetailUiEvent()
+    data class UpdateIcon(
+        val icon: String,
+    ) : CategoryDetailUiEvent()
 
-    data class UpdateColor(val color: String) : CategoryDetailUiEvent()
+    data class UpdateColor(
+        val color: String,
+    ) : CategoryDetailUiEvent()
 
     data object DeleteCategory : CategoryDetailUiEvent()
 

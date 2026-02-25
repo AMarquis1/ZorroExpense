@@ -69,22 +69,25 @@ class AddExpenseViewModel(
 
                         if (allUserIds.isNotEmpty()) {
                             // Fetch full user details to enrich member data
-                            getUsersUseCase.invoke(allUserIds).onSuccess { users ->
-                                // Create a map of userId -> fullUserData for easy lookup
-                                val userMap = users.associateBy { it.userId }
+                            getUsersUseCase
+                                .invoke(allUserIds)
+                                .onSuccess { users ->
+                                    // Create a map of userId -> fullUserData for easy lookup
+                                    val userMap = users.associateBy { it.userId }
 
-                                // Enrich members with full user data
-                                val enrichedMembers = expenseList.members.map { member ->
-                                    userMap[member.userId]?.let {
-                                        member.copy(name = it.name, profileImage = it.profileImage)
-                                    } ?: member
+                                    // Enrich members with full user data
+                                    val enrichedMembers =
+                                        expenseList.members.map { member ->
+                                            userMap[member.userId]?.let {
+                                                member.copy(name = it.name, profileImage = it.profileImage)
+                                            } ?: member
+                                        }
+
+                                    _availableUsers.value = enrichedMembers
+                                }.onFailure {
+                                    // If user fetching fails, use members as-is with partial data
+                                    _availableUsers.value = expenseList.members
                                 }
-
-                                _availableUsers.value = enrichedMembers
-                            }.onFailure {
-                                // If user fetching fails, use members as-is with partial data
-                                _availableUsers.value = expenseList.members
-                            }
                         } else {
                             // No members to fetch
                             _availableUsers.value = expenseList.members
@@ -222,6 +225,7 @@ class AddExpenseViewModel(
             addNewExpense()
         }
     }
+
     private fun updateExpense() {
         val currentFormState = _formState.value
 

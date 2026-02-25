@@ -134,11 +134,12 @@ internal fun GroupListScreen(
                 }
 
             // Auto-expand when near the top (within 3 items) for better UX
-            isFabExpanded = if (currentIndex <= 3) {
-                true
-            } else {
-                !isScrollingDown
-            }
+            isFabExpanded =
+                if (currentIndex <= 3) {
+                    true
+                } else {
+                    !isScrollingDown
+                }
 
             // Auto-close menu when scrolling
             if (isScrollingDown) {
@@ -156,20 +157,21 @@ internal fun GroupListScreen(
             SpeedDialFab(
                 expanded = isFabMenuExpanded,
                 onExpandedChange = { isFabMenuExpanded = it },
-                items = listOf(
-                    SpeedDialFabItem(
-                        icon = Icons.Default.Share,
-                        label = "Join Group",
-                        contentDescription = "Join Group",
-                        onClick = { showJoinGroupDialog = true },
+                items =
+                    listOf(
+                        SpeedDialFabItem(
+                            icon = Icons.Default.Share,
+                            label = "Join Group",
+                            contentDescription = "Join Group",
+                            onClick = { showJoinGroupDialog = true },
+                        ),
+                        SpeedDialFabItem(
+                            icon = Icons.Default.Add,
+                            label = "Create Group",
+                            contentDescription = "Create Group",
+                            onClick = { onCreateGroup() },
+                        ),
                     ),
-                    SpeedDialFabItem(
-                        icon = Icons.Default.Add,
-                        label = "Create Group",
-                        contentDescription = "Create Group",
-                        onClick = { onCreateGroup() },
-                    ),
-                ),
                 fabExpanded = isFabExpanded,
             )
         },
@@ -183,9 +185,10 @@ internal fun GroupListScreen(
                     .padding(paddingValues),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface),
             ) {
                 ModernHeader(onProfileClick = onProfileClick)
 
@@ -387,7 +390,7 @@ private fun SuccessState(
                     sharedTransitionScope = sharedTransitionScope,
                     animatedContentScope = animatedContentScope,
                     onClick = { onGroupSelected(group) },
-                    onEdit = { onEditGroup(group)},
+                    onEdit = { onEditGroup(group) },
                     onDelete = { onDeleteGroup(group) },
                 )
             }
@@ -449,14 +452,15 @@ internal fun ExpenseListCard(
                     AsyncImage(
                         model = list.imageUrl,
                         contentDescription = "Group image",
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .sharedElement(
-                                rememberSharedContentState(key = "group_image_${list.listId}"),
-                                animatedVisibilityScope = animatedContentScope,
-                            ),
+                        modifier =
+                            Modifier
+                                .width(48.dp)
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .sharedElement(
+                                    rememberSharedContentState(key = "group_image_${list.listId}"),
+                                    animatedVisibilityScope = animatedContentScope,
+                                ),
                         contentScale = ContentScale.Crop,
                     )
                 }
@@ -500,7 +504,7 @@ internal fun ExpenseListCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     val formattedTime = formatDateForDisplay(list.lastModified)
                     Text(
@@ -515,7 +519,6 @@ internal fun ExpenseListCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-
             }
 
             // Member avatars and action buttons (right section)
@@ -602,17 +605,17 @@ fun EmptyState() {
                                     MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                                 ),
                         ),
-                )
-                .padding(32.dp),
+                ).padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
             painter = painterResource(Res.drawable.zorro3),
             contentDescription = "Zorro Header",
-            modifier = Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(16.dp))
+            modifier =
+                Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(16.dp)),
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -728,8 +731,7 @@ private fun ErrorState(
                                     MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.05f),
                                 ),
                         ),
-                )
-                .padding(32.dp),
+                ).padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -903,9 +905,10 @@ private fun DeleteExpenseListDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
             ) {
                 Text("Delete")
             }

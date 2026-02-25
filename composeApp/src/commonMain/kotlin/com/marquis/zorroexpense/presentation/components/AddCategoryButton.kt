@@ -41,22 +41,25 @@ fun AddCategoryButton(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val strokeWidth = 2.dp.toPx()
                 val radius = (this.size.minDimension - strokeWidth) / 2f
-                val center = androidx.compose.ui.geometry.Offset(
-                    this.size.width / 2,
-                    this.size.height / 2,
-                )
+                val center =
+                    androidx.compose.ui.geometry.Offset(
+                        this.size.width / 2,
+                        this.size.height / 2,
+                    )
 
                 drawCircle(
                     color = primaryColor,
                     radius = radius,
                     center = center,
-                    style = Stroke(
-                        width = strokeWidth,
-                        pathEffect = PathEffect.dashPathEffect(
-                            floatArrayOf(15f, 6f),
-                            0f,
+                    style =
+                        Stroke(
+                            width = strokeWidth,
+                            pathEffect =
+                                PathEffect.dashPathEffect(
+                                    floatArrayOf(15f, 6f),
+                                    0f,
+                                ),
                         ),
-                    ),
                 )
             }
 

@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -43,9 +42,10 @@ actual fun SwipeableGroupCard(
     onDelete: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val dismissState = rememberSwipeToDismissBoxState(
-        positionalThreshold = { totalDistance -> totalDistance * 0.5f },
-    )
+    val dismissState =
+        rememberSwipeToDismissBoxState(
+            positionalThreshold = { totalDistance -> totalDistance * 0.5f },
+        )
 
     SwipeToDismissBox(
         state = dismissState,
@@ -94,26 +94,27 @@ private fun SwipeBackground(
             Icon(
                 Icons.Default.Edit,
                 contentDescription = "Edit",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .drawBehind {
-                        drawRect(lerp(Color.Yellow,Color.LightGray,progress))
-                    }
-                    .wrapContentSize(Alignment.CenterStart)
-                    .padding(12.dp),
-                tint = Color.White
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .drawBehind {
+                            drawRect(lerp(Color.Yellow, Color.LightGray, progress))
+                        }.wrapContentSize(Alignment.CenterStart)
+                        .padding(12.dp),
+                tint = Color.White,
             )
         }
         SwipeToDismissBoxValue.EndToStart -> {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Remove item",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(lerp(Color.Red, Color.LightGray, progress))
-                    .wrapContentSize(Alignment.CenterEnd)
-                    .padding(12.dp),
-                tint = Color.White
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(lerp(Color.Red, Color.LightGray, progress))
+                        .wrapContentSize(Alignment.CenterEnd)
+                        .padding(12.dp),
+                tint = Color.White,
             )
         }
         else -> {}

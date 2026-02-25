@@ -6,8 +6,6 @@ import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.dto.toDomain
 import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.Expense
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 
 class ExpenseRemoteDataSourceImpl(
     private val firestoreService: FirestoreService,

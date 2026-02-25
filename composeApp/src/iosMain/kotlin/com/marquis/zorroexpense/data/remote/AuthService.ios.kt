@@ -78,4 +78,8 @@ actual class AuthService {
             displayName = displayName,
             isEmailVerified = isEmailVerified,
         )
+
+    actual suspend fun signInWithGoogle(idToken: String): Result<AuthUserDto> {
+        TODO("Not yet implemented")
+    }
 }
