@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Badge
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -561,15 +562,34 @@ fun ExpenseListScreen(
 
                             // Category filter dropdown button
                             Box {
-                                IconButton(
-                                    onClick = { showCategoryFilterMenu = true },
+                                val disabledCategoryCount = availableCategories.size - selectedCategories.size
+                                Box(
+                                    modifier = Modifier.size(48.dp),
                                 ) {
-                                    Icon(
-                                        Icons.Default.Tune,
-                                        contentDescription = "Filter by category",
-                                        tint = androidx.compose.ui.graphics.Color.White,
-                                        modifier = Modifier.size(28.dp),
-                                    )
+                                    IconButton(
+                                        onClick = { showCategoryFilterMenu = true },
+                                        modifier = Modifier.size(48.dp),
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Tune,
+                                            contentDescription = "Filter by category",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(28.dp),
+                                        )
+                                    }
+
+                                    if (disabledCategoryCount > 0) {
+                                        Badge(
+                                            modifier = Modifier.align(Alignment.TopEnd),
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                        ) {
+                                            Text(
+                                                text = disabledCategoryCount.toString(),
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                                style = MaterialTheme.typography.labelSmall,
+                                            )
+                                        }
+                                    }
                                 }
 
                                 DropdownMenu(

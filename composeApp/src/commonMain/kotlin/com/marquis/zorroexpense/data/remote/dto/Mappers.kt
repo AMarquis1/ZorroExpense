@@ -54,13 +54,13 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
     val resolvedPaidBy =
         paidBy.getReferencePath()?.let { path ->
             val userId = path.substringAfterLast("/")
-            firestoreService.getUserById(path).getOrNull()?.toDomain(userId)
+            firestoreService.getUserById(userId).getOrNull()?.toDomain(userId)
         } ?: User()
 
     val resolvedSplitDetails =
         splitDetails.getSplitDetailData().mapNotNull { (userPath, amount) ->
             val userId = userPath.substringAfterLast("/")
-            firestoreService.getUserById(userPath).getOrNull()?.toDomain(userId)?.let { user ->
+            firestoreService.getUserById(userId).getOrNull()?.toDomain(userId)?.let { user ->
                 SplitDetail(user = user, amount = amount)
             }
         }
