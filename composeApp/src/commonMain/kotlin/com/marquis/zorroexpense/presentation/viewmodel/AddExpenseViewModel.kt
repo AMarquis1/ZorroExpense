@@ -125,7 +125,7 @@ class AddExpenseViewModel(
                 selectedDate = expense.date,
                 percentageSplits = percentageSplits,
                 numberSplits = numberSplits,
-                splitMethod = SplitMethod.NUMBER, // Default to number since we have actual amounts
+                splitMethod = SplitMethod.NUMBER,
                 isNameValid = true,
                 isPriceValid = true,
                 isCategoryValid = true,

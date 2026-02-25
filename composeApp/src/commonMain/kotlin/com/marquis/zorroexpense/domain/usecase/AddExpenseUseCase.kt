@@ -9,5 +9,5 @@ class AddExpenseUseCase(
     suspend operator fun invoke(
         listId: String,
         expense: Expense,
-    ): Result<String> = expenseRepository.addExpenseToList(listId, expense)
+    ): Result<String> = expenseRepository.addExpense(listId, expense)
 }

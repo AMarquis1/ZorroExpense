@@ -29,7 +29,7 @@ interface ExpenseRepository {
     /**
      * Add a new expense to a specific expense list
      */
-    suspend fun addExpenseToList(
+    suspend fun addExpense(
         listId: String,
         expense: Expense,
     ): Result<String>

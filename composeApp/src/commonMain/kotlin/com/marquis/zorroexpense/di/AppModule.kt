@@ -225,7 +225,7 @@ object AppModule {
         GetUserGroupUseCase(groupRepository)
     }
 
-    private val createExpenseListUseCase: CreateGroupUseCase by lazy {
+    private val createGroupUseCase: CreateGroupUseCase by lazy {
         CreateGroupUseCase(groupRepository, getUsersUseCase)
     }
 
@@ -403,7 +403,7 @@ object AppModule {
                 deleteGroupUseCase = deleteExpenseListUseCase,
                 getGroupByIdUseCase = getExpenseListByIdUseCase,
                 updateGroupUseCase = updateExpenseListUseCase,
-                createGroupUseCase = createExpenseListUseCase,
+                createGroupUseCase = createGroupUseCase,
                 getGroupCategoriesUseCase = GetGroupCategoriesUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
                 storageService = storageService,
@@ -421,7 +421,7 @@ object AppModule {
                 deleteGroupUseCase = deleteExpenseListUseCase,
                 getGroupByIdUseCase = getExpenseListByIdUseCase,
                 updateGroupUseCase = updateExpenseListUseCase,
-                createGroupUseCase = createExpenseListUseCase,
+                createGroupUseCase = createGroupUseCase,
                 getGroupCategoriesUseCase = GetGroupCategoriesUseCase,
                 getCategoriesUseCase = getCategoriesUseCase,
                 storageService = storageService,

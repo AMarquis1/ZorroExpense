@@ -83,6 +83,10 @@ class ExpenseListViewModel(
         viewModelScope.launch {
             getExpenseListByIdUseCase(listId).onSuccess { expenseList ->
                 _groupMetadata.value = expenseList
+                // Update available categories from group metadata
+                if (expenseList?.categories?.isNotEmpty() == true) {
+                    _availableCategories.value = expenseList.categories
+                }
             }
         }
     }
@@ -505,14 +509,41 @@ class ExpenseListViewModel(
             val updatedExpenses = currentState.expenses + newExpenses
             val debtSummaries = calculateDebtsFromExpenses(updatedExpenses)
 
+            // Extract new categories from the added expenses and add them to available categories if not already present
+            val newCategories = newExpenses
+                .map { it.category }
+                .distinctBy { category ->
+                    category.documentId.ifBlank { category.name }
+                }
+            val currentAvailableCategories = _availableCategories.value
+            val updatedAvailableCategories = (currentAvailableCategories + newCategories)
+                .distinctBy { category ->
+                    category.documentId.ifBlank { category.name }
+                }
+
+            // Add new categories to selected categories by default
+            val categoriesNotYetSelected = newCategories.filter { newCategory ->
+                !currentState.selectedCategories.any { selected ->
+                    if (newCategory.documentId.isNotBlank() && selected.documentId.isNotBlank()) {
+                        newCategory.documentId == selected.documentId
+                    } else {
+                        newCategory.name == selected.name
+                    }
+                }
+            }
+            val updatedSelectedCategories = currentState.selectedCategories + categoriesNotYetSelected
+
+            _availableCategories.value = updatedAvailableCategories
+
             _uiState.update {
                 currentState.copy(
                     expenses = updatedExpenses,
+                    selectedCategories = updatedSelectedCategories,
                     filteredExpenses =
                         filterExpenses(
                             expenses = updatedExpenses,
                             searchQuery = currentState.searchQuery,
-                            selectedCategories = currentState.selectedCategories,
+                            selectedCategories = updatedSelectedCategories,
                             sortOption = currentState.sortOption,
                             pendingDeletions = currentState.pendingDeletions,
                         ),
@@ -538,6 +569,38 @@ class ExpenseListViewModel(
                         }
                     }
                 val debtSummaries = calculateDebtsFromExpenses(updatedExpenses)
+
+                // Check if the updated expense uses a new category and add it if needed
+                val updatedCategory = updatedExpense.category
+                val currentAvailableCategories = _availableCategories.value
+                val categoryExists = currentAvailableCategories.any { category ->
+                    if (updatedCategory.documentId.isNotBlank() && category.documentId.isNotBlank()) {
+                        updatedCategory.documentId == category.documentId
+                    } else {
+                        updatedCategory.name == category.name
+                    }
+                }
+
+                if (!categoryExists) {
+                    val updatedAvailableCategories = currentAvailableCategories + updatedCategory
+                    _availableCategories.value = updatedAvailableCategories
+
+                    val updatedSelectedCategories = state.selectedCategories + updatedCategory
+                    return@update state.copy(
+                        expenses = updatedExpenses,
+                        selectedCategories = updatedSelectedCategories,
+                        filteredExpenses =
+                            filterExpenses(
+                                expenses = updatedExpenses,
+                                searchQuery = state.searchQuery,
+                                selectedCategories = updatedSelectedCategories,
+                                sortOption = state.sortOption,
+                                pendingDeletions = state.pendingDeletions,
+                            ),
+                        debtSummaries = debtSummaries,
+                    )
+                }
+
                 state.copy(
                     expenses = updatedExpenses,
                     filteredExpenses =

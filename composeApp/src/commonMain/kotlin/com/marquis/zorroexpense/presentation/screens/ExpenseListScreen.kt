@@ -80,6 +80,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.components.EmptyState
 import com.marquis.zorroexpense.components.ErrorState
 import com.marquis.zorroexpense.components.ExpenseCardSkeleton
@@ -507,7 +508,7 @@ fun ExpenseListScreen(
                                 Icon(
                                     Icons.Default.Search,
                                     contentDescription = "Search",
-                                    tint = androidx.compose.ui.graphics.Color.White,
+                                    tint = Color.White,
                                     modifier = Modifier.size(28.dp),
                                 )
                             }
@@ -520,7 +521,7 @@ fun ExpenseListScreen(
                                     Icon(
                                         Icons.Default.FilterList,
                                         contentDescription = "Sort expenses",
-                                        tint = androidx.compose.ui.graphics.Color.White,
+                                        tint = Color.White,
                                         modifier = Modifier.size(28.dp),
                                     )
                                 }
@@ -591,7 +592,7 @@ fun ExpenseListScreen(
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                                 ) {
-                                                    com.marquis.zorroexpense.components.CategoryIconCircle(
+                                                    CategoryIconCircle(
                                                         category = category,
                                                         size = 24.dp,
                                                     )
@@ -719,7 +720,7 @@ fun ExpenseListScreen(
                         item {
                             if (searchQuery.isNotEmpty()) {
                                 EmptyState(
-                                    icon = "🔍",
+                                    icon = " 🔍",
                                     title = "No matching expenses",
                                     description = "Try adjusting your search query to find expenses.",
                                 )

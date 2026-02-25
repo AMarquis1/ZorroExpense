@@ -160,7 +160,7 @@ class ExpenseRepositoryImpl(
     /**
      * Add expense to a list with immediate cache update
      */
-    override suspend fun addExpenseToList(
+    override suspend fun addExpense(
         listId: String,
         expense: Expense,
     ): Result<String> =

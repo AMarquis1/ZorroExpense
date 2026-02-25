@@ -39,8 +39,12 @@ actual fun Expense.toDto(): ExpenseDto {
             },
         categoryRef =
             if (this.category.documentId.isNotBlank()) {
-                // Create reference to category document using documentId
-                firestore.collection("Categories").document(this.category.documentId)
+                // Create reference to category document within the ExpenseList's categories subcollection
+                firestore
+                    .collection("ExpenseLists")
+                    .document(this.listId)
+                    .collection("categories")
+                    .document(this.category.documentId)
             } else {
                 null
             },
