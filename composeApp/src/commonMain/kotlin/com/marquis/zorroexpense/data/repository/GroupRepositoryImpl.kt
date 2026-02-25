@@ -82,6 +82,8 @@ class GroupRepositoryImpl(
                 val categoryDtos = list.categories.map { it.toDto() }
                 firestoreService.addGroupToUser(list.members.first().userId, listId)
                 firestoreService.setGroupCategories(listId, categoryDtos)
+                // Clear cache so newly created group appears when navigating back
+                cachedLists = emptyMap()
                 listId
             }
         }

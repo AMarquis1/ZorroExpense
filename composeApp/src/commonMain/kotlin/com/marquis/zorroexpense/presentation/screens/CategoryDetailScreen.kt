@@ -373,7 +373,11 @@ private fun CategoryDetailContent(
             } else {
                 OutlinedTextField(
                     value = editedName,
-                    onValueChange = onNameChange,
+                    onValueChange = { newValue ->
+                        if (newValue.length <= 12) {
+                            onNameChange(newValue)
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Enter category name") },
                     singleLine = true,

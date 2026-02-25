@@ -304,6 +304,14 @@ object AppModule {
         return viewModel
     }
 
+    /**
+     * Trigger a refresh on the cached GroupListViewModel
+     * Called when returning from group creation to refresh the list
+     */
+    fun triggerGroupListRefresh() {
+        groupListViewModel?.clearCacheAndRefresh()
+    }
+
     private val expenseListViewModels = mutableMapOf<String, ExpenseListViewModel>()
 
     /**
@@ -486,6 +494,13 @@ object AppModule {
             userRepository = userRepository,
             storageService = storageService,
         )
+
+    /**
+     * Get the cached ExpenseListViewModel for a specific listId
+     * Used to update the ViewModel after adding expenses
+     */
+    fun getExpenseListViewModel(listId: String): ExpenseListViewModel? =
+        expenseListViewModels[listId]
 
     // =================
     // Public API for Testing and Direct Access

@@ -32,7 +32,7 @@ actual class FirestoreService {
 
     actual suspend fun getUserById(userId: String): Result<UserDto?> =
         try {
-            val document = firestore.document(userId).get()
+            val document = firestore.collection("Users").document(userId).get()
             val user =
                 if (document.exists) {
                     document.data<UserDto>()

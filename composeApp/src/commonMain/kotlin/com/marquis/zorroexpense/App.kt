@@ -401,6 +401,8 @@ fun App() {
                                         )) {
                                             popUpTo(AppDestinations.ExpenseLists) { inclusive = false }
                                         }
+                                        // Trigger refresh when returning from group creation
+                                        AppModule.triggerGroupListRefresh()
                                     }
                                 },
                             )
@@ -569,13 +571,16 @@ fun App() {
                                 navController.popBackStack()
                             },
                             onExpenseSaved = { savedExpenses ->
-                                // Add saved expenses to list immediately (no network refresh needed)
+                                // Add saved expenses to list immediately AND refresh to ensure data consistency
                                 if (savedExpenses.isNotEmpty()) {
-                                    val listViewModel =
-                                        AppModule.provideExpenseListViewModel(
-                                            listId = addExpenseRoute.listId,
-                                        )
-                                    listViewModel.addExpensesLocally(savedExpenses)
+                                    // Get the actual cached ViewModel for this list
+                                    val listViewModel = AppModule.getExpenseListViewModel(addExpenseRoute.listId)
+                                    if (listViewModel != null) {
+                                        // Add expenses to the local cache for immediate display
+                                        listViewModel.addExpensesLocally(savedExpenses)
+                                        // Also trigger a refresh to ensure the list is up-to-date with Firestore
+                                        listViewModel.onEvent(ExpenseListUiEvent.RefreshExpenses)
+                                    }
                                 }
                                 navController.popBackStack()
                             },
@@ -740,13 +745,15 @@ fun App() {
                                 // Update the expense in the list and show snackbar
                                 if (savedExpenses.isNotEmpty()) {
                                     val savedExpense = savedExpenses.first()
-                                    val listViewModel =
-                                        AppModule.provideExpenseListViewModel(
-                                            listId = editExpense.listId,
-                                        )
-                                    listViewModel.updateExpenseLocally(savedExpense)
-                                    // Set the name to trigger snackbar on ExpenseListScreen
-                                    updatedExpenseName = savedExpense.name
+                                    // Get the cached ViewModel for this list
+                                    val listViewModel = AppModule.getExpenseListViewModel(editExpense.listId)
+                                    if (listViewModel != null) {
+                                        listViewModel.updateExpenseLocally(savedExpense)
+                                        // Trigger a refresh to ensure data consistency
+                                        listViewModel.onEvent(ExpenseListUiEvent.RefreshExpenses)
+                                        // Set the name to trigger snackbar on ExpenseListScreen
+                                        updatedExpenseName = savedExpense.name
+                                    }
                                 }
                                 // Navigate back to ExpenseList, popping both EditExpense and ExpenseDetail screens
                                 navController.popBackStack()

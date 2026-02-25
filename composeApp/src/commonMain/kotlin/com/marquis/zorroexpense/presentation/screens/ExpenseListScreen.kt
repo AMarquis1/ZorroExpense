@@ -472,20 +472,24 @@ fun ExpenseListScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f),
                             ) {
-                                with(sharedTransitionScope) {
-                                    AsyncImage(
-                                        model = groupMetadata?.imageUrl,
-                                        contentDescription = "Group image",
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .sharedElement(
-                                                rememberSharedContentState(key = "group_image_${groupMetadata?.listId}"),
-                                                animatedVisibilityScope = animatedContentScope,
-                                            ),
-                                        contentScale = ContentScale.Crop,
-                                    )
-                                }
+                                groupMetadata?.imageUrl
+                                    ?.takeIf { it.isNotBlank() }
+                                    ?.let { imageUrl ->
+                                        with(sharedTransitionScope) {
+                                            AsyncImage(
+                                                model = imageUrl,
+                                                contentDescription = "Group image",
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .sharedElement(
+                                                        rememberSharedContentState(key = "group_image_${groupMetadata?.listId}"),
+                                                        animatedVisibilityScope = animatedContentScope,
+                                                    ),
+                                                contentScale = ContentScale.Crop,
+                                            )
+                                        }
+                                    }
 
                                 Text(
                                     text = listName,

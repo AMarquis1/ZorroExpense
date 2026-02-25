@@ -57,6 +57,11 @@ class GroupListViewModel(
         loadListsWithCache(showCacheImmediately = true, forceRefresh = true)
     }
 
+    fun clearCacheAndRefresh() {
+        cachedLists = null
+        loadLists()
+    }
+
     private fun loadLists() {
         loadListsWithCache(showCacheImmediately = false, forceRefresh = false)
     }

@@ -16,16 +16,15 @@ class UserRepositoryImpl(
 ) : UserRepository {
     override suspend fun getUserById(userId: String): Result<User?> =
         try {
-            // Normalize path: if it doesn't start with "Users/", add it
-            val normalizedPath = if (userId.startsWith("Users/")) userId else "Users/$userId"
-            val userIdOnly = normalizedPath.substringAfterLast("/")
+            // Extract just the userId (remove "Users/" prefix if present)
+            val userIdOnly = if (userId.startsWith("Users/")) userId.substringAfterLast("/") else userId
             if (AppConfig.USE_MOCK_DATA) {
                 // Use mock data for development/testing
                 Result.success(MockExpenseData.usersMap[userIdOnly])
             } else {
                 // Use Firestore for production
                 firestoreService
-                    .getUserById(normalizedPath)
+                    .getUserById(userIdOnly)
                     .mapCatching { userDto ->
                         userDto?.toDomain(userIdOnly)
                     }
@@ -50,11 +49,10 @@ class UserRepositoryImpl(
                 // Use Firestore for production
                 val users = mutableListOf<User>()
                 for (userPath in userIds) {
-                    // Normalize path: if it doesn't start with "Users/", add it
-                    val normalizedPath = if (userPath.startsWith("Users/")) userPath else "Users/$userPath"
-                    val userIdOnly = normalizedPath.substringAfterLast("/")
+                    // Extract just the userId (remove "Users/" prefix if present)
+                    val userIdOnly = if (userPath.startsWith("Users/")) userPath.substringAfterLast("/") else userPath
                     firestoreService
-                        .getUserById(normalizedPath)
+                        .getUserById(userIdOnly)
                         .onSuccess { userDto ->
                             userDto?.toDomain(userIdOnly)?.let { users.add(it) }
                         }.onFailure { return Result.failure(it) }
@@ -67,11 +65,10 @@ class UserRepositoryImpl(
 
     override suspend fun updateProfile(userId: String, name: String, profileImageUrl: String?): Result<Unit> =
         try {
-            // Normalize path: if it doesn't start with "Users/", add it
-            val normalizedPath = if (userId.startsWith("Users/")) userId else "Users/$userId"
+            // Extract just the userId (remove "Users/" prefix if present)
+            val userIdOnly = if (userId.startsWith("Users/")) userId.substringAfterLast("/") else userId
             if (AppConfig.USE_MOCK_DATA) {
-                // Update mock data in memory - extract just the userId part
-                val userIdOnly = normalizedPath.substringAfterLast("/")
+                // Update mock data in memory
                 val existingUser = MockExpenseData.usersMap[userIdOnly]
                 if (existingUser != null) {
                     MockExpenseData.usersMap[userIdOnly] = existingUser.copy(
@@ -81,8 +78,9 @@ class UserRepositoryImpl(
                 }
                 Result.success(Unit)
             } else {
-                // Use Firestore for production
-                firestoreService.updateUserProfile(normalizedPath, name, profileImageUrl)
+                // Use Firestore for production - pass full path to updateUserProfile
+                val fullPath = "Users/$userIdOnly"
+                firestoreService.updateUserProfile(fullPath, name, profileImageUrl)
             }
         } catch (e: Exception) {
             Result.failure(e)

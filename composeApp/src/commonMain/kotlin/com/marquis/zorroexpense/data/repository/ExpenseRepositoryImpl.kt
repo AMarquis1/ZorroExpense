@@ -171,13 +171,14 @@ class ExpenseRepositoryImpl(
 
                     if (remoteResult.isSuccess) {
                         val expenseId = remoteResult.getOrThrow()
-                        // Update cache immediately with the new expense
-                        async {
-                            runCatching {
-                                localDataSource.addExpenseToList(listId, expense.copy(documentId = expenseId))
-                            }
+                        // Update cache immediately with the new expense (AWAITED to ensure it completes)
+                        try {
+                            localDataSource.addExpenseToList(listId, expense.copy(documentId = expenseId))
+                        } catch (e: Exception) {
+                            println("Failed to update local cache after adding expense: ${e.message}")
                         }
-                        // Update lastModified timestamp on the expense list
+
+                        // Update lastModified timestamp on the expense list (in background)
                         async {
                             runCatching {
                                 firestoreService.updateExpenseListLastModified(listId)
@@ -209,13 +210,14 @@ class ExpenseRepositoryImpl(
                     val remoteResult = remoteDataSource.updateExpenseInList(listId, expense)
 
                     if (remoteResult.isSuccess) {
-                        // Update cache immediately with the updated expense
-                        async {
-                            runCatching {
-                                localDataSource.updateExpenseInList(listId, expense)
-                            }
+                        // Update cache immediately with the updated expense (AWAITED to ensure it completes)
+                        try {
+                            localDataSource.updateExpenseInList(listId, expense)
+                        } catch (e: Exception) {
+                            println("Failed to update local cache after updating expense: ${e.message}")
                         }
-                        // Update lastModified timestamp on the expense list
+
+                        // Update lastModified timestamp on the expense list (in background)
                         async {
                             runCatching {
                                 firestoreService.updateExpenseListLastModified(listId)
@@ -247,13 +249,14 @@ class ExpenseRepositoryImpl(
                     val remoteResult = remoteDataSource.deleteExpenseFromList(listId, expenseId)
 
                     if (remoteResult.isSuccess) {
-                        // Update cache immediately by removing the deleted expense
-                        async {
-                            runCatching {
-                                localDataSource.deleteExpenseFromList(listId, expenseId)
-                            }
+                        // Update cache immediately by removing the deleted expense (AWAITED to ensure it completes)
+                        try {
+                            localDataSource.deleteExpenseFromList(listId, expenseId)
+                        } catch (e: Exception) {
+                            println("Failed to update local cache after deleting expense: ${e.message}")
                         }
-                        // Update lastModified timestamp on the expense list
+
+                        // Update lastModified timestamp on the expense list (in background)
                         async {
                             runCatching {
                                 firestoreService.updateExpenseListLastModified(listId)
