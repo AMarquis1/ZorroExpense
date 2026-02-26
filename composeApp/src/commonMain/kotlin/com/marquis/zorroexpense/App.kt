@@ -154,6 +154,7 @@ fun App() {
                                                             name = category.name,
                                                             icon = category.icon,
                                                             color = category.color,
+                                                            active = category.active,
                                                         )
                                                     },
                                                 ),
@@ -214,6 +215,7 @@ fun App() {
                                                         name = category.name,
                                                         icon = category.icon,
                                                         color = category.color,
+                                                        active = category.active,
                                                     )
                                                 },
                                             ),
@@ -336,6 +338,7 @@ fun App() {
                                                             name = category.name,
                                                             icon = category.icon,
                                                             color = category.color,
+                                                            active = category.active,
                                                         )
                                                     },
                                                 ),
@@ -384,6 +387,7 @@ fun App() {
                                             name = categoryNav.name,
                                             icon = categoryNav.icon,
                                             color = categoryNav.color,
+                                            active = categoryNav.active,
                                         )
                                     },
                             )

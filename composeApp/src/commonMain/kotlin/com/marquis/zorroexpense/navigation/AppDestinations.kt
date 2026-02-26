@@ -118,6 +118,7 @@ sealed class AppDestinations {
         val name: String,
         val icon: String,
         val color: String,
+        val active: Boolean = true,
     )
 
     @Serializable
