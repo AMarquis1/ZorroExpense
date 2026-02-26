@@ -788,9 +788,10 @@ fun App() {
                                         updatedExpenseName = savedExpense.name
                                     }
                                 }
-                                // Navigate back to ExpenseList, popping both EditExpense and ExpenseDetail screens
-                                navController.popBackStack()
-                                navController.popBackStack()
+                                // Navigate back to ExpenseList
+                                navController.navigate(AppDestinations.ExpenseList(editExpense.listId)) {
+                                    popUpTo<AppDestinations.ExpenseList> { inclusive = false }
+                                }
                             },
                         )
                     }

@@ -4,7 +4,7 @@ import com.marquis.zorroexpense.domain.model.Expense
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Timestamp
 import dev.gitlive.firebase.firestore.firestore
-import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlin.time.ExperimentalTime
@@ -25,10 +25,11 @@ actual fun Expense.toDto(): ExpenseDto {
         listId = firestore.collection("ExpenseLists").document(this.listId),
         date =
             try {
-                // Parse the date string (YYYY-MM-DD format) to create Firestore Timestamp
+                // Parse ISO-8601 format datetime string (e.g., "2026-02-03 22:42:27.682444Z")
                 if (this.date.isNotBlank()) {
-                    val localDate = LocalDate.parse(this.date)
-                    val instant = localDate.atStartOfDayIn(TimeZone.currentSystemDefault())
+                    // Replace space with 'T' to match ISO-8601 standard
+                    val isoDateTime = this.date.replace(" ", "T")
+                    val instant = Instant.parse(isoDateTime)
                     Timestamp(instant.epochSeconds, instant.nanosecondsOfSecond)
                 } else {
                     // Use current timestamp if date is empty
