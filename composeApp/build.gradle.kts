@@ -73,6 +73,9 @@ kotlin {
             implementation(libs.firebase.firestore.ktx)
             implementation(libs.firebase.auth.ktx)
             implementation(libs.firebase.storage.ktx)
+            // Override Firebase Auth to fix session persistence bug (firebase-android-sdk#7111)
+            // GitLive's 2.4.0 uses Firebase Auth 23.2.1 with persistence bug, manually pin to 24.0.0+
+            implementation("com.google.firebase:firebase-auth:24.0.0")
             implementation(libs.compose.material3)
             implementation(libs.android.material)
             implementation(libs.play.services.auth)
@@ -177,7 +180,6 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
-    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
 }
 
 ktlint {

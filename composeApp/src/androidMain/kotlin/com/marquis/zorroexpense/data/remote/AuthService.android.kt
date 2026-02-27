@@ -60,7 +60,15 @@ actual class AuthService {
     actual suspend fun getCurrentUser(): Result<AuthUserDto?> =
         try {
             val user = firebaseAuth.currentUser
-            Result.success(user?.toAuthUserDto())
+            // Workaround for firebase-android-sdk#7111: Ensure session is properly restored
+            // If currentUser is null but auth state exists, wait briefly for restoration
+            if (user == null) {
+                kotlinx.coroutines.delay(100)
+                val retryUser = firebaseAuth.currentUser
+                Result.success(retryUser?.toAuthUserDto())
+            } else {
+                Result.success(user.toAuthUserDto())
+            }
         } catch (e: Exception) {
             Result.failure(e.toAuthError())
         }

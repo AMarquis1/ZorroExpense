@@ -65,11 +65,22 @@ class AuthViewModel(
         }
 
         // Check if user is already authenticated on init
+        // With retry logic to handle firebase-android-sdk#7111 persistence bug
         viewModelScope.launch {
-            getCurrentUserUseCase()
-                .onSuccess { user ->
-                    if (user != null) {
-                        _globalAuthState.value = GlobalAuthState.Authenticated(user)
+            var user = getCurrentUserUseCase()
+            var retries = 0
+
+            // Retry up to 3 times with delays to ensure session restoration
+            while (user.isSuccess && user.getOrNull() == null && retries < 3) {
+                kotlinx.coroutines.delay(100)
+                user = getCurrentUserUseCase()
+                retries++
+            }
+
+            user
+                .onSuccess { authenticated ->
+                    if (authenticated != null) {
+                        _globalAuthState.value = GlobalAuthState.Authenticated(authenticated)
                     } else {
                         _globalAuthState.value = GlobalAuthState.Unauthenticated
                     }
