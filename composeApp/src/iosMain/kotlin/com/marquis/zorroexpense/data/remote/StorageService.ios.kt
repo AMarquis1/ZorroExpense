@@ -14,7 +14,7 @@ actual class StorageService actual constructor(
         imageBytes: ByteArray,
     ): Result<String> =
         try {
-            val fileName = "profile_images/$userId.jpg"
+            val fileName = "profile_images/$userId/profile.jpg"
             val reference = storage.reference.child(fileName)
 
             // Upload the bytes directly to Firebase Storage
@@ -51,7 +51,7 @@ actual class StorageService actual constructor(
         imageBytes: ByteArray,
     ): Result<String> =
         try {
-            val fileName = "group_images/$groupId.jpg"
+            val fileName = "group_images/$groupId/group_image.jpg"
             val reference = storage.reference.child(fileName)
 
             // Upload the bytes directly to Firebase Storage

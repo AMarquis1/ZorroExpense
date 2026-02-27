@@ -19,7 +19,7 @@ actual class StorageService actual constructor(
         imageBytes: ByteArray,
     ): Result<String> =
         try {
-            val fileName = "profile_images/$userId.jpg"
+            val fileName = "profile_images/$userId/profile.jpg"
             Log.d(tag, "Starting upload to: gs://zorro-expense.firebasestorage.app/$fileName (${imageBytes.size} bytes)")
 
             val reference = storage.reference.child(fileName)
@@ -61,7 +61,7 @@ actual class StorageService actual constructor(
         imageBytes: ByteArray,
     ): Result<String> =
         try {
-            val fileName = "group_images/$groupId.jpg"
+            val fileName = "group_images/$groupId/group_image.jpg"
             Log.d(tag, "Starting group image upload to: gs://zorro-expense.firebasestorage.app/$fileName (${imageBytes.size} bytes)")
 
             val reference = storage.reference.child(fileName)
