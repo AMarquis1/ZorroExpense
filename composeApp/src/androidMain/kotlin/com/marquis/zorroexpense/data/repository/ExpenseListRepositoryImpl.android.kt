@@ -15,7 +15,9 @@ actual fun Group.toDto(): GroupDto {
             firestore.collection("Users").document(member.userId)
         }
 
-    val now = kotlin.time.Clock.System.now()
+    val now =
+        kotlin.time.Clock.System
+            .now()
     val lastModifiedTimestamp = Timestamp(now.epochSeconds, now.nanosecondsOfSecond)
 
     return AndroidGroupDto(

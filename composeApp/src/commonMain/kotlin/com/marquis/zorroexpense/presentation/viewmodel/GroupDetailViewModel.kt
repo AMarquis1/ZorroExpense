@@ -7,6 +7,7 @@ import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.usecase.CreateGroupUseCase
+import com.marquis.zorroexpense.domain.usecase.DeleteCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteGroupUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
@@ -28,6 +29,7 @@ class GroupDetailViewModel(
     initialGroup: Group,
     initialMode: GroupDetailMode,
     private val deleteGroupUseCase: DeleteGroupUseCase,
+    private val deleteCategoryUseCase: DeleteCategoryUseCase,
     private val getGroupByIdUseCase: GetGroupByIdUseCase,
     private val updateGroupUseCase: UpdateGroupUseCase,
     private val createGroupUseCase: CreateGroupUseCase,
@@ -75,6 +77,9 @@ class GroupDetailViewModel(
             is GroupDetailUiEvent.CategoryToggled -> toggleCategory(event.category)
             is GroupDetailUiEvent.DismissCategoryBottomSheet -> dismissCategoryBottomSheet()
             is GroupDetailUiEvent.RemoveCategory -> removeCategory(event.category)
+            is GroupDetailUiEvent.ShowDeleteCategoryDialog -> showDeleteCategoryDialog(event.category)
+            is GroupDetailUiEvent.ConfirmDeleteCategory -> confirmDeleteCategory()
+            is GroupDetailUiEvent.CancelDeleteCategory -> cancelDeleteCategory()
             is GroupDetailUiEvent.RemoveMember -> showDeleteMemberConfirmation(event.member)
             is GroupDetailUiEvent.ConfirmDeleteMember -> confirmDeleteMember()
             is GroupDetailUiEvent.CancelDeleteMember -> cancelDeleteMember()
@@ -209,6 +214,54 @@ class GroupDetailViewModel(
                         currentState.editedCategories.map {
                             if (it.documentId == category.documentId) it.copy(active = false) else it
                         },
+                )
+            }
+        }
+    }
+
+    private fun showDeleteCategoryDialog(category: Category) {
+        val currentState = _uiState.value
+        if (currentState is GroupDetailUiState.Success) {
+            _uiState.update {
+                currentState.copy(
+                    showDeleteCategoryDialog = true,
+                    categoryToDelete = category,
+                )
+            }
+        }
+    }
+
+    private fun confirmDeleteCategory() {
+        val currentState = _uiState.value
+        if (currentState is GroupDetailUiState.Success && currentState.categoryToDelete != null) {
+            val categoryToRemove = currentState.categoryToDelete
+
+            // Call delete category use case
+            viewModelScope.launch {
+                deleteCategoryUseCase(groupId, categoryToRemove.documentId)
+            }
+
+            // Update UI state
+            _uiState.update {
+                currentState.copy(
+                    showDeleteCategoryDialog = false,
+                    categoryToDelete = null,
+                    editedCategories =
+                        currentState.editedCategories.filter {
+                            it.documentId != categoryToRemove.documentId
+                        },
+                )
+            }
+        }
+    }
+
+    private fun cancelDeleteCategory() {
+        val currentState = _uiState.value
+        if (currentState is GroupDetailUiState.Success) {
+            _uiState.update {
+                currentState.copy(
+                    showDeleteCategoryDialog = false,
+                    categoryToDelete = null,
                 )
             }
         }

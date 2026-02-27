@@ -583,7 +583,6 @@ fun ExpenseListScreen(
                                         )
                                     }
 
-
                                     if (disabledCategoryCount > 0 && !isLoading) {
                                         Badge(
                                             modifier = Modifier.align(Alignment.TopEnd),

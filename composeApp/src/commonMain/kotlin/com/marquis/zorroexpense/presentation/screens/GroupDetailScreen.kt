@@ -239,6 +239,7 @@ fun GroupDetailScreen(
                     onAddCategoryClick = { viewModel.onEvent(GroupDetailUiEvent.AddCategoryClicked) },
                     onRemoveCategory = { viewModel.onEvent(GroupDetailUiEvent.RemoveCategory(it)) },
                     onReactivateCategory = { viewModel.onEvent(GroupDetailUiEvent.CategoryToggled(it)) },
+                    onDeleteCategoryClick = { viewModel.onEvent(GroupDetailUiEvent.ShowDeleteCategoryDialog(it)) },
                     onRemoveMember = { viewModel.onEvent(GroupDetailUiEvent.RemoveMember(it)) },
                     onShowGalleryPicker = { showGalleryPicker = true },
                     onCreateCategoryClick = onCreateCategoryClick,
@@ -259,6 +260,27 @@ fun GroupDetailScreen(
                         memberName = successState.memberToDelete.name,
                         onConfirm = { viewModel.onEvent(GroupDetailUiEvent.ConfirmDeleteMember) },
                         onDismiss = { viewModel.onEvent(GroupDetailUiEvent.CancelDeleteMember) },
+                    )
+                }
+
+                if (successState.showDeleteCategoryDialog && successState.categoryToDelete != null) {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.onEvent(GroupDetailUiEvent.CancelDeleteCategory) },
+                        title = { Text("Delete category?") },
+                        text = { Text("Are you sure you want to delete \"${successState.categoryToDelete.name}\"? This action cannot be undone.") },
+                        confirmButton = {
+                            Button(
+                                onClick = { viewModel.onEvent(GroupDetailUiEvent.ConfirmDeleteCategory) },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            ) {
+                                Text("Delete", color = MaterialTheme.colorScheme.onError)
+                            }
+                        },
+                        dismissButton = {
+                            OutlinedButton(onClick = { viewModel.onEvent(GroupDetailUiEvent.CancelDeleteCategory) }) {
+                                Text("Cancel")
+                            }
+                        },
                     )
                 }
 
@@ -356,6 +378,7 @@ private fun ExpenseListDetailContent(
     onAddCategoryClick: () -> Unit,
     onRemoveCategory: (Category) -> Unit,
     onReactivateCategory: (Category) -> Unit,
+    onDeleteCategoryClick: (Category) -> Unit,
     onRemoveMember: (User) -> Unit,
     onShowGalleryPicker: () -> Unit,
     onCreateCategoryClick: () -> Unit = {},
@@ -642,28 +665,58 @@ private fun ExpenseListDetailContent(
                                             )
                                         }
 
-                                        // Reactivate (+) badge
-                                        Card(
-                                            modifier =
-                                                Modifier
-                                                    .size(20.dp)
-                                                    .align(Alignment.TopEnd),
-                                            colors =
-                                                CardDefaults.cardColors(
-                                                    containerColor = MaterialTheme.colorScheme.primary,
-                                                ),
-                                            shape = CircleShape,
-                                            onClick = { onReactivateCategory(category) },
+                                        // Reactivate (+) and Delete (trash) buttons
+                                        Row(
+                                            modifier = Modifier.align(Alignment.TopEnd),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                                         ) {
-                                            Box(
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentAlignment = Alignment.Center,
+                                            // Delete icon (trash)
+                                            Card(
+                                                modifier =
+                                                    Modifier
+                                                        .size(28.dp),
+                                                colors =
+                                                    CardDefaults.cardColors(
+                                                        containerColor = MaterialTheme.colorScheme.error,
+                                                    ),
+                                                shape = CircleShape,
+                                                onClick = { onDeleteCategoryClick(category) },
                                             ) {
-                                                Text(
-                                                    text = "+",
-                                                    color = MaterialTheme.colorScheme.onPrimary,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                )
+                                                Box(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentAlignment = Alignment.Center,
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Delete,
+                                                        contentDescription = "Delete category",
+                                                        tint = MaterialTheme.colorScheme.onError,
+                                                        modifier = Modifier.size(16.dp),
+                                                    )
+                                                }
+                                            }
+
+                                            // Reactivate button (+)
+                                            Card(
+                                                modifier =
+                                                    Modifier
+                                                        .size(28.dp),
+                                                colors =
+                                                    CardDefaults.cardColors(
+                                                        containerColor = MaterialTheme.colorScheme.primary,
+                                                    ),
+                                                shape = CircleShape,
+                                                onClick = { onReactivateCategory(category) },
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentAlignment = Alignment.Center,
+                                                ) {
+                                                    Text(
+                                                        text = "+",
+                                                        color = MaterialTheme.colorScheme.onPrimary,
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                    )
+                                                }
                                             }
                                         }
                                     }

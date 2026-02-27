@@ -23,6 +23,8 @@ sealed class GroupDetailUiState {
         val isSaving: Boolean = false,
         val showCategoryBottomSheet: Boolean = false,
         val isUploading: Boolean = false,
+        val showDeleteCategoryDialog: Boolean = false,
+        val categoryToDelete: Category? = null,
         // Editable fields for EDIT/ADD modes
         val editedName: String = group.name,
         val editedCategories: List<Category> = group.categories,
@@ -73,6 +75,17 @@ sealed class GroupDetailUiEvent {
     data class RemoveCategory(
         val category: Category,
     ) : GroupDetailUiEvent()
+
+    /** Show delete confirmation for category */
+    data class ShowDeleteCategoryDialog(
+        val category: Category,
+    ) : GroupDetailUiEvent()
+
+    /** Confirm category deletion */
+    data object ConfirmDeleteCategory : GroupDetailUiEvent()
+
+    /** Cancel category deletion */
+    data object CancelDeleteCategory : GroupDetailUiEvent()
 
     /** Remove a member */
     data class RemoveMember(

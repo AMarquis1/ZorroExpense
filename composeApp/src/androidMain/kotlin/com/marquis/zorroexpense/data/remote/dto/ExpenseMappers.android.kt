@@ -5,8 +5,6 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Timestamp
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlin.time.ExperimentalTime
 
 /**
