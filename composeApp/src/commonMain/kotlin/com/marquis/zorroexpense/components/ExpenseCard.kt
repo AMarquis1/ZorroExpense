@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.FlightTakeoff
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocalCafe
 import androidx.compose.material.icons.outlined.LocalDining
 import androidx.compose.material.icons.outlined.LocalFlorist
@@ -777,7 +778,7 @@ private fun getCategoryIcon(iconName: String): ImageVector =
         "LocalFlorist" -> Icons.Outlined.LocalFlorist
         "LocalLaundryService" -> Icons.Outlined.LocalLaundryService
         "LocalShipping" -> Icons.Outlined.LocalShipping
-        "LocalOffer" -> Icons.Outlined.LocalOffer
+        "Home" -> Icons.Outlined.Home
         else -> Icons.Outlined.QuestionMark
     }
 

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.FlightTakeoff
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.LocalFlorist
@@ -73,6 +74,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.components.CategoryIconCircle
+import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.presentation.state.CategoryDetailMode
 import com.marquis.zorroexpense.presentation.state.CategoryDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.CategoryDetailUiState
@@ -259,6 +261,7 @@ private fun hexStringToColor(colorHex: String): Color {
 
 private fun getIconByName(iconName: String) =
     when (iconName) {
+        "Home" -> Icons.Filled.Home
         "Others" -> Icons.Filled.QuestionMark
         "ShoppingCart" -> Icons.Filled.ShoppingCart
         "Pets" -> Icons.Filled.Pets
@@ -282,13 +285,12 @@ private fun getIconByName(iconName: String) =
         "LocalFlorist" -> Icons.Filled.LocalFlorist
         "LocalLaundryService" -> Icons.Filled.LocalLaundryService
         "LocalShipping" -> Icons.Filled.LocalShipping
-        "LocalOffer" -> Icons.Filled.LocalOffer
         else -> Icons.Filled.QuestionMark
     }
 
 @Composable
 private fun CategoryDetailContent(
-    category: com.marquis.zorroexpense.domain.model.Category,
+    category: Category,
     mode: CategoryDetailMode,
     editedName: String,
     editedIcon: String,
@@ -300,6 +302,7 @@ private fun CategoryDetailContent(
 ) {
     val icons =
         listOf(
+            "Home",
             "Others",
             "ShoppingCart",
             "Pets",
@@ -323,7 +326,6 @@ private fun CategoryDetailContent(
             "LocalFlorist",
             "LocalLaundryService",
             "LocalShipping",
-            "LocalOffer",
         )
     val colors =
         listOf(

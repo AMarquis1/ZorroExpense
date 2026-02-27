@@ -59,8 +59,6 @@ fun CategoryManagementScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val allCategories by viewModel.allCategories.collectAsState()
-    val bottomSheetState = rememberModalBottomSheetState()
-    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,

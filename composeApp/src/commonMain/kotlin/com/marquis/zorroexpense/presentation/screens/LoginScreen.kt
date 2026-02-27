@@ -67,10 +67,12 @@ fun LoginScreen(
     ) {
         Image(
             painter = painterResource(Res.drawable.zorro2),
+            contentScale = ContentScale.FillWidth,
             contentDescription = "Zorro Header",
             modifier =
                 Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .height(400.dp)
                     .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)),
         )
 
