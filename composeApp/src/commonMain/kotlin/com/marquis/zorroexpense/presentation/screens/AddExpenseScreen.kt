@@ -14,6 +14,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.TextAutoSizeDefaults
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -34,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -47,14 +50,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.overflow.TextOverflow
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.marquis.zorroexpense.components.CategoryIconCircle
 import com.marquis.zorroexpense.domain.model.Expense
 import com.marquis.zorroexpense.presentation.components.bottomsheets.CategorySelectionBottomSheet
@@ -129,6 +139,18 @@ fun AddExpenseScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+
+    // Helper function to hide keyboard and show bottom sheet with proper timing
+    fun showBottomSheetWithKeyboardHide(onShow: () -> Unit) {
+        coroutineScope.launch {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            delay(150) // Wait for keyboard animation to complete
+            onShow()
+        }
+    }
 
     // Validation from ViewModel
     val isNameValid = formState.isNameValid
@@ -259,7 +281,13 @@ fun AddExpenseScreen(
                                 onValueChange = { newValue ->
                                     viewModel.onEvent(AddExpenseUiEvent.PriceChanged(newValue))
                                 },
-                                label = { Text("Amount") },
+                                label = {
+                                    Text(
+                                        "Amount",
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                },
                                 placeholder = { Text("0.00") },
                                 leadingIcon = {
                                     Icon(
@@ -288,14 +316,24 @@ fun AddExpenseScreen(
                                     Modifier
                                         .weight(0.55f)
                                         .clickable {
-                                            focusManager.clearFocus()
-                                            showCategoryBottomSheet = true
+                                            showBottomSheetWithKeyboardHide {
+                                                showCategoryBottomSheet = true
+                                            }
                                         },
                             ) {
                                 OutlinedTextField(
                                     value = selectedCategory?.name ?: "",
                                     onValueChange = { },
-                                    label = { Text("Category") },
+                                    label = {
+                                        Text(
+                                            "Category",
+                                            autoSize = TextAutoSize.StepBased(
+                                                maxFontSize = 14.sp,
+                                            ),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    },
                                     placeholder = { Text("Select a category") },
                                     leadingIcon = {
                                         if (selectedCategory != null) {
@@ -326,7 +364,7 @@ fun AddExpenseScreen(
                                         }
                                     },
                                     colors =
-                                        androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                        OutlinedTextFieldDefaults.colors(
                                             disabledTextColor = MaterialTheme.colorScheme.onSurface,
                                             disabledBorderColor = MaterialTheme.colorScheme.outline,
                                             disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -344,14 +382,21 @@ fun AddExpenseScreen(
                                 Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        focusManager.clearFocus()
-                                        showDatePickerBottomSheet = true
+                                        showBottomSheetWithKeyboardHide {
+                                            showDatePickerBottomSheet = true
+                                        }
                                     },
                         ) {
                             OutlinedTextField(
                                 value = formatDateForDisplay(selectedDate),
                                 onValueChange = { },
-                                label = { Text("Date") },
+                                label = {
+                                    Text(
+                                        "Date",
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                },
                                 placeholder = { Text("Select date") },
                                 leadingIcon = {
                                     Icon(
@@ -369,7 +414,7 @@ fun AddExpenseScreen(
                                 readOnly = true,
                                 enabled = false,
                                 colors =
-                                    androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    OutlinedTextFieldDefaults.colors(
                                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                                         disabledBorderColor = MaterialTheme.colorScheme.outline,
                                         disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -408,8 +453,9 @@ fun AddExpenseScreen(
                             title = "Paid By",
                             selectedUser = selectedPaidByUser,
                             onAddClick = {
-                                focusManager.clearFocus()
-                                showPaidByBottomSheet = true
+                                showBottomSheetWithKeyboardHide {
+                                    showPaidByBottomSheet = true
+                                }
                             },
                             showError = selectedPaidByUser == null,
                             errorMessage = "Please select who paid",
@@ -424,8 +470,9 @@ fun AddExpenseScreen(
                             numberSplits = numberSplits,
                             expenseAmount = expensePrice.toFloatOrNull() ?: 0f,
                             onAddClick = {
-                                focusManager.clearFocus()
-                                showSplitWithBottomSheet = true
+                                showBottomSheetWithKeyboardHide {
+                                    showSplitWithBottomSheet = true
+                                }
                             },
                             onRemoveUser = { user ->
                                 viewModel.onEvent(AddExpenseUiEvent.RemoveUserFromSplit(user))
@@ -440,8 +487,9 @@ fun AddExpenseScreen(
                                 percentageSplits = percentageSplits,
                                 numberSplits = numberSplits,
                                 onSplitMethodClick = {
-                                    focusManager.clearFocus()
-                                    showSplitMethodBottomSheet = true
+                                    showBottomSheetWithKeyboardHide {
+                                        showSplitMethodBottomSheet = true
+                                    }
                                 },
                             )
                         }
@@ -470,7 +518,13 @@ fun AddExpenseScreen(
                         OutlinedTextField(
                             value = expenseDescription,
                             onValueChange = { viewModel.onEvent(AddExpenseUiEvent.DescriptionChanged(it)) },
-                            label = { Text("Note (Optional)") },
+                            label = {
+                                Text(
+                                    "Note (Optional)",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
                             placeholder = { Text("Add notes about this expense...") },
                             leadingIcon = {
                                 Icon(
@@ -514,7 +568,11 @@ fun AddExpenseScreen(
                             recurrenceDay = recurrenceDay,
                             recurrenceLimit = recurrenceLimit,
                             onRecurringToggled = { viewModel.onEvent(AddExpenseUiEvent.RecurringToggled(it)) },
-                            onRecurrenceTypeClick = { showRecurrenceTypeBottomSheet = true },
+                            onRecurrenceTypeClick = {
+                                showBottomSheetWithKeyboardHide {
+                                    showRecurrenceTypeBottomSheet = true
+                                }
+                            },
                             onRecurrenceLimitChanged = { viewModel.onEvent(AddExpenseUiEvent.RecurrenceLimitChanged(it)) },
                             modifier = Modifier.padding(16.dp),
                         )
