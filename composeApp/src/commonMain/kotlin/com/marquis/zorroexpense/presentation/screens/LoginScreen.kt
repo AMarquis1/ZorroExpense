@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.marquis.zorroexpense.di.AppModule
 import com.marquis.zorroexpense.presentation.state.AuthUiEvent
 import com.marquis.zorroexpense.presentation.state.AuthUiState
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
@@ -98,7 +99,7 @@ fun LoginScreen(
             value = email,
             onValueChange = { viewModel.onEvent(AuthUiEvent.EmailChanged(it)) },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             enabled = uiState !is AuthUiState.Loading,
         )
 
@@ -108,7 +109,7 @@ fun LoginScreen(
             value = password,
             onValueChange = { viewModel.onEvent(AuthUiEvent.PasswordChanged(it)) },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             visualTransformation = PasswordVisualTransformation(),
             enabled = uiState !is AuthUiState.Loading,
         )
@@ -143,6 +144,7 @@ fun LoginScreen(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
                     .height(48.dp),
             enabled = email.isNotEmpty() && password.isNotEmpty() && uiState !is AuthUiState.Loading,
         ) {
@@ -174,6 +176,7 @@ fun LoginScreen(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
                     .height(48.dp),
             enabled = uiState !is AuthUiState.Loading,
         ) {
@@ -197,8 +200,11 @@ fun LoginScreen(
         TextButton(
             onClick = onNavigateToSignUp,
             enabled = uiState !is AuthUiState.Loading,
+            modifier = Modifier.padding(bottom = 56.dp)
         ) {
-            Text("Don't have an account? Sign up")
+            Text(
+                text = "Don't have an account? Sign up",
+            )
         }
     }
 }

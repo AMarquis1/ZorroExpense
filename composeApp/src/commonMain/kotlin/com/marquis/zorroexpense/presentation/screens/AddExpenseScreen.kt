@@ -61,7 +61,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.overflow.TextOverflow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -284,6 +283,9 @@ fun AddExpenseScreen(
                                 label = {
                                     Text(
                                         "Amount",
+                                        autoSize = TextAutoSize.StepBased(
+                                            maxFontSize = 13.sp,
+                                        ),
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
@@ -295,7 +297,7 @@ fun AddExpenseScreen(
                                         contentDescription = "Amount",
                                     )
                                 },
-                                modifier = Modifier.weight(0.45f),
+                                modifier = Modifier.weight(0.40f),
                                 singleLine = true,
                                 isError = expensePrice.isNotBlank() && !isPriceValid,
                                 supportingText = {
@@ -314,7 +316,7 @@ fun AddExpenseScreen(
                             Box(
                                 modifier =
                                     Modifier
-                                        .weight(0.55f)
+                                        .weight(0.6f)
                                         .clickable {
                                             showBottomSheetWithKeyboardHide {
                                                 showCategoryBottomSheet = true
@@ -328,7 +330,7 @@ fun AddExpenseScreen(
                                         Text(
                                             "Category",
                                             autoSize = TextAutoSize.StepBased(
-                                                maxFontSize = 14.sp,
+                                                maxFontSize = 13.sp,
                                             ),
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,

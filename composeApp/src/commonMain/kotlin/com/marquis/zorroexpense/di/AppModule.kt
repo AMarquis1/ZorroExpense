@@ -6,6 +6,7 @@ import com.marquis.zorroexpense.data.datasource.ExpenseLocalDataSourceImpl
 import com.marquis.zorroexpense.data.datasource.ExpenseRemoteDataSource
 import com.marquis.zorroexpense.data.datasource.ExpenseRemoteDataSourceImpl
 import com.marquis.zorroexpense.data.remote.AuthService
+import com.marquis.zorroexpense.data.remote.CrashlyticService
 import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.data.repository.AuthRepositoryImpl
@@ -88,6 +89,10 @@ object AppModule {
 
     private val storageService: StorageService by lazy {
         StorageService(getAndroidContext())
+    }
+
+    private val crashlyticService: CrashlyticService by lazy {
+        CrashlyticService()
     }
 
     // =================
@@ -521,6 +526,8 @@ object AppModule {
     fun provideUpdateExpenseUseCase(): UpdateExpenseUseCase = updateExpenseUseCase
 
     fun provideDeleteExpenseUseCase(): DeleteExpenseUseCase = deleteExpenseUseCase
+
+    fun provideCrashlyticService(): CrashlyticService = crashlyticService
 
     /**
      * Clear all caches - useful for testing or logout scenarios

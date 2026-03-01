@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.gms)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.crashlytics.gradle)
 }
 
 kotlin {
@@ -73,6 +74,7 @@ kotlin {
             implementation(libs.firebase.firestore.ktx)
             implementation(libs.firebase.auth.ktx)
             implementation(libs.firebase.storage.ktx)
+            implementation(libs.firebase.crashlytics)
             // Override Firebase Auth to fix session persistence bug (firebase-android-sdk#7111)
             // GitLive's 2.4.0 uses Firebase Auth 23.2.1 with persistence bug, manually pin to 24.0.0+
             implementation("com.google.firebase:firebase-auth:24.0.0")
