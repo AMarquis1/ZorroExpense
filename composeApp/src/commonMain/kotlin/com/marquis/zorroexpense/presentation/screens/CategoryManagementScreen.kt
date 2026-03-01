@@ -1,5 +1,6 @@
 package com.marquis.zorroexpense.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
@@ -36,6 +38,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,11 +48,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.components.CategoryIconCircle
+import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.presentation.components.AddCategoryButton
 import com.marquis.zorroexpense.presentation.state.CategoryManagementUiEvent
 import com.marquis.zorroexpense.presentation.state.CategoryManagementUiState
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryManagementViewModel
+import io.github.ismoy.imagepickerkmp.domain.config.CameraCaptureConfig
+import io.github.ismoy.imagepickerkmp.domain.config.CropConfig
+import io.github.ismoy.imagepickerkmp.domain.models.CompressionLevel
+import io.github.ismoy.imagepickerkmp.domain.models.MimeType
+import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -59,6 +69,7 @@ fun CategoryManagementScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val allCategories by viewModel.allCategories.collectAsState()
+    val showGalleryPicker = remember { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
@@ -125,9 +136,12 @@ fun CategoryManagementScreen(
                     groupName = successState.groupName,
                     selectedCategories = successState.categories,
                     allCategories = allCategories,
+                    imageUrl = successState.imageUrl,
+                    isUploading = successState.isUploading,
                     onAddCategoryClick = { onCreateCategoryClick() },
                     onRemoveCategory = { viewModel.onEvent(CategoryManagementUiEvent.RemoveCategory(it)) },
                     onReactivateCategory = { viewModel.onEvent(CategoryManagementUiEvent.CategoryToggled(it)) },
+                    onShowGalleryPicker = { showGalleryPicker.value = true },
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -145,6 +159,37 @@ fun CategoryManagementScreen(
             }
         }
     }
+
+    Box(modifier = Modifier.fillMaxSize().padding(top = 36.dp)) {
+        if (showGalleryPicker.value) {
+            GalleryPickerLauncher(
+                allowMultiple = false,
+                mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
+                cameraCaptureConfig =
+                    CameraCaptureConfig(
+                        compressionLevel = CompressionLevel.HIGH,
+                        cropConfig =
+                            CropConfig(
+                                enabled = true,
+                                squareCrop = false,
+                            ),
+                    ),
+                onPhotosSelected = { photos ->
+                    if (photos.isNotEmpty()) {
+                        val photo = photos.first()
+                        viewModel.onEvent(CategoryManagementUiEvent.PhotoSelected(photo))
+                    }
+                    showGalleryPicker.value = false
+                },
+                onError = {
+                    showGalleryPicker.value = false
+                },
+                onDismiss = {
+                    showGalleryPicker.value = false
+                },
+            )
+        }
+    }
 }
 
 @Composable
@@ -152,9 +197,12 @@ private fun CategoryManagementContent(
     groupName: String,
     selectedCategories: List<Category>,
     allCategories: List<Category>,
+    imageUrl: String,
+    isUploading: Boolean,
     onAddCategoryClick: () -> Unit,
     onRemoveCategory: (Category) -> Unit,
     onReactivateCategory: (Category) -> Unit,
+    onShowGalleryPicker: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // In new group workflow, all categories are active (no inactive state)
@@ -167,6 +215,59 @@ private fun CategoryManagementContent(
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
     ) {
+        // Group image section
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier.size(120.dp),
+                contentAlignment = Alignment.BottomEnd,
+            ) {
+                ProfileAvatar(
+                    name = groupName,
+                    size = 120.dp,
+                    userProfile = imageUrl,
+                )
+
+                // Camera icon overlay for uploading
+                Card(
+                    modifier =
+                        Modifier
+                            .size(50.dp)
+                            .padding(4.dp),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                        ),
+                    shape = CircleShape,
+                    onClick = if (!isUploading) ({ onShowGalleryPicker() }) else ({}),
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Change group image",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         Text(
             text = "Select categories for \"$groupName\"",
             style = MaterialTheme.typography.bodyMedium,

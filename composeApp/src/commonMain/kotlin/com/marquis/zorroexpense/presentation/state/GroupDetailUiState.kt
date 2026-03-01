@@ -3,7 +3,6 @@ package com.marquis.zorroexpense.presentation.state
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
-import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 
 enum class GroupDetailMode {
     VIEW,
@@ -97,9 +96,4 @@ sealed class GroupDetailUiEvent {
 
     /** Cancel member deletion */
     data object CancelDeleteMember : GroupDetailUiEvent()
-
-    /** Photo selected from gallery */
-    data class PhotoSelected(
-        val photo: GalleryPhotoResult,
-    ) : GroupDetailUiEvent()
 }

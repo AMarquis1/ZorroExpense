@@ -2,7 +2,6 @@ package com.marquis.zorroexpense.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
@@ -16,7 +15,6 @@ import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
 import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
-import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,7 +33,6 @@ class GroupDetailViewModel(
     private val createGroupUseCase: CreateGroupUseCase,
     private val getGroupCategoriesUseCase: GetGroupCategoriesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val storageService: StorageService,
     private val onListDeleted: () -> Unit = {},
     private val onListSaved: (listId: String, listName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
@@ -83,7 +80,6 @@ class GroupDetailViewModel(
             is GroupDetailUiEvent.RemoveMember -> showDeleteMemberConfirmation(event.member)
             is GroupDetailUiEvent.ConfirmDeleteMember -> confirmDeleteMember()
             is GroupDetailUiEvent.CancelDeleteMember -> cancelDeleteMember()
-            is GroupDetailUiEvent.PhotoSelected -> onPhotoSelected(event.photo)
         }
     }
 
@@ -514,37 +510,4 @@ class GroupDetailViewModel(
         }
     }
 
-    fun onPhotoSelected(photo: GalleryPhotoResult) {
-        // Read bytes from the photo URI and upload
-        viewModelScope.launch {
-            storageService
-                .readImageBytesFromUri(photo.uri)
-                .onSuccess { imageBytes ->
-                    uploadGroupImage(imageBytes)
-                }.onFailure { error ->
-                    // Error handled silently - image upload is optional
-                }
-        }
-    }
-
-    private fun uploadGroupImage(imageBytes: ByteArray) {
-        val currentState = _uiState.value as? GroupDetailUiState.Success ?: return
-
-        viewModelScope.launch {
-            _uiState.update { currentState.copy(isUploading = true) }
-
-            storageService
-                .uploadGroupImage(groupId, imageBytes)
-                .onSuccess { downloadUrl ->
-                    _uiState.update {
-                        currentState.copy(
-                            editedImageUrl = downloadUrl,
-                            isUploading = false,
-                        )
-                    }
-                }.onFailure { error ->
-                    _uiState.update { currentState.copy(isUploading = false) }
-                }
-        }
-    }
 }

@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marquis.zorroexpense.data.remote.StorageService
 import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.usecase.CreateCategoryUseCase
 import com.marquis.zorroexpense.domain.usecase.GetCategoriesUseCase
@@ -9,6 +10,7 @@ import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.UpdateGroupUseCase
 import com.marquis.zorroexpense.presentation.state.CategoryManagementUiEvent
 import com.marquis.zorroexpense.presentation.state.CategoryManagementUiState
+import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +24,7 @@ class CategoryManagementViewModel(
     private val getGroupByIdUseCase: GetGroupByIdUseCase,
     private val updateGroupUseCase: UpdateGroupUseCase,
     private val createCategoryUseCase: CreateCategoryUseCase,
+    private val storageService: StorageService,
     private val onCategoriesSaved: (groupId: String, groupName: String) -> Unit = { _, _ -> },
 ) : ViewModel() {
     private val _uiState =
@@ -45,6 +48,7 @@ class CategoryManagementViewModel(
             CategoryManagementUiEvent.CancelClicked -> {} // Handle in screen
             CategoryManagementUiEvent.AddCategoryClicked -> {} // Handled in screen
             CategoryManagementUiEvent.DismissCategoryBottomSheet -> {} // Handled in screen
+            is CategoryManagementUiEvent.PhotoSelected -> onPhotoSelected(event.photo)
         }
     }
 
@@ -66,6 +70,8 @@ class CategoryManagementViewModel(
                             groupId = groupId,
                             groupName = groupName,
                             categories = defaultCategories,
+                            imageUrl = "",
+                            isUploading = false,
                         )
                 },
                 onFailure = { error ->
@@ -246,6 +252,40 @@ class CategoryManagementViewModel(
             _uiState.update {
                 currentState.copy(categories = updatedCategories)
             }
+        }
+    }
+
+    fun onPhotoSelected(photo: GalleryPhotoResult) {
+        // Read bytes from the photo URI and upload
+        viewModelScope.launch {
+            storageService
+                .readImageBytesFromUri(photo.uri)
+                .onSuccess { imageBytes ->
+                    uploadGroupImage(imageBytes)
+                }.onFailure { error ->
+                    // Error handled silently - image upload is optional
+                }
+        }
+    }
+
+    private fun uploadGroupImage(imageBytes: ByteArray) {
+        val currentState = _uiState.value as? CategoryManagementUiState.Success ?: return
+
+        viewModelScope.launch {
+            _uiState.update { currentState.copy(isUploading = true) }
+
+            storageService
+                .uploadGroupImage(groupId, imageBytes)
+                .onSuccess { downloadUrl ->
+                    _uiState.update {
+                        currentState.copy(
+                            imageUrl = downloadUrl,
+                            isUploading = false,
+                        )
+                    }
+                }.onFailure { error ->
+                    _uiState.update { currentState.copy(isUploading = false) }
+                }
         }
     }
 }

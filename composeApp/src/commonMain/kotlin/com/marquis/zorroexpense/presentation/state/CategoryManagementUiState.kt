@@ -1,6 +1,7 @@
 package com.marquis.zorroexpense.presentation.state
 
 import com.marquis.zorroexpense.domain.model.Category
+import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 
 sealed class CategoryManagementUiState {
     data object Loading : CategoryManagementUiState()
@@ -10,6 +11,8 @@ sealed class CategoryManagementUiState {
         val groupName: String,
         val categories: List<Category> = emptyList(),
         val isSaving: Boolean = false,
+        val imageUrl: String = "",
+        val isUploading: Boolean = false,
     ) : CategoryManagementUiState()
 
     data class Error(
@@ -33,4 +36,8 @@ sealed class CategoryManagementUiEvent {
     data object AddCategoryClicked : CategoryManagementUiEvent()
 
     data object DismissCategoryBottomSheet : CategoryManagementUiEvent()
+
+    data class PhotoSelected(
+        val photo: GalleryPhotoResult,
+    ) : CategoryManagementUiEvent()
 }

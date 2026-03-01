@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
@@ -83,11 +82,6 @@ import com.marquis.zorroexpense.presentation.state.GroupDetailMode
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiEvent
 import com.marquis.zorroexpense.presentation.state.GroupDetailUiState
 import com.marquis.zorroexpense.presentation.viewmodel.GroupDetailViewModel
-import io.github.ismoy.imagepickerkmp.domain.config.CameraCaptureConfig
-import io.github.ismoy.imagepickerkmp.domain.config.CropConfig
-import io.github.ismoy.imagepickerkmp.domain.models.CompressionLevel
-import io.github.ismoy.imagepickerkmp.domain.models.MimeType
-import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -103,13 +97,11 @@ fun GroupDetailScreen(
     val allCategories by viewModel.allCategories.collectAsState()
     val bottomSheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
-    var showGalleryPicker by remember { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
         topBar = {
-            if (!showGalleryPicker) {
-                TopAppBar(
+            TopAppBar(
                     title = {
                         val title =
                             when (uiState) {
@@ -212,7 +204,6 @@ fun GroupDetailScreen(
                             actionIconContentColor = MaterialTheme.colorScheme.onSurface,
                         ),
                 )
-            }
         },
     ) { paddingValues ->
         when (uiState) {
@@ -241,7 +232,6 @@ fun GroupDetailScreen(
                     onReactivateCategory = { viewModel.onEvent(GroupDetailUiEvent.CategoryToggled(it)) },
                     onDeleteCategoryClick = { viewModel.onEvent(GroupDetailUiEvent.ShowDeleteCategoryDialog(it)) },
                     onRemoveMember = { viewModel.onEvent(GroupDetailUiEvent.RemoveMember(it)) },
-                    onShowGalleryPicker = { showGalleryPicker = true },
                     onCreateCategoryClick = onCreateCategoryClick,
                     onCategoryClick = onCategoryClick,
                     modifier = Modifier.padding(paddingValues),
@@ -332,36 +322,6 @@ fun GroupDetailScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().padding(top = 36.dp)) {
-        if (showGalleryPicker) {
-            GalleryPickerLauncher(
-                allowMultiple = false,
-                mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
-                cameraCaptureConfig =
-                    CameraCaptureConfig(
-                        compressionLevel = CompressionLevel.HIGH,
-                        cropConfig =
-                            CropConfig(
-                                enabled = true,
-                                squareCrop = false,
-                            ),
-                    ),
-                onPhotosSelected = { photos ->
-                    if (photos.isNotEmpty()) {
-                        val photo = photos.first()
-                        viewModel.onEvent(GroupDetailUiEvent.PhotoSelected(photo))
-                    }
-                    showGalleryPicker = false
-                },
-                onError = {
-                    showGalleryPicker = false
-                },
-                onDismiss = {
-                    showGalleryPicker = false
-                },
-            )
-        }
-    }
 }
 
 @Composable
@@ -380,7 +340,6 @@ private fun ExpenseListDetailContent(
     onReactivateCategory: (Category) -> Unit,
     onDeleteCategoryClick: (Category) -> Unit,
     onRemoveMember: (User) -> Unit,
-    onShowGalleryPicker: () -> Unit,
     onCreateCategoryClick: () -> Unit = {},
     onCategoryClick: (Category) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -404,8 +363,8 @@ private fun ExpenseListDetailContent(
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
     ) {
-        // Group avatar with edit icon (only in EDIT mode)
-        if (isEditable) {
+        // Group avatar (only in EDIT mode, not in ADD mode)
+        if (mode == GroupDetailMode.EDIT) {
             Box(
                 modifier =
                     Modifier
@@ -447,45 +406,6 @@ private fun ExpenseListDetailContent(
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.scale(1.5f),
                         )
-                    }
-                }
-
-                // Camera icon button
-                IconButton(
-                    onClick = onShowGalleryPicker,
-                    modifier =
-                        Modifier
-                            .size(40.dp)
-                            .zIndex(1f),
-                    enabled = !isUploading,
-                ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(40.dp)
-                                .background(
-                                    if (isUploading) {
-                                        MaterialTheme.colorScheme.surfaceVariant
-                                    } else {
-                                        MaterialTheme.colorScheme.primary
-                                    },
-                                    CircleShape,
-                                ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (isUploading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = "Change group image",
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
                     }
                 }
             }
