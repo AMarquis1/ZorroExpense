@@ -1,12 +1,19 @@
 package com.marquis.zorroexpense.domain.repository
 
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.model.ExpensePage
 
 /**
  * Repository interface for expense data operations
  * Follows Clean Architecture principles with proper abstraction
  */
 interface ExpenseRepository {
+    suspend fun getExpensePage(
+        listId: String,
+        cursor: String?,
+        pageSize: Int,
+    ): Result<ExpensePage>
+
     /**
      * Force refresh expenses for a specific list, bypassing cache
      * Always fetches from remote data source and updates cache

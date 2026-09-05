@@ -290,6 +290,9 @@ fun ExpenseListScreen(
     val collapsedMonths = if (currentState is ExpenseListUiState.Success) currentState.collapsedMonths else emptySet()
     val isLoading = currentState is ExpenseListUiState.Loading
     val isRefreshing = if (currentState is ExpenseListUiState.Success) currentState.isRefreshing else false
+    val isLoadingNextPage = if (currentState is ExpenseListUiState.Success) currentState.isLoadingNextPage else false
+    val hasMore = if (currentState is ExpenseListUiState.Success) currentState.hasMore else false
+    val nextPageError = if (currentState is ExpenseListUiState.Success) currentState.nextPageError else null
     val showUpcoming = if (currentState is ExpenseListUiState.Success) currentState.showUpcomingExpenses else true
     val errorMessage = if (currentState is ExpenseListUiState.Error) currentState.message else null
 
@@ -351,6 +354,23 @@ fun ExpenseListScreen(
 
             previousFirstVisibleItemIndex = currentIndex
             previousFirstVisibleItemScrollOffset = currentOffset
+        }
+    }
+
+    LaunchedEffect(listState, hasMore, isLoadingNextPage, nextPageError) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            layoutInfo.visibleItemsInfo.lastOrNull()?.index to layoutInfo.totalItemsCount
+        }.collect { (lastVisibleIndex, totalItemsCount) ->
+            if (
+                lastVisibleIndex != null &&
+                lastVisibleIndex >= totalItemsCount - 3 &&
+                hasMore &&
+                !isLoadingNextPage &&
+                nextPageError == null
+            ) {
+                    viewModel.onEvent(ExpenseListUiEvent.LoadNextPage)
+            }
         }
     }
 
@@ -543,7 +563,7 @@ fun ExpenseListScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                     )
 
-                                    SortOption.entries.forEach { option ->
+                                    listOf(SortOption.DATE_DESC).forEach { option ->
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
@@ -897,6 +917,25 @@ fun ExpenseListScreen(
                                         onCardClick = { viewModel.onEvent(ExpenseListUiEvent.ExpenseClicked(expense)) },
                                         sharedTransitionScope = sharedTransitionScope,
                                         animatedContentScope = animatedContentScope,
+                                    )
+                                }
+                            }
+                        }
+
+                        if (hasMore || isLoadingNextPage || nextPageError != null) {
+                            item(key = "next_page_status") {
+                                if (isLoadingNextPage) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                ) {
+                                    Text("Loading more expenses...")
+                                }
+                                } else if (nextPageError != null) {
+                                    Text(
+                                        text = "Couldn't load more expenses. Tap to retry.",
+                                        color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.fillMaxWidth().clickable { viewModel.onEvent(ExpenseListUiEvent.RetryLoadNextPage) }.padding(16.dp),
                                     )
                                 }
                             }

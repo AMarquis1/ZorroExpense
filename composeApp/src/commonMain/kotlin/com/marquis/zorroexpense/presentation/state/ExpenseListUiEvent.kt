@@ -8,6 +8,10 @@ sealed class ExpenseListUiEvent {
 
     object RefreshExpenses : ExpenseListUiEvent()
 
+    object LoadNextPage : ExpenseListUiEvent()
+
+    object RetryLoadNextPage : ExpenseListUiEvent()
+
     data class SearchQueryChanged(
         val query: String,
     ) : ExpenseListUiEvent()

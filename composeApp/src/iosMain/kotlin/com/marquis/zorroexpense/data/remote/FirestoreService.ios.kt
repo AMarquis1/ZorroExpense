@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.ExpenseDtoPage
 import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.IosExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.IosGroupDto
@@ -9,6 +10,7 @@ import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.UserProfile
 import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firestore.DocumentReference
 import dev.gitlive.firebase.firestore.firestore
 import dev.gitlive.firebase.firestore.firestoreSettings
 
@@ -95,18 +97,12 @@ actual class FirestoreService {
                     .document(userId)
                     .get()
 
-            // Get the ExpenseListReferences array field from the user document
-            @Suppress("UNCHECKED_CAST")
             val expenseListReferences =
-                (userSnapshot.get("ExpenseListReferences") as? List<Any>)
-                    ?: emptyList()
+                userSnapshot.get<List<DocumentReference>>("ExpenseListReferences")
 
             val lists = mutableListOf<GroupDto>()
             for (reference in expenseListReferences) {
-                // Extract document ID from reference path
-                // Path format: "projects/zorro-expense/databases/(default)/documents/ExpenseLists/FXeLk3GspKd1fDqWJM8b"
-                val referenceString = reference.toString()
-                val listId = referenceString.substringAfterLast("/")
+                val listId = reference.path.substringAfterLast("/")
 
                 val listSnapshot =
                     firestore
@@ -314,6 +310,13 @@ actual class FirestoreService {
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    actual suspend fun getExpensePage(
+        groupId: String,
+        cursor: String?,
+        pageSize: Int,
+    ): Result<ExpenseDtoPage> =
+        Result.failure(UnsupportedOperationException("Expense pagination is not implemented on iOS yet"))
 
     actual suspend fun getExpenseById(
         groupId: String,

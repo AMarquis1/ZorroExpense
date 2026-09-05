@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.ExpenseDtoPage
 import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.domain.model.UserProfile
@@ -233,6 +234,13 @@ actual class FirestoreService actual constructor() {
     actual suspend fun getExpensesByListId(groupId: String): Result<List<ExpenseDto>> {
         TODO("Not yet implemented")
     }
+
+    actual suspend fun getExpensePage(
+        groupId: String,
+        cursor: String?,
+        pageSize: Int,
+    ): Result<ExpenseDtoPage> =
+        Result.failure(UnsupportedOperationException("Expense pagination is not implemented on Web yet"))
 
     actual suspend fun addExpenseToList(
         groupId: String,

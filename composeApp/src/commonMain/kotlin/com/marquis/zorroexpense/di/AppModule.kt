@@ -181,6 +181,10 @@ object AppModule {
         GetExpensesByListIdUseCase(expenseRepository)
     }
 
+    private val getExpensePageUseCase: com.marquis.zorroexpense.domain.usecase.GetExpensePageUseCase by lazy {
+        com.marquis.zorroexpense.domain.usecase.GetExpensePageUseCase(expenseRepository)
+    }
+
     private val getExpenseByIdUseCase: com.marquis.zorroexpense.domain.usecase.GetExpenseByIdUseCase by lazy {
         com.marquis.zorroexpense.domain.usecase
             .GetExpenseByIdUseCase(expenseRepository)
@@ -339,6 +343,7 @@ object AppModule {
                     listId = listId,
                     listName = listName,
                     getExpensesByListIdUseCase = getExpensesByListIdUseCase,
+                    getExpensePageUseCase = getExpensePageUseCase,
                     refreshExpensesUseCase = refreshExpensesUseCase,
                     deleteExpenseUseCase = deleteExpenseUseCase,
                     calculateDebtsUseCase = calculateDebtsUseCase,

@@ -6,6 +6,7 @@ import com.marquis.zorroexpense.data.remote.FirestoreService
 import com.marquis.zorroexpense.domain.error.ExpenseError
 import com.marquis.zorroexpense.domain.error.toExpenseError
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.model.ExpensePage
 import com.marquis.zorroexpense.domain.repository.ExpenseRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -29,6 +30,22 @@ class ExpenseRepositoryImpl(
     private val firestoreService: FirestoreService,
 ) : ExpenseRepository {
     private val repositoryMutex = Mutex()
+
+    override suspend fun getExpensePage(
+        listId: String,
+        cursor: String?,
+        pageSize: Int,
+    ): Result<ExpensePage> =
+        try {
+            val pageResult = remoteDataSource.getExpensePage(listId, cursor, pageSize)
+            if (pageResult.isSuccess) {
+                Result.success(pageResult.getOrThrow())
+            } else {
+                Result.failure(pageResult.exceptionOrNull()?.toExpenseError() ?: ExpenseError.NetworkError("Failed to fetch expense page"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e.toExpenseError())
+        }
 
     /**
      * Force refresh expenses for a specific list, bypassing cache

@@ -2,6 +2,7 @@ package com.marquis.zorroexpense.data.remote
 
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.ExpenseDtoPage
 import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.domain.model.UserProfile
@@ -61,6 +62,12 @@ expect class FirestoreService() {
     ): Result<Unit>
 
     suspend fun getExpensesByListId(groupId: String): Result<List<ExpenseDto>>
+
+    suspend fun getExpensePage(
+        groupId: String,
+        cursor: String?,
+        pageSize: Int,
+    ): Result<ExpenseDtoPage>
 
     suspend fun getExpenseById(
         groupId: String,

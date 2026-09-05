@@ -126,7 +126,6 @@ internal fun EditProfileScreen(
                     )
                 }
             }
-
             EditProfileUiState.Saved -> {
                 onNavigateBack()
             }

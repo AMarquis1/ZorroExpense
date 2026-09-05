@@ -1,6 +1,7 @@
 package com.marquis.zorroexpense.data.datasource
 
 import com.marquis.zorroexpense.domain.model.Expense
+import com.marquis.zorroexpense.domain.model.ExpensePage
 
 /**
  * Abstract data source for expense operations
@@ -34,7 +35,13 @@ interface ExpenseDataSource {
  * Remote data source interface
  * Represents network-based data access
  */
-interface ExpenseRemoteDataSource : ExpenseDataSource
+interface ExpenseRemoteDataSource : ExpenseDataSource {
+    suspend fun getExpensePage(
+        listId: String,
+        cursor: String?,
+        pageSize: Int,
+    ): Result<ExpensePage>
+}
 
 /**
  * Local data source interface

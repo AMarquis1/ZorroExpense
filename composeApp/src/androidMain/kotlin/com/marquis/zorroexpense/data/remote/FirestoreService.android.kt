@@ -4,17 +4,23 @@ import com.marquis.zorroexpense.data.remote.dto.AndroidExpenseDto
 import com.marquis.zorroexpense.data.remote.dto.AndroidGroupDto
 import com.marquis.zorroexpense.data.remote.dto.CategoryDto
 import com.marquis.zorroexpense.data.remote.dto.ExpenseDto
+import com.marquis.zorroexpense.data.remote.dto.ExpenseDtoPage
 import com.marquis.zorroexpense.data.remote.dto.GroupDto
 import com.marquis.zorroexpense.data.remote.dto.UserDto
 import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.UserProfile
 import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.DocumentReference
+import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.firestore
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class FirestoreService {
     private val firestore = Firebase.firestore
+    // Cursors are only used during the current list session, so retaining the snapshot
+    // avoids another document read and remains valid if that expense is later deleted.
+    private val expensePageCursors = mutableMapOf<String, DocumentSnapshot>()
 
     actual suspend fun getCategories(): Result<List<CategoryDto>> =
         try {
@@ -325,6 +331,39 @@ actual class FirestoreService {
                     document.data<AndroidExpenseDto>().copy(documentId = document.id)
                 }
             Result.success(expenses)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    actual suspend fun getExpensePage(
+        groupId: String,
+        cursor: String?,
+        pageSize: Int,
+    ): Result<ExpenseDtoPage> =
+        try {
+            require(pageSize > 0) { "Page size must be greater than zero" }
+            val collection = firestore.collection("ExpenseLists").document(groupId).collection("Expenses")
+            var query =
+                collection
+                    .orderBy("date", Direction.DESCENDING)
+                    .limit(pageSize + 1)
+            if (cursor != null) {
+                val cursorSnapshot = expensePageCursors[cursor]
+                    ?: return Result.failure(IllegalStateException("Paging session expired; refresh the expense list"))
+                query = query.startAfter(cursorSnapshot)
+            }
+            val documents = query.get().documents
+            val hasMore = documents.size > pageSize
+            val pageDocuments = documents.take(pageSize)
+            val nextCursor = pageDocuments.lastOrNull()?.id
+            pageDocuments.lastOrNull()?.let { document -> expensePageCursors[document.id] = document }
+            Result.success(
+                ExpenseDtoPage(
+                    expenses = pageDocuments.map { it.data<AndroidExpenseDto>().copy(documentId = it.id) },
+                    nextCursor = nextCursor,
+                    hasMore = hasMore,
+                ),
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }

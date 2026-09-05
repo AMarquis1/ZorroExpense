@@ -79,6 +79,39 @@ suspend fun ExpenseDto.toDomain(firestoreService: FirestoreService): Expense {
     )
 }
 
+fun ExpenseDto.toDomain(
+    categoriesCache: Map<String, Category>,
+    usersCache: Map<String, User>,
+): Expense {
+    val categoryId = category.getReferencePath()?.substringAfterLast("/")
+    val resolvedCategory = categoryId?.let { categoriesCache[it] } ?: Category()
+
+    val resolvedPaidBy =
+        paidBy.getReferencePath()?.let { path ->
+            val userId = path.substringAfterLast("/")
+            usersCache[userId]
+        } ?: User()
+
+    val resolvedSplitDetails =
+        splitDetails.getSplitDetailData().mapNotNull { (userPath, amount) ->
+            val userId = userPath.substringAfterLast("/")
+            usersCache[userId]?.let { user -> SplitDetail(user = user, amount = amount) }
+        }
+
+    return Expense(
+        documentId = documentId,
+        listId = listId.getListIdPath(),
+        description = description,
+        name = name,
+        price = price,
+        date = date.toDateString(),
+        category = resolvedCategory,
+        paidBy = resolvedPaidBy,
+        splitDetails = resolvedSplitDetails,
+        isFromRecurring = isFromRecurring,
+    )
+}
+
 fun GroupDto.toDomain(categories: List<CategoryDto> = emptyList()): Group {
     val resolvedCategories = categories.map { it.toDomain() }
 

@@ -8,6 +8,7 @@ import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.usecase.CalculateDebtsUseCase
 import com.marquis.zorroexpense.domain.usecase.DeleteExpenseUseCase
 import com.marquis.zorroexpense.domain.usecase.GetExpensesByListIdUseCase
+import com.marquis.zorroexpense.domain.usecase.GetExpensePageUseCase
 import com.marquis.zorroexpense.domain.usecase.GetGroupByIdUseCase
 import com.marquis.zorroexpense.domain.usecase.RefreshExpensesUseCase
 import com.marquis.zorroexpense.presentation.state.ExpenseListUiEvent
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -26,6 +28,7 @@ class ExpenseListViewModel(
     private val listId: String,
     val listName: String = "",
     private val getExpensesByListIdUseCase: GetExpensesByListIdUseCase,
+    private val getExpensePageUseCase: GetExpensePageUseCase,
     private val refreshExpensesUseCase: RefreshExpensesUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
     private val calculateDebtsUseCase: CalculateDebtsUseCase,
@@ -43,6 +46,8 @@ class ExpenseListViewModel(
     val groupMetadata: StateFlow<Group?> = _groupMetadata.asStateFlow()
 
     private var hasLoadedOnce = false
+    private var pageLoadJob: Job? = null
+    private var pagingGeneration = 0
 
     /**
      * Utility function to check if an expense date is in the future
@@ -114,7 +119,10 @@ class ExpenseListViewModel(
     fun onEvent(event: ExpenseListUiEvent) {
         when (event) {
             is ExpenseListUiEvent.LoadExpenses -> loadExpenses(isRefresh = false)
-            is ExpenseListUiEvent.RefreshExpenses -> loadExpenses(isRefresh = true, forceRefresh = true)
+            is ExpenseListUiEvent.RefreshExpenses -> loadExpenses(isRefresh = true)
+            is ExpenseListUiEvent.LoadNextPage,
+            is ExpenseListUiEvent.RetryLoadNextPage,
+            -> loadNextPage()
             is ExpenseListUiEvent.SearchQueryChanged -> updateSearchQuery(event.query)
             is ExpenseListUiEvent.SearchExpandedChanged -> updateSearchExpanded(event.isExpanded)
             is ExpenseListUiEvent.CategoryToggled -> toggleCategory(event.category)
@@ -132,9 +140,10 @@ class ExpenseListViewModel(
 
     private fun loadExpenses(
         isRefresh: Boolean = false,
-        forceRefresh: Boolean = false,
     ) {
-        viewModelScope.launch {
+        pageLoadJob?.cancel()
+        val generation = ++pagingGeneration
+        pageLoadJob = viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is ExpenseListUiState.Success) {
                 _uiState.value = currentState.copy(isRefreshing = true)
@@ -147,15 +156,12 @@ class ExpenseListViewModel(
                 _uiState.value = ExpenseListUiState.Loading
             }
 
-            val expensesResult =
-                if (forceRefresh) {
-                    refreshExpensesUseCase(listId)
-                } else {
-                    getExpensesByListIdUseCase(listId)
-                }
+            val expensesResult = getExpensePageUseCase(listId, cursor = null)
 
             if (expensesResult.isSuccess) {
-                val expenses = expensesResult.getOrThrow()
+                if (generation != pagingGeneration) return@launch
+                val page = expensesResult.getOrThrow()
+                val expenses = page.expenses
                 val categories =
                     expenses
                         .map { it.category }
@@ -209,6 +215,8 @@ class ExpenseListViewModel(
                         pendingDeletions = preservedPendingDeletions,
                         showUpcomingExpenses = existingState.showUpcomingExpenses,
                         debtSummaries = debtSummaries,
+                        nextCursor = page.nextCursor,
+                        hasMore = page.hasMore,
                     )
 
                 _uiState.value =
@@ -223,6 +231,7 @@ class ExpenseListViewModel(
                             ),
                     )
             } else {
+                if (generation != pagingGeneration) return@launch
                 val error = expensesResult.exceptionOrNull()
                 if (isRefresh && currentState is ExpenseListUiState.Success) {
                     _uiState.value = currentState.copy(isRefreshing = false)
@@ -233,6 +242,36 @@ class ExpenseListViewModel(
                         )
                 }
             }
+        }
+    }
+
+    private fun loadNextPage() {
+        val currentState = _uiState.value as? ExpenseListUiState.Success ?: return
+        if (pageLoadJob?.isActive == true || currentState.isLoadingNextPage || !currentState.hasMore || currentState.nextCursor == null) return
+
+        val generation = pagingGeneration
+        pageLoadJob = viewModelScope.launch {
+            _uiState.value = currentState.copy(isLoadingNextPage = true, nextPageError = null)
+            getExpensePageUseCase(listId, currentState.nextCursor).fold(
+                onSuccess = { page ->
+                    if (generation != pagingGeneration) return@fold
+                    val latestState = _uiState.value as? ExpenseListUiState.Success ?: return@fold
+                    val expenses = (latestState.expenses + page.expenses).distinctBy { it.documentId }
+                    _uiState.value = latestState.copy(
+                        expenses = expenses,
+                        filteredExpenses = filterExpenses(expenses, latestState.searchQuery, latestState.selectedCategories, latestState.sortOption, latestState.pendingDeletions),
+                        debtSummaries = calculateDebtsFromExpenses(expenses),
+                        isLoadingNextPage = false,
+                        nextCursor = page.nextCursor,
+                        hasMore = page.hasMore,
+                    )
+                },
+                onFailure = { error ->
+                    if (generation != pagingGeneration) return@fold
+                    val latestState = _uiState.value as? ExpenseListUiState.Success ?: return@fold
+                    _uiState.value = latestState.copy(isLoadingNextPage = false, nextPageError = error.message ?: "Failed to load more expenses")
+                },
+            )
         }
     }
 

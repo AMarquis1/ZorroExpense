@@ -10,6 +10,7 @@
 		B202E53C2E2F208E00A925EB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B202E53B2E2F208E00A925EB /* FirebaseAuth */; };
 		B202E53E2E2F208E00A925EB /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = B202E53D2E2F208E00A925EB /* FirebaseCore */; };
 		B202E5402E2F208E00A925EB /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = B202E53F2E2F208E00A925EB /* FirebaseFirestore */; };
+		B202E5422E2F208E00A925EB /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = B202E5412E2F208E00A925EB /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +51,7 @@
 				B202E53E2E2F208E00A925EB /* FirebaseCore in Frameworks */,
 				B202E53C2E2F208E00A925EB /* FirebaseAuth in Frameworks */,
 				B202E5402E2F208E00A925EB /* FirebaseFirestore in Frameworks */,
+				B202E5422E2F208E00A925EB /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,6 +99,7 @@
 				B202E53B2E2F208E00A925EB /* FirebaseAuth */,
 				B202E53D2E2F208E00A925EB /* FirebaseCore */,
 				B202E53F2E2F208E00A925EB /* FirebaseFirestore */,
+				B202E5412E2F208E00A925EB /* FirebaseStorage */,
 			);
 			productName = iosApp;
 			productReference = B9DA97B12DC1472C00A4DA20 /* ZorroExpense.app */;
@@ -420,6 +423,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B202E53A2E2F208E00A925EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		B202E5412E2F208E00A925EB /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B202E53A2E2F208E00A925EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
