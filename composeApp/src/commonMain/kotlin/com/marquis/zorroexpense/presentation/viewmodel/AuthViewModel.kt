@@ -196,11 +196,10 @@ class AuthViewModel(
         }
     }
 
-    /**
-     * Reset Google Sign-In trigger when user cancels or encounters error.
-     */
-    fun resetGoogleSignInTrigger() {
+    /** Completes a native Google Sign-In attempt that did not yield an ID token. */
+    fun handleGoogleSignInFailure(error: AuthError) {
         _googleSignInTrigger.value = false
+        _uiState.value = AuthUiState.Error(error.message)
     }
 
     private fun clearForm() {

@@ -52,13 +52,16 @@ sealed class AuthError : Exception() {
  */
 fun Throwable.toAuthError(): AuthError =
     when {
-        this.message?.contains("INVALID_EMAIL", ignoreCase = true) == true -> AuthError.InvalidEmail
-        this.message?.contains("INVALID_PASSWORD", ignoreCase = true) == true -> AuthError.InvalidPassword
-        this.message?.contains("INVALID_LOGIN_CREDENTIALS", ignoreCase = true) == true -> AuthError.InvalidCredentials
-        this.message?.contains("EMAIL_EXISTS", ignoreCase = true) == true -> AuthError.EmailAlreadyInUse
-        this.message?.contains("WEAK_PASSWORD", ignoreCase = true) == true -> AuthError.WeakPassword
-        this.message?.contains("USER_DISABLED", ignoreCase = true) == true -> AuthError.AccountDisabled
-        this.message?.contains("network", ignoreCase = true) == true -> AuthError.NetworkError
-        this.message?.contains("USER_NOT_FOUND", ignoreCase = true) == true -> AuthError.UserNotFound
+        messageContains("INVALID_EMAIL", "badly formatted", "invalid email") -> AuthError.InvalidEmail
+        messageContains("INVALID_PASSWORD") -> AuthError.InvalidPassword
+        messageContains("INVALID_LOGIN_CREDENTIALS", "invalid credential", "wrong password") -> AuthError.InvalidCredentials
+        messageContains("EMAIL_EXISTS", "already in use") -> AuthError.EmailAlreadyInUse
+        messageContains("WEAK_PASSWORD", "password should be at least") -> AuthError.WeakPassword
+        messageContains("USER_DISABLED", "has been disabled") -> AuthError.AccountDisabled
+        messageContains("network", "offline") -> AuthError.NetworkError
+        messageContains("USER_NOT_FOUND", "no user record") -> AuthError.UserNotFound
         else -> AuthError.UnknownError
     }
+
+private fun Throwable.messageContains(vararg values: String): Boolean =
+    values.any { value -> message?.contains(value, ignoreCase = true) == true }

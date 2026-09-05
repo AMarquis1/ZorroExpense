@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.marquis.zorroexpense.domain.error.AuthError
 import com.marquis.zorroexpense.presentation.viewmodel.AuthViewModel
 
 private const val TAG = "GoogleSignIn"
@@ -43,18 +44,18 @@ internal actual fun HandleGoogleSignInTrigger(
                         viewModel.handleGoogleSignInResult(idToken)
                     } ?: run {
                         Log.e(TAG, "ID token is null")
-                        viewModel.resetGoogleSignInTrigger()
+                        viewModel.handleGoogleSignInFailure(AuthError.GoogleSignInFailed)
                     }
                 } catch (e: ApiException) {
                     Log.e(TAG, "ApiException: ${e.statusCode} - ${e.message}", e)
-                    viewModel.resetGoogleSignInTrigger()
+                    viewModel.handleGoogleSignInFailure(AuthError.GoogleSignInFailed)
                 } catch (e: Exception) {
                     Log.e(TAG, "Unexpected exception", e)
-                    viewModel.resetGoogleSignInTrigger()
+                    viewModel.handleGoogleSignInFailure(AuthError.GoogleSignInFailed)
                 }
             } else {
                 Log.d(TAG, "Result not OK (probably cancelled or error)")
-                viewModel.resetGoogleSignInTrigger()
+                viewModel.handleGoogleSignInFailure(AuthError.GoogleSignInCancelled)
             }
         }
 
@@ -76,7 +77,7 @@ internal actual fun HandleGoogleSignInTrigger(
                 googleSignInLauncher.launch(googleSignInClient.signInIntent)
             } catch (e: Exception) {
                 Log.e(TAG, "Error launching Google Sign-In", e)
-                viewModel.resetGoogleSignInTrigger()
+                viewModel.handleGoogleSignInFailure(AuthError.GoogleSignInFailed)
             }
         }
     }

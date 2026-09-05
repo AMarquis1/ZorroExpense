@@ -38,8 +38,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,11 +52,14 @@ import com.marquis.zorroexpense.presentation.components.AddCategoryButton
 import com.marquis.zorroexpense.presentation.state.CategoryManagementUiEvent
 import com.marquis.zorroexpense.presentation.state.CategoryManagementUiState
 import com.marquis.zorroexpense.presentation.viewmodel.CategoryManagementViewModel
-import io.github.ismoy.imagepickerkmp.domain.config.CameraCaptureConfig
-import io.github.ismoy.imagepickerkmp.domain.config.CropConfig
-import io.github.ismoy.imagepickerkmp.domain.models.CompressionLevel
-import io.github.ismoy.imagepickerkmp.domain.models.MimeType
-import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
+import io.github.ismoy.imagepickerkmp.config.CameraCaptureConfig
+import io.github.ismoy.imagepickerkmp.config.CropConfig
+import io.github.ismoy.imagepickerkmp.config.GalleryConfig
+import io.github.ismoy.imagepickerkmp.picker.CompressionLevel
+import io.github.ismoy.imagepickerkmp.picker.ImagePickerKMPConfig
+import io.github.ismoy.imagepickerkmp.picker.ImagePickerResult
+import io.github.ismoy.imagepickerkmp.picker.MimeType
+import io.github.ismoy.imagepickerkmp.picker.rememberImagePickerKMP
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -69,7 +70,30 @@ fun CategoryManagementScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val allCategories by viewModel.allCategories.collectAsState()
-    val showGalleryPicker = remember { mutableStateOf(false) }
+    val imagePicker =
+        rememberImagePickerKMP(
+            ImagePickerKMPConfig(
+                galleryConfig =
+                    GalleryConfig(
+                        mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
+                    ),
+                cropConfig = CropConfig(enabled = true, squareCrop = false),
+            ),
+        )
+
+    when (val result = imagePicker.result) {
+        is ImagePickerResult.Success -> {
+            result.first?.let { photo ->
+                viewModel.onEvent(CategoryManagementUiEvent.PhotoSelected(photo))
+            }
+            imagePicker.reset()
+        }
+        is ImagePickerResult.Error,
+        ImagePickerResult.Dismissed,
+        ImagePickerResult.Idle,
+        ImagePickerResult.Loading,
+        -> Unit
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets.statusBars,
@@ -141,7 +165,11 @@ fun CategoryManagementScreen(
                     onAddCategoryClick = { onCreateCategoryClick() },
                     onRemoveCategory = { viewModel.onEvent(CategoryManagementUiEvent.RemoveCategory(it)) },
                     onReactivateCategory = { viewModel.onEvent(CategoryManagementUiEvent.CategoryToggled(it)) },
-                    onShowGalleryPicker = { showGalleryPicker.value = true },
+                    onShowGalleryPicker = {
+                        imagePicker.launchGallery(
+                            cameraCaptureConfig = CameraCaptureConfig(compressionLevel = CompressionLevel.HIGH),
+                        )
+                    },
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -157,37 +185,6 @@ fun CategoryManagementScreen(
                     )
                 }
             }
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize().padding(top = 36.dp)) {
-        if (showGalleryPicker.value) {
-            GalleryPickerLauncher(
-                allowMultiple = false,
-                mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
-                cameraCaptureConfig =
-                    CameraCaptureConfig(
-                        compressionLevel = CompressionLevel.HIGH,
-                        cropConfig =
-                            CropConfig(
-                                enabled = true,
-                                squareCrop = false,
-                            ),
-                    ),
-                onPhotosSelected = { photos ->
-                    if (photos.isNotEmpty()) {
-                        val photo = photos.first()
-                        viewModel.onEvent(CategoryManagementUiEvent.PhotoSelected(photo))
-                    }
-                    showGalleryPicker.value = false
-                },
-                onError = {
-                    showGalleryPicker.value = false
-                },
-                onDismiss = {
-                    showGalleryPicker.value = false
-                },
-            )
         }
     }
 }

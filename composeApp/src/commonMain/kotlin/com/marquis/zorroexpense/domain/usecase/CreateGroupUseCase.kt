@@ -4,7 +4,7 @@ import com.marquis.zorroexpense.domain.model.Category
 import com.marquis.zorroexpense.domain.model.Group
 import com.marquis.zorroexpense.domain.model.User
 import com.marquis.zorroexpense.domain.repository.GroupRepository
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 class CreateGroupUseCase(
     private val groupRepository: GroupRepository,

@@ -48,6 +48,9 @@ class ExpenseListViewModel(
     private var hasLoadedOnce = false
     private var pageLoadJob: Job? = null
     private var pagingGeneration = 0
+    private var debtExpenses: List<Expense> = emptyList()
+    private var debtSummaries: List<com.marquis.zorroexpense.domain.model.DebtSummary> = emptyList()
+    private var debtLoadGeneration = 0
 
     /**
      * Utility function to check if an expense date is in the future
@@ -71,6 +74,27 @@ class ExpenseListViewModel(
     private fun calculateDebtsFromExpenses(expenses: List<Expense>): List<com.marquis.zorroexpense.domain.model.DebtSummary> {
         val currentExpenses = expenses.filter { !isFutureExpense(it.date) }
         return calculateDebtsUseCase(currentExpenses)
+    }
+
+    /**
+     * Settlement balances require the entire list, unlike the paged expense feed.
+     */
+    private fun loadDebtSummaries() {
+        val generation = ++debtLoadGeneration
+        viewModelScope.launch {
+            getExpensesByListIdUseCase(listId).onSuccess { expenses ->
+                if (generation != debtLoadGeneration) return@onSuccess
+                debtExpenses = expenses
+                debtSummaries = calculateDebtsFromExpenses(debtExpenses)
+                _uiState.update { state ->
+                    if (state is ExpenseListUiState.Success) {
+                        state.copy(debtSummaries = debtSummaries)
+                    } else {
+                        state
+                    }
+                }
+            }
+        }
     }
 
     init {
@@ -143,6 +167,7 @@ class ExpenseListViewModel(
     ) {
         pageLoadJob?.cancel()
         val generation = ++pagingGeneration
+        loadDebtSummaries()
         pageLoadJob = viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is ExpenseListUiState.Success) {
@@ -197,8 +222,6 @@ class ExpenseListViewModel(
                     } else {
                         expenses
                     }
-
-                val debtSummaries = calculateDebtsFromExpenses(finalExpenses)
 
                 val newState =
                     ExpenseListUiState.Success(
@@ -260,7 +283,6 @@ class ExpenseListViewModel(
                     _uiState.value = latestState.copy(
                         expenses = expenses,
                         filteredExpenses = filterExpenses(expenses, latestState.searchQuery, latestState.selectedCategories, latestState.sortOption, latestState.pendingDeletions),
-                        debtSummaries = calculateDebtsFromExpenses(expenses),
                         isLoadingNextPage = false,
                         nextCursor = page.nextCursor,
                         hasMore = page.hasMore,
@@ -490,7 +512,9 @@ class ExpenseListViewModel(
                         if (state is ExpenseListUiState.Success) {
                             val newExpenses = state.expenses.filter { it.documentId != expenseId }
                             val newPendingDeletions = state.pendingDeletions - expenseId
-                            val debtSummaries = calculateDebtsFromExpenses(newExpenses)
+                            debtExpenses = debtExpenses.filter { it.documentId != expenseId }
+                            debtLoadGeneration++
+                            debtSummaries = calculateDebtsFromExpenses(debtExpenses)
                             state.copy(
                                 expenses = newExpenses,
                                 pendingDeletions = newPendingDeletions,
@@ -551,7 +575,9 @@ class ExpenseListViewModel(
         val currentState = _uiState.value
         if (currentState is ExpenseListUiState.Success) {
             val updatedExpenses = currentState.expenses + newExpenses
-            val debtSummaries = calculateDebtsFromExpenses(updatedExpenses)
+            debtExpenses = (debtExpenses + newExpenses).distinctBy { it.documentId }
+            debtLoadGeneration++
+            debtSummaries = calculateDebtsFromExpenses(debtExpenses)
 
             // Extract new categories from the added expenses and add them to available categories if not already present
             val newCategories =
@@ -615,7 +641,12 @@ class ExpenseListViewModel(
                             expense
                         }
                     }
-                val debtSummaries = calculateDebtsFromExpenses(updatedExpenses)
+                debtExpenses =
+                    debtExpenses.map { expense ->
+                        if (expense.documentId == updatedExpense.documentId) updatedExpense else expense
+                    }
+                debtLoadGeneration++
+                debtSummaries = calculateDebtsFromExpenses(debtExpenses)
 
                 // Check if the updated expense uses a new category and add it if needed
                 val updatedCategory = updatedExpense.category

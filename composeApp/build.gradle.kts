@@ -31,7 +31,6 @@ kotlin {
     }
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
     ).forEach { iosTarget ->
@@ -181,6 +180,7 @@ android {
 }
 
 dependencies {
+    implementation(platform(libs.firebase.bom))
     debugImplementation(compose.uiTooling)
 }
 

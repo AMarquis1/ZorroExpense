@@ -11,6 +11,7 @@ import com.marquis.zorroexpense.data.remote.dto.toDto
 import com.marquis.zorroexpense.domain.model.UserProfile
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.DocumentReference
+import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.firestore
 import dev.gitlive.firebase.firestore.firestoreSettings
 
@@ -98,7 +99,7 @@ actual class FirestoreService {
                     .get()
 
             val expenseListReferences =
-                userSnapshot.get<List<DocumentReference>>("ExpenseListReferences")
+                userSnapshot.get<List<DocumentReference>?>("ExpenseListReferences").orEmpty()
 
             val lists = mutableListOf<GroupDto>()
             for (reference in expenseListReferences) {
@@ -250,15 +251,16 @@ actual class FirestoreService {
             val userDoc = firestore.collection("Users").document(userId)
             val userSnapshot = userDoc.get()
 
-            @Suppress("UNCHECKED_CAST")
             val currentReferences =
-                (userSnapshot.get("ExpenseListReferences") as? MutableList<Any>)
-                    ?.toMutableList() ?: mutableListOf()
+                userSnapshot
+                    .get<List<DocumentReference>?>("ExpenseListReferences")
+                    .orEmpty()
+                    .toMutableList()
 
             // Add the reference if not already present
             val alreadyExists =
-                currentReferences.any {
-                    it.toString().substringAfterLast("/") == groupId
+                currentReferences.any { reference ->
+                    reference.path.substringAfterLast("/") == groupId
                 }
             if (!alreadyExists) {
                 val newReference = firestore.collection("ExpenseLists").document(groupId)
@@ -279,14 +281,15 @@ actual class FirestoreService {
             val userDoc = firestore.collection("Users").document(userId)
             val userSnapshot = userDoc.get()
 
-            @Suppress("UNCHECKED_CAST")
             val currentReferences =
-                (userSnapshot.get("ExpenseListReferences") as? MutableList<Any>)
-                    ?.toMutableList() ?: mutableListOf()
+                userSnapshot
+                    .get<List<DocumentReference>?>("ExpenseListReferences")
+                    .orEmpty()
+                    .toMutableList()
 
             // Remove the reference with matching listId
             currentReferences.removeAll { reference ->
-                reference.toString().substringAfterLast("/") == groupId
+                reference.path.substringAfterLast("/") == groupId
             }
 
             userDoc.update("ExpenseListReferences" to currentReferences)
@@ -299,8 +302,9 @@ actual class FirestoreService {
         try {
             val snapshot =
                 firestore
+                    .collection("ExpenseLists")
+                    .document(groupId)
                     .collection("Expenses")
-                    .where { "listId" equalTo groupId }
                     .get()
             val expenses =
                 snapshot.documents.map { document ->
@@ -316,7 +320,38 @@ actual class FirestoreService {
         cursor: String?,
         pageSize: Int,
     ): Result<ExpenseDtoPage> =
-        Result.failure(UnsupportedOperationException("Expense pagination is not implemented on iOS yet"))
+        try {
+            require(pageSize > 0) { "Page size must be greater than zero" }
+            val documents =
+                firestore
+                    .collection("ExpenseLists")
+                    .document(groupId)
+                    .collection("Expenses")
+                    .orderBy("date", Direction.DESCENDING)
+                    .get()
+                    .documents
+            val startIndex =
+                cursor?.let { cursorId ->
+                    val cursorIndex = documents.indexOfFirst { document -> document.id == cursorId }
+                    if (cursorIndex == -1) {
+                        return Result.failure(IllegalStateException("Paging session expired; refresh the expense list"))
+                    }
+                    cursorIndex + 1
+                } ?: 0
+            val pageDocuments = documents.drop(startIndex).take(pageSize)
+            val nextCursor = pageDocuments.lastOrNull()?.id
+            Result.success(
+                ExpenseDtoPage(
+                    expenses = pageDocuments.map { document ->
+                        document.data<IosExpenseDto>().copy(documentId = document.id)
+                    },
+                    nextCursor = nextCursor,
+                    hasMore = startIndex + pageDocuments.size < documents.size,
+                ),
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 
     actual suspend fun getExpenseById(
         groupId: String,
@@ -325,6 +360,8 @@ actual class FirestoreService {
         try {
             val snapshot =
                 firestore
+                    .collection("ExpenseLists")
+                    .document(groupId)
                     .collection("Expenses")
                     .document(expenseId)
                     .get()
@@ -347,6 +384,8 @@ actual class FirestoreService {
             val iosExpenseDto = expense as IosExpenseDto
             val docRef =
                 firestore
+                    .collection("ExpenseLists")
+                    .document(groupId)
                     .collection("Expenses")
                     .add(iosExpenseDto)
             Result.success(docRef.id)
@@ -362,6 +401,8 @@ actual class FirestoreService {
         try {
             val iosExpenseDto = expense as IosExpenseDto
             firestore
+                .collection("ExpenseLists")
+                .document(groupId)
                 .collection("Expenses")
                 .document(expenseId)
                 .set(iosExpenseDto)
@@ -376,6 +417,8 @@ actual class FirestoreService {
     ): Result<Unit> =
         try {
             firestore
+                .collection("ExpenseLists")
+                .document(groupId)
                 .collection("Expenses")
                 .document(expenseId)
                 .delete()

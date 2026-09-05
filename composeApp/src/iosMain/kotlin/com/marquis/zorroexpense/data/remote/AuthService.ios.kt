@@ -5,6 +5,7 @@ import com.marquis.zorroexpense.domain.error.AuthError
 import com.marquis.zorroexpense.domain.error.toAuthError
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.FirebaseUser
+import dev.gitlive.firebase.auth.GoogleAuthProvider
 import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -79,7 +80,13 @@ actual class AuthService {
             isEmailVerified = isEmailVerified,
         )
 
-    actual suspend fun signInWithGoogle(idToken: String): Result<AuthUserDto> {
-        TODO("Not yet implemented")
-    }
+    actual suspend fun signInWithGoogle(idToken: String): Result<AuthUserDto> =
+        try {
+            val credential = GoogleAuthProvider.credential(idToken, null)
+            firebaseAuth.signInWithCredential(credential)
+            val user = firebaseAuth.currentUser ?: return Result.failure(AuthError.UnknownError)
+            Result.success(user.toAuthUserDto())
+        } catch (e: Exception) {
+            Result.failure(e.toAuthError())
+        }
 }

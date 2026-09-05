@@ -7,7 +7,7 @@ import com.marquis.zorroexpense.domain.repository.UserRepository
 import com.marquis.zorroexpense.domain.usecase.GetCurrentUserUseCase
 import com.marquis.zorroexpense.presentation.state.EditProfileUiEvent
 import com.marquis.zorroexpense.presentation.state.EditProfileUiState
-import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
+import io.github.ismoy.imagepickerkmp.picker.GalleryPhotoResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

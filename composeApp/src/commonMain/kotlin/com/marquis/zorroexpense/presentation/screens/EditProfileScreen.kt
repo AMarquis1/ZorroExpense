@@ -28,9 +28,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -39,11 +37,14 @@ import com.marquis.zorroexpense.components.ProfileAvatar
 import com.marquis.zorroexpense.presentation.state.EditProfileUiEvent
 import com.marquis.zorroexpense.presentation.state.EditProfileUiState
 import com.marquis.zorroexpense.presentation.viewmodel.EditProfileViewModel
-import io.github.ismoy.imagepickerkmp.domain.config.CameraCaptureConfig
-import io.github.ismoy.imagepickerkmp.domain.config.CropConfig
-import io.github.ismoy.imagepickerkmp.domain.models.CompressionLevel
-import io.github.ismoy.imagepickerkmp.domain.models.MimeType
-import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
+import io.github.ismoy.imagepickerkmp.config.CameraCaptureConfig
+import io.github.ismoy.imagepickerkmp.config.CropConfig
+import io.github.ismoy.imagepickerkmp.config.GalleryConfig
+import io.github.ismoy.imagepickerkmp.picker.CompressionLevel
+import io.github.ismoy.imagepickerkmp.picker.ImagePickerKMPConfig
+import io.github.ismoy.imagepickerkmp.picker.ImagePickerResult
+import io.github.ismoy.imagepickerkmp.picker.MimeType
+import io.github.ismoy.imagepickerkmp.picker.rememberImagePickerKMP
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,11 +53,31 @@ internal fun EditProfileScreen(
     onNavigateBack: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showGalleryPicker by remember { mutableStateOf(false) }
+    val imagePicker =
+        rememberImagePickerKMP(
+            ImagePickerKMPConfig(
+                galleryConfig =
+                    GalleryConfig(
+                        mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
+                    ),
+                cropConfig = CropConfig(enabled = true, squareCrop = false),
+            ),
+        )
+
+    when (val result = imagePicker.result) {
+        is ImagePickerResult.Success -> {
+            result.first?.let(viewModel::onPhotoSelected)
+            imagePicker.reset()
+        }
+        is ImagePickerResult.Error,
+        ImagePickerResult.Dismissed,
+        ImagePickerResult.Idle,
+        ImagePickerResult.Loading,
+        -> Unit
+    }
     Scaffold(
         topBar = {
-            if (!showGalleryPicker) {
-                TopAppBar(
+            TopAppBar(
                     title = { Text("Edit Profile") },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
@@ -84,8 +105,7 @@ internal fun EditProfileScreen(
                             titleContentColor = MaterialTheme.colorScheme.onSurface,
                             actionIconContentColor = MaterialTheme.colorScheme.onSurface,
                         ),
-                )
-            }
+            )
         },
     ) { paddingValues ->
         when (val state = uiState) {
@@ -105,8 +125,11 @@ internal fun EditProfileScreen(
                 EditProfileContent(
                     state = state,
                     viewModel = viewModel,
-                    showGalleryPicker = showGalleryPicker,
-                    onShowGalleryPickerChanged = { show -> showGalleryPicker = show },
+                    onShowGalleryPicker = {
+                        imagePicker.launchGallery(
+                            cameraCaptureConfig = CameraCaptureConfig(compressionLevel = CompressionLevel.HIGH),
+                        )
+                    },
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -137,8 +160,7 @@ internal fun EditProfileScreen(
 private fun EditProfileContent(
     state: EditProfileUiState.Success,
     viewModel: EditProfileViewModel,
-    showGalleryPicker: Boolean,
-    onShowGalleryPickerChanged: (Boolean) -> Unit,
+    onShowGalleryPicker: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -164,7 +186,7 @@ private fun EditProfileContent(
             IconButton(
                 onClick = {
                     if (!state.isUploading) {
-                        onShowGalleryPickerChanged(true)
+                        onShowGalleryPicker()
                     }
                 },
                 modifier =
@@ -217,36 +239,5 @@ private fun EditProfileContent(
             enabled = !state.isSaving && !state.isUploading,
             singleLine = true,
         )
-    }
-
-    Box(modifier = Modifier.fillMaxSize().padding(top = 36.dp)) {
-        if (showGalleryPicker) {
-            GalleryPickerLauncher(
-                allowMultiple = false,
-                mimeTypes = listOf(MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG),
-                cameraCaptureConfig =
-                    CameraCaptureConfig(
-                        compressionLevel = CompressionLevel.HIGH,
-                        cropConfig =
-                            CropConfig(
-                                enabled = true,
-                                squareCrop = false,
-                            ),
-                    ),
-                onPhotosSelected = { photos ->
-                    if (photos.isNotEmpty()) {
-                        val photo = photos.first()
-                        viewModel.onPhotoSelected(photo)
-                    }
-                    onShowGalleryPickerChanged(false)
-                },
-                onError = {
-                    onShowGalleryPickerChanged(false)
-                },
-                onDismiss = {
-                    onShowGalleryPickerChanged(false)
-                },
-            )
-        }
     }
 }

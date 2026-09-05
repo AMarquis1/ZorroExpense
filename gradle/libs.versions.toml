@@ -1,30 +1,30 @@
 [versions]
-agp = "8.11.2"
-android-compileSdk = "36"
+agp = "9.4.0"
+android-compileSdk = "37"
 android-minSdk = "30"
-android-targetSdk = "36"
-androidx-activity = "1.12.2"
-androidx-lifecycle = "2.9.6"
-composeMultiplatform = "1.10.0"
+android-targetSdk = "37"
+androidx-activity = "1.13.0"
+androidx-lifecycle = "2.11.0"
+composeMultiplatform = "1.12.0"
 junit = "4.13.2"
-kotlin = "2.3.0"
-navigationCompose = "2.9.1"
-coil3 = "3.3.0"
-ktor = "3.3.3"
+kotlin = "2.4.10"
+navigationCompose = "2.9.2"
+coil3 = "3.6.2"
+ktor = "3.5.2"
 ksp = "2.3.5"
-kotlinSerialization = "1.9.0"
-kotlinDatetime = "0.7.1-0.6.x-compat"
-gms = "4.4.4"
-firebase-bom = "34.7.0"
-firebase-ktx = "2.4.0"
-crashlytics-gradle = "3.0.2"
-compose-material3 = "1.5.0-alpha13"
-android-material = "1.14.0-alpha08"
+kotlinSerialization = "1.11.0"
+kotlinDatetime = "0.8.0"
+gms = "4.5.0"
+firebase-bom = "34.18.0"
+firebase-ktx = "2.7.0"
+crashlytics-gradle = "3.0.8"
+compose-material3 = "1.5.0-alpha27"
+android-material = "1.14.0"
 material-icons = "1.7.3"
-ktlint = "14.0.1"
+ktlint = "14.2.0"
 placeholder = "1.0.12"
-play-services-auth = "21.0.0"
-imagepickerkmp = "1.0.32"
+play-services-auth = "20.7.0"
+imagepickerkmp = "1.1.7"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -51,7 +51,7 @@ firebase-common-ktx = { module = "dev.gitlive:firebase-common", version.ref = "f
 firebase-firestore-ktx = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-ktx" }
 firebase-auth-ktx = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-ktx" }
 firebase-storage-ktx = { module = "dev.gitlive:firebase-storage", version.ref = "firebase-ktx" }
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
 android-material = { module = "com.google.android.material:material", version.ref = "android-material" }
 material-icons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons" }

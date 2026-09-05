@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,10 +33,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.marquis.zorroexpense.di.AppModule
 import com.marquis.zorroexpense.presentation.state.AuthUiEvent
@@ -55,6 +63,9 @@ fun LoginScreen(
     val password by viewModel.password.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val googleSignInTrigger by viewModel.googleSignInTrigger.collectAsState()
+    val passwordFocusRequester = FocusRequester()
+    val focusManager = LocalFocusManager.current
+    val canSubmit = email.isNotEmpty() && password.isNotEmpty() && uiState !is AuthUiState.Loading
 
     HandleGoogleSignInTrigger(googleSignInTrigger, viewModel)
 
@@ -62,6 +73,7 @@ fun LoginScreen(
         modifier =
             Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -100,6 +112,8 @@ fun LoginScreen(
             onValueChange = { viewModel.onEvent(AuthUiEvent.EmailChanged(it)) },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { passwordFocusRequester.requestFocus() }),
             enabled = uiState !is AuthUiState.Loading,
         )
 
@@ -109,8 +123,20 @@ fun LoginScreen(
             value = password,
             onValueChange = { viewModel.onEvent(AuthUiEvent.PasswordChanged(it)) },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .focusRequester(passwordFocusRequester),
             visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions =
+                KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                        if (canSubmit) viewModel.onEvent(AuthUiEvent.LoginClicked)
+                    },
+                ),
             enabled = uiState !is AuthUiState.Loading,
         )
 
@@ -140,13 +166,16 @@ fun LoginScreen(
         }
 
         Button(
-            onClick = { viewModel.onEvent(AuthUiEvent.LoginClicked) },
+            onClick = {
+                focusManager.clearFocus()
+                viewModel.onEvent(AuthUiEvent.LoginClicked)
+            },
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .height(48.dp),
-            enabled = email.isNotEmpty() && password.isNotEmpty() && uiState !is AuthUiState.Loading,
+            enabled = canSubmit,
         ) {
             Text("Sign In")
         }

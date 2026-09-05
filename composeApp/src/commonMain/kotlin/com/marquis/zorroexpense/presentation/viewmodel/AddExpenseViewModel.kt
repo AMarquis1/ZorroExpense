@@ -20,11 +20,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
+import kotlin.time.Clock
 
 class AddExpenseViewModel(
     private val listId: String,
@@ -330,7 +330,7 @@ class AddExpenseViewModel(
                 val expenses =
                     expenseDates.map { date ->
                         // Use current time for new expenses (includes time component)
-                        val dateTimeString = "$date ${Clock.System.now().toString().substringAfter("T")}"
+                        val dateTimeString = "$date ${Clock.System.now().toString().substringAfter("T")}" 
                         Expense(
                             name = currentFormState.expenseName.trim(),
                             description = currentFormState.expenseDescription.trim(),

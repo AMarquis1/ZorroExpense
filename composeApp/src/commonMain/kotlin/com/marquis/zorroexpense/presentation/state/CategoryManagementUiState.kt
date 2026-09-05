@@ -1,7 +1,7 @@
 package com.marquis.zorroexpense.presentation.state
 
 import com.marquis.zorroexpense.domain.model.Category
-import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
+import io.github.ismoy.imagepickerkmp.picker.GalleryPhotoResult
 
 sealed class CategoryManagementUiState {
     data object Loading : CategoryManagementUiState()
